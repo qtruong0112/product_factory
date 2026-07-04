@@ -1,0 +1,11 @@
+package com.f88.productfactory;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ProductFactoryApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ProductFactoryApplication.class, args);
+    }
+}

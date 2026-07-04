@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pf-db
+    environment:
+      POSTGRES_DB: product_factory
+      POSTGRES_USER: pf_user
+      POSTGRES_PASSWORD: pf_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pf-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pf_user -d product_factory"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: pf-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/product_factory
+      DB_USER: pf_user
+      DB_PASSWORD: pf_pass
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: pf-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  pf-pgdata:
