@@ -1,0 +1,776 @@
+{
+  "$schema": "https://productfactory.local/meta/relational-canonical-v2.json",
+  "$id": "https://productfactory.local/schemas/product-factory-5.1-canonical-v3-semantic.json",
+  "title": "Product Factory 5.1 — Canonical Schema v3 (Semantic-aligned, ERD-ready)",
+  "description": "Hợp nhất 2 nguồn: (1) Product_Factory_Semantic_Objects.xlsx — 26 semantic objects / 4 tầng ngữ nghĩa / 29 relationships (nguồn chuẩn về NGỮ NGHĨA và CARDINALITY); (2) Product_Factory_5_1.html — mã nguồn app (nguồn chuẩn về CỘT, KIỂU DỮ LIỆU, INSTANCE). Mỗi entity gắn x-layer (I/II/III/IV) và x-semantic-object trỏ về object gốc trong xlsx. Mọi PK/FK/unique khai báo máy-đọc-được để gen ERD/DBML/DDL tự động.",
+
+  "x-semantic-layers": {
+    "I":   "Ontology nghĩa vụ (Obligation Ontology) — 6 objects",
+    "II":  "Cấu hình (Configuration primitives) — 8 objects",
+    "III": "Pipeline sản phẩm (Product pipeline) — 8 objects",
+    "IV":  "Quản trị & Ràng buộc (Governance) — 4 objects"
+  },
+
+  "x-enums": {
+    "entity_status":     ["draft", "review", "approved", "published", "retired"],
+    "matrix_kind":       ["ARCHETYPE_X_ELEMENT", "ELEMENTTYPE_X_ELEMENTTYPE", "OBLIGATIONTYPE_X_BLOCK"],
+    "matrix_verdict":    ["req", "pos", "na"],
+    "block_usage":       ["active", "locked"],
+    "constraint_kind":   ["regulatory", "range", "required", "dependency", "enum"],
+    "scope_priority_note": "Ưu tiên giải quyết fragment: people(3) > place(2) > time(1) > default(0) — lưu trong bảng selector_scope.priority",
+    "audience":          ["individual", "business"],
+    "channel":           ["App", "Web", "PGD"],
+    "ot_role":           ["Primary", "Support"],
+    "foa_requirement":   ["required", "possible", "na"],
+    "biz_group":         ["Khởi tạo", "Giá trị", "Kích hoạt", "Vận hành", "Thu hồi"],
+    "version_entity_type": ["pattern", "template", "config"],
+    "release_step_status": ["done", "current", "upcoming"],
+    "release_role":      ["Product Owner", "Product Designer", "Product Designer / QA", "Checker / Approver", "Operations"],
+    "customer_tier":     ["standard", "loyalty", "vip"]
+  },
+
+  "entities": {
+
+    "obligation_element_type": {
+      "x-layer": "I", "x-semantic-object": "#1 Obligation Element Type (OET)",
+      "description": "Chiều phân loại ngữ nghĩa của nghĩa vụ. 6 chiều lõi (OET_NATURE…OET_TIME) + mở rộng OET_LIFECYCLE trong thư viện. OET_NATURE có is_identify=true — quyết định Family.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":        { "type": "VARCHAR(30)", "nullable": false },
+        "name":        { "type": "VARCHAR(80)", "nullable": false },
+        "short_name":  { "type": "VARCHAR(40)", "nullable": true },
+        "description": { "type": "TEXT", "nullable": true },
+        "is_identify": { "type": "BOOLEAN", "nullable": false, "default": false }
+      }
+    },
+
+    "obligation_element": {
+      "x-layer": "I", "x-semantic-object": "#2 Obligation Element",
+      "description": "Giá trị nguyên tử — 'gen' ngữ nghĩa để lắp thành Obligation Type. App: 17 element, thư viện đầy đủ: 47. Rel #1: ElementType 1:N Element.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":              { "type": "VARCHAR(60)", "nullable": false },
+        "name":              { "type": "VARCHAR(160)", "nullable": false },
+        "element_type_code": { "type": "VARCHAR(30)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["element_type_code"], "references": { "entity": "obligation_element_type", "columns": ["code"] } }
+      ]
+    },
+
+    "financial_obligation_archetype": {
+      "x-layer": "I", "x-semantic-object": "#3 Financial Obligation Archetype",
+      "description": "Khuôn nghĩa vụ gốc — mẫu trừu tượng cao nhất (Term Loan / Revolving / Conditional). Quy định Element nào Required/Possible qua Ma trận 1 (materialize ở foa_element).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":            { "type": "VARCHAR(30)", "nullable": false },
+        "name":            { "type": "VARCHAR(80)", "nullable": false },
+        "nature":          { "type": "VARCHAR(160)", "nullable": true },
+        "nature_desc":     { "type": "TEXT", "nullable": true },
+        "value_structure": { "type": "VARCHAR(160)", "nullable": true },
+        "value_desc":      { "type": "TEXT", "nullable": true }
+      }
+    },
+
+    "foa_element": {
+      "x-layer": "I", "x-semantic-object": "#23 Ma trận 1 (Archetype × Element) — materialized",
+      "description": "Rel #5: Archetype constrains Element N:M kèm mức Required/Possible/N.A — ma trận gốc suy diễn Family & hợp lệ hóa Pattern/Intent.",
+      "primaryKey": ["archetype_code", "element_code"],
+      "columns": {
+        "archetype_code": { "type": "VARCHAR(30)", "nullable": false },
+        "element_code":   { "type": "VARCHAR(60)", "nullable": false },
+        "requirement":    { "type": "VARCHAR(10)", "nullable": false, "enum": "foa_requirement" }
+      },
+      "foreignKeys": [
+        { "columns": ["archetype_code"], "references": { "entity": "financial_obligation_archetype", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["element_code"],   "references": { "entity": "obligation_element", "columns": ["code"] } }
+      ]
+    },
+
+    "obligation_family": {
+      "x-layer": "I", "x-semantic-object": "#4 Obligation Family",
+      "description": "Họ nghĩa vụ. Rel #3: Nature định danh Family 1:1 → FK identified_by_nature_code UNIQUE (mỗi Nature định danh đúng 1 Family và ngược lại).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":                      { "type": "VARCHAR(30)", "nullable": false },
+        "name":                      { "type": "VARCHAR(80)", "nullable": false },
+        "identified_by_nature_code": { "type": "VARCHAR(60)", "nullable": false, "comment": "Element thuộc OET_NATURE (is_identify)" }
+      },
+      "uniques": [["identified_by_nature_code"]],
+      "foreignKeys": [
+        { "columns": ["identified_by_nature_code"], "references": { "entity": "obligation_element", "columns": ["code"] } }
+      ]
+    },
+
+    "obligation_type": {
+      "x-layer": "I", "x-semantic-object": "#5 Obligation Type",
+      "description": "Loại nghĩa vụ chuẩn hóa = tổ hợp đủ 6 Element (mỗi OET đúng 1, materialize ở obligation_type_composition). Nút trung tâm nối ontology với Block. Rel #4: N Type thuộc 1 Family. Rel #6 (MỚI so với v2): mỗi Type hiện thực hóa 1 Archetype.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":           { "type": "VARCHAR(60)", "nullable": false },
+        "name":           { "type": "VARCHAR(160)", "nullable": false },
+        "family_code":    { "type": "VARCHAR(30)", "nullable": false },
+        "archetype_code": { "type": "VARCHAR(30)", "nullable": false },
+        "status":         { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["family_code"],    "references": { "entity": "obligation_family", "columns": ["code"] } },
+        { "columns": ["archetype_code"], "references": { "entity": "financial_obligation_archetype", "columns": ["code"] } }
+      ]
+    },
+
+    "obligation_type_composition": {
+      "x-layer": "I", "x-semantic-object": "#2↔#5 (rel #2 composes)",
+      "description": "Rel #2: N Element cấu thành 1 Type; PK ghép (type, element_type) ép ràng buộc 'mỗi OET chọn đúng 1 Element' (trường comp trong HTML).",
+      "primaryKey": ["obligation_type_code", "element_type_code"],
+      "columns": {
+        "obligation_type_code": { "type": "VARCHAR(60)", "nullable": false },
+        "element_type_code":    { "type": "VARCHAR(30)", "nullable": false },
+        "element_code":         { "type": "VARCHAR(60)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["obligation_type_code"], "references": { "entity": "obligation_type", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["element_type_code"],    "references": { "entity": "obligation_element_type", "columns": ["code"] } },
+        { "columns": ["element_code"],         "references": { "entity": "obligation_element", "columns": ["code"] } }
+      ]
+    },
+
+    "lifecycle": {
+      "x-layer": "I", "x-semantic-object": "#6 Lifecycle & State Machine",
+      "description": "Rel #8: mỗi Lifecycle chi phối 1 loại đối tượng (Term Loan 7 state, Facility 6, Product Variant 5, Pattern 5, Config maker–checker 6, Domain 4).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":       { "type": "VARCHAR(40)", "nullable": false },
+        "name":       { "type": "VARCHAR(160)", "nullable": false },
+        "governs":    { "type": "VARCHAR(80)", "nullable": false, "comment": "Loại đối tượng được chi phối" },
+        "status":     { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      }
+    },
+
+    "lifecycle_state": {
+      "x-layer": "I", "x-semantic-object": "#6 Lifecycle & State Machine",
+      "description": "State có thứ tự của lifecycle (Draft, Active, Overdue, Closed…).",
+      "primaryKey": ["lifecycle_code", "sort_order"],
+      "columns": {
+        "lifecycle_code": { "type": "VARCHAR(40)", "nullable": false },
+        "sort_order":     { "type": "SMALLINT", "nullable": false },
+        "name":           { "type": "VARCHAR(60)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["lifecycle_code"], "references": { "entity": "lifecycle", "columns": ["code"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "domain": {
+      "x-layer": "II", "x-semantic-object": "#14 Domain",
+      "description": "Miền dữ liệu — ranh giới sở hữu ngữ nghĩa (DOM_PRODUCT 142 thực thể, DOM_OBLIGATION 98, DOM_PARTY 37, DOM_COLLATERAL 54, DOM_PRICING 29).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":         { "type": "VARCHAR(40)", "nullable": false },
+        "name":         { "type": "VARCHAR(120)", "nullable": false },
+        "description":  { "type": "TEXT", "nullable": true },
+        "entity_count": { "type": "INTEGER", "nullable": true },
+        "status":       { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      }
+    },
+
+    "data_type": {
+      "x-layer": "II", "x-semantic-object": "#13 Data Type",
+      "description": "Kiểu dữ liệu của Attribute — object riêng theo semantic sheet (không còn là enum như v2): DT_MONEY, DT_PERCENT, DT_INT, DT_ENUM, DT_RANGE, DT_BOOL, DT_FORMULA.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code": { "type": "VARCHAR(20)", "nullable": false },
+        "name": { "type": "VARCHAR(60)", "nullable": false }
+      }
+    },
+
+    "attribute_group": {
+      "x-layer": "II", "x-semantic-object": "#12 Attribute Group",
+      "description": "Nhóm nghiệp vụ của Attribute (GRP_PRICING 11, GRP_LIMIT 7, GRP_COLLATERAL 9, GRP_REPAYMENT 8, GRP_PARTY 10, GRP_PENALTY 6). Rel #15 (MỚI so với v2): Group thuộc Domain N:1 (GRP_PRICING → DOM_PRICING, GRP_LIMIT → DOM_PRODUCT…).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":        { "type": "VARCHAR(40)", "nullable": false },
+        "name":        { "type": "VARCHAR(120)", "nullable": false },
+        "domain_code": { "type": "VARCHAR(40)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["domain_code"], "references": { "entity": "domain", "columns": ["code"] } }
+      ]
+    },
+
+    "attribute": {
+      "x-layer": "II", "x-semantic-object": "#9 Attribute",
+      "description": "Thuộc tính kinh doanh trong Từ điển thuộc tính (64 attr: base_rate, ltv, limit_amount…), tái sử dụng qua nhiều Block/Template. Rel #13 grouped in, rel #14 typed as. Ràng buộc chi tiết tách sang attribute_constraint (rel #17).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":           { "type": "VARCHAR(60)", "nullable": false },
+        "name":           { "type": "VARCHAR(160)", "nullable": false },
+        "group_code":     { "type": "VARCHAR(40)", "nullable": false },
+        "data_type_code": { "type": "VARCHAR(20)", "nullable": false },
+        "is_required":    { "type": "BOOLEAN", "nullable": false, "default": false },
+        "is_unique":      { "type": "BOOLEAN", "nullable": false, "default": false },
+        "is_nullable":    { "type": "BOOLEAN", "nullable": false, "default": true },
+        "default_value":  { "type": "VARCHAR(255)", "nullable": true },
+        "unit":           { "type": "VARCHAR(40)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["group_code"],     "references": { "entity": "attribute_group", "columns": ["code"] } },
+        { "columns": ["data_type_code"], "references": { "entity": "data_type", "columns": ["code"] } }
+      ]
+    },
+
+    "attribute_constraint": {
+      "x-layer": "II", "x-semantic-object": "#11 Constraint",
+      "description": "Rel #17: 1 Attribute chịu N Constraint. 5 loại: regulatory (trần NHNN ≤1,65%/tháng), range (min/max/step), required, dependency (liên thuộc tính — base_rate phụ thuộc rate_type; limit ≤ LTV × giá trị TS; LTV chỉ khi Recovery=ASSET_PLEDGE), enum. Dependency dùng FK depends_on_attribute_code.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":                        { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "attribute_code":            { "type": "VARCHAR(60)", "nullable": false },
+        "kind":                      { "type": "VARCHAR(12)", "nullable": false, "enum": "constraint_kind" },
+        "min_value":                 { "type": "DECIMAL(18,4)", "nullable": true },
+        "max_value":                 { "type": "DECIMAL(18,4)", "nullable": true },
+        "step_value":                { "type": "DECIMAL(18,4)", "nullable": true },
+        "expression":                { "type": "VARCHAR(255)", "nullable": true, "comment": "Biểu thức ràng buộc, vd 'limit <= ltv * asset_value'" },
+        "depends_on_attribute_code": { "type": "VARCHAR(60)", "nullable": true, "comment": "Attribute bị phụ thuộc (constraint kind=dependency)" },
+        "message":                   { "type": "VARCHAR(255)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["attribute_code"],            "references": { "entity": "attribute", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["depends_on_attribute_code"], "references": { "entity": "attribute", "columns": ["code"] } }
+      ]
+    },
+
+    "attribute_enum_value": {
+      "x-layer": "II", "x-semantic-object": "#11 Constraint (kind=enum)",
+      "description": "Giá trị enum của attribute kiểu DT_ENUM (vd asset_type: Xe máy / Ô tô / Vàng).",
+      "primaryKey": ["attribute_code", "sort_order"],
+      "columns": {
+        "attribute_code": { "type": "VARCHAR(60)", "nullable": false },
+        "sort_order":     { "type": "SMALLINT", "nullable": false },
+        "value":          { "type": "VARCHAR(160)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["attribute_code"], "references": { "entity": "attribute", "columns": ["code"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "block": {
+      "x-layer": "II", "x-semantic-object": "#7 Block",
+      "description": "Khối cấu hình nghiệp vụ, 5 nhóm (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi). App: 12 block, thư viện: 26. Rel #10: mỗi Block governance bởi 1 Element (BLK_INTEREST↔TERM_LOAN_OBLIGATION, BLK_COLLATERAL↔ASSET_PLEDGE…) — FK nullable vì một số block neo vào 'khía cạnh' chưa mã hóa thành element (Eligibility, Obligor Party).",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":                        { "type": "VARCHAR(40)", "nullable": false },
+        "code":                      { "type": "VARCHAR(60)", "nullable": false },
+        "name":                      { "type": "VARCHAR(160)", "nullable": false },
+        "biz_group":                 { "type": "VARCHAR(20)", "nullable": false, "enum": "biz_group" },
+        "governed_by_element_code":  { "type": "VARCHAR(60)", "nullable": true },
+        "governed_by_aspect":        { "type": "VARCHAR(80)", "nullable": true, "comment": "Khía cạnh chi phối khi không phải element (Eligibility, Obligor Party, PENALTY…)" },
+        "status":                    { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "uniques": [["code"]],
+      "foreignKeys": [
+        { "columns": ["governed_by_element_code"], "references": { "entity": "obligation_element", "columns": ["code"] } }
+      ]
+    },
+
+    "answer_slot": {
+      "x-layer": "II", "x-semantic-object": "#8 Answer Slot",
+      "description": "Ô khai báo trong Block — nơi 1 Attribute được 'cắm' vào kèm cờ bắt buộc, default, rule (~30 slot). Rel #11: Block 1:N Slot. Rel #12: Slot binds Attribute N:1 (whereUsed).",
+      "primaryKey": ["block_id", "code"],
+      "columns": {
+        "block_id":       { "type": "VARCHAR(40)", "nullable": false },
+        "code":           { "type": "VARCHAR(60)", "nullable": false },
+        "name":           { "type": "VARCHAR(160)", "nullable": false },
+        "attribute_code": { "type": "VARCHAR(60)", "nullable": false },
+        "is_required":    { "type": "BOOLEAN", "nullable": false, "default": false },
+        "default_value":  { "type": "VARCHAR(255)", "nullable": true },
+        "rule_text":      { "type": "VARCHAR(255)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["block_id"],       "references": { "entity": "block", "columns": ["id"] }, "onDelete": "CASCADE" },
+        { "columns": ["attribute_code"], "references": { "entity": "attribute", "columns": ["code"] } }
+      ]
+    },
+
+    "selector_scope": {
+      "x-layer": "II", "x-semantic-object": "#10 Fragment & Scope",
+      "description": "Loại phạm vi áp dụng của Fragment, kèm priority giải quyết xung đột: default(0) < time(1) < place(2) < people(3).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":     { "type": "VARCHAR(10)", "nullable": false, "comment": "default / time / place / people" },
+        "name":     { "type": "VARCHAR(60)", "nullable": false },
+        "priority": { "type": "SMALLINT", "nullable": false }
+      }
+    },
+
+    "fragment": {
+      "x-layer": "II", "x-semantic-object": "#10 Fragment & Scope",
+      "description": "Giá trị của Attribute theo phạm vi, trong bối cảnh 1 Config (rel #16 + rel #24: Config gán giá trị Attribute vào slot của Template qua Fragment+Scope). Vd base_rate: 1,5% default · 1,0% Loyalty · 1,4% HCM/HN · 0,9% KM Tết. Bất biến nghiệp vụ: mỗi (config, slot) phải có ≥1 fragment scope=default.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":             { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "config_code":    { "type": "VARCHAR(20)", "nullable": false },
+        "block_id":       { "type": "VARCHAR(40)", "nullable": false },
+        "slot_code":      { "type": "VARCHAR(60)", "nullable": false },
+        "scope_code":     { "type": "VARCHAR(10)", "nullable": false },
+        "scope_value":    { "type": "VARCHAR(120)", "nullable": true, "comment": "NULL với scope default; 'Loyalty'/'HCM, HN'/'KM Tết'…" },
+        "value":          { "type": "VARCHAR(255)", "nullable": false },
+        "is_warning":     { "type": "BOOLEAN", "nullable": false, "default": false },
+        "validation_msg": { "type": "VARCHAR(255)", "nullable": true }
+      },
+      "uniques": [["config_code", "block_id", "slot_code", "scope_code", "scope_value"]],
+      "foreignKeys": [
+        { "columns": ["config_code"],            "references": { "entity": "product_config", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["block_id", "slot_code"],  "references": { "entity": "answer_slot", "columns": ["block_id", "code"] } },
+        { "columns": ["scope_code"],             "references": { "entity": "selector_scope", "columns": ["code"] } }
+      ]
+    },
+
+    "business_intent": {
+      "x-layer": "III", "x-semantic-object": "#15 Business Intent",
+      "description": "Định hướng kinh doanh nguồn (7 intent): mục tiêu, KPI, owner, kỳ áp dụng. Rel #18: 1 BI dẫn xuất N Product Intent.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":        { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "name":      { "type": "VARCHAR(200)", "nullable": false },
+        "owner":     { "type": "VARCHAR(120)", "nullable": false },
+        "period":    { "type": "VARCHAR(60)", "nullable": false },
+        "objective": { "type": "TEXT", "nullable": true },
+        "status":    { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      }
+    },
+
+    "business_intent_kpi": {
+      "x-layer": "III", "x-semantic-object": "#15 Business Intent",
+      "description": "KPI của Business Intent (Dư nợ 1.200 tỷ, 48.000 HĐ, NPL ≤3%…).",
+      "primaryKey": ["business_intent_id", "sort_order"],
+      "columns": {
+        "business_intent_id": { "type": "BIGINT", "nullable": false },
+        "sort_order":         { "type": "SMALLINT", "nullable": false },
+        "metric":             { "type": "VARCHAR(160)", "nullable": false },
+        "target":             { "type": "VARCHAR(80)", "nullable": false },
+        "unit":               { "type": "VARCHAR(40)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["business_intent_id"], "references": { "entity": "business_intent", "columns": ["id"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "customer_segment": {
+      "x-layer": "III", "x-semantic-object": "#22 Customer Segment / Audience",
+      "description": "Đối tượng KH mục tiêu — object riêng theo semantic sheet (MỚI so với v2): KH cá nhân (CMND/CCCD · Giấy nhận nợ) / KH doanh nghiệp (ĐKKD · HĐ tín dụng DN), kèm tier Standard/Loyalty/VIP.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":              { "type": "VARCHAR(40)", "nullable": false },
+        "name":              { "type": "VARCHAR(160)", "nullable": false },
+        "audience":          { "type": "VARCHAR(12)", "nullable": false, "enum": "audience" },
+        "tier":              { "type": "VARCHAR(10)", "nullable": true, "enum": "customer_tier" },
+        "legal_requirement": { "type": "VARCHAR(255)", "nullable": true }
+      }
+    },
+
+    "product_intent": {
+      "x-layer": "III", "x-semantic-object": "#16 Product Intent",
+      "description": "Ý định sản phẩm (12 intent: PI-001…). Rel #19: anchored to Obligation Nature + Archetype. Rel #20: 1 Intent định hình N Pattern.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":                  { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "code":                { "type": "VARCHAR(20)", "nullable": true, "comment": "PI-001…" },
+        "name":                { "type": "VARCHAR(200)", "nullable": false },
+        "business_intent_id":  { "type": "BIGINT", "nullable": false },
+        "nature_element_code": { "type": "VARCHAR(60)", "nullable": false, "comment": "Element thuộc OET_NATURE (is_identify)" },
+        "archetype_code":      { "type": "VARCHAR(30)", "nullable": false },
+        "status":              { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["business_intent_id"],  "references": { "entity": "business_intent", "columns": ["id"] } },
+        { "columns": ["nature_element_code"], "references": { "entity": "obligation_element", "columns": ["code"] } },
+        { "columns": ["archetype_code"],      "references": { "entity": "financial_obligation_archetype", "columns": ["code"] } }
+      ]
+    },
+
+    "product_intent_element": {
+      "x-layer": "III", "x-semantic-object": "#16 Product Intent",
+      "description": "Element nền khai báo cho Intent (đối chiếu Ma trận 1). PI-003 ghép FACILITY + LOAN → junction cho phép nhiều nature/element phụ.",
+      "primaryKey": ["product_intent_id", "element_code"],
+      "columns": {
+        "product_intent_id": { "type": "BIGINT", "nullable": false },
+        "element_code":      { "type": "VARCHAR(60)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["product_intent_id"], "references": { "entity": "product_intent", "columns": ["id"] }, "onDelete": "CASCADE" },
+        { "columns": ["element_code"],      "references": { "entity": "obligation_element", "columns": ["code"] } }
+      ]
+    },
+
+    "product_pattern": {
+      "x-layer": "III", "x-semantic-object": "#17 Product Pattern",
+      "description": "Khung sản phẩm (8 pattern): lắp Obligation Type × Block theo Ma trận 3, khóa Block không áp dụng (khóa chuyển về Pattern theo semantic sheet — pattern_block.usage). Rel #22: 1 Pattern sinh N Template.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":              { "type": "VARCHAR(20)", "nullable": false },
+        "name":              { "type": "VARCHAR(200)", "nullable": false },
+        "product_intent_id": { "type": "BIGINT", "nullable": true },
+        "status":            { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["product_intent_id"], "references": { "entity": "product_intent", "columns": ["id"] } }
+      ]
+    },
+
+    "pattern_block": {
+      "x-layer": "III", "x-semantic-object": "#17 ↔ #7 (rel #21 assembled from)",
+      "description": "Junction Pattern ↔ Block (canvas có thứ tự) kèm usage active/locked — Block bắt buộc theo Ma trận 3 không được locked (enforce ở application/trigger).",
+      "primaryKey": ["pattern_code", "block_id"],
+      "columns": {
+        "pattern_code": { "type": "VARCHAR(20)", "nullable": false },
+        "block_id":     { "type": "VARCHAR(40)", "nullable": false },
+        "position":     { "type": "SMALLINT", "nullable": false },
+        "usage":        { "type": "VARCHAR(10)", "nullable": false, "enum": "block_usage", "default": "active" }
+      },
+      "foreignKeys": [
+        { "columns": ["pattern_code"], "references": { "entity": "product_pattern", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["block_id"],     "references": { "entity": "block", "columns": ["id"] } }
+      ]
+    },
+
+    "pattern_obligation_type": {
+      "x-layer": "III", "x-semantic-object": "#17 ↔ #5 (rel #21)",
+      "description": "Junction Pattern ↔ Obligation Type kèm role Primary/Support.",
+      "primaryKey": ["pattern_code", "obligation_type_code"],
+      "columns": {
+        "pattern_code":         { "type": "VARCHAR(20)", "nullable": false },
+        "obligation_type_code": { "type": "VARCHAR(60)", "nullable": false },
+        "role":                 { "type": "VARCHAR(10)", "nullable": false, "enum": "ot_role", "default": "Primary" }
+      },
+      "foreignKeys": [
+        { "columns": ["pattern_code"],         "references": { "entity": "product_pattern", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["obligation_type_code"], "references": { "entity": "obligation_type", "columns": ["code"] } }
+      ]
+    },
+
+    "product_template": {
+      "x-layer": "III", "x-semantic-object": "#18 Product Template",
+      "description": "Khuôn hoàn chỉnh từ Pattern (15 template), sẵn sàng cấu hình. Rel #24: 1 Template cấu hình thành N Config (15 → 34).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":              { "type": "VARCHAR(20)", "nullable": false },
+        "name":              { "type": "VARCHAR(200)", "nullable": false },
+        "from_pattern_code": { "type": "VARCHAR(20)", "nullable": false },
+        "status":            { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["from_pattern_code"], "references": { "entity": "product_pattern", "columns": ["code"] } }
+      ]
+    },
+
+    "template_segment": {
+      "x-layer": "III", "x-semantic-object": "#18 ↔ #22 (rel #23 targets, N:M)",
+      "description": "Junction MỚI so với v2: Template nhắm tới nhiều Customer Segment và ngược lại (semantic sheet xác nhận N:M).",
+      "primaryKey": ["template_code", "segment_code"],
+      "columns": {
+        "template_code": { "type": "VARCHAR(20)", "nullable": false },
+        "segment_code":  { "type": "VARCHAR(40)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["template_code"], "references": { "entity": "product_template", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["segment_code"],  "references": { "entity": "customer_segment", "columns": ["code"] } }
+      ]
+    },
+
+    "template_frame": {
+      "x-layer": "III", "x-semantic-object": "#18 Product Template",
+      "description": "Giá trị khung cấp template cho Answer Slot (từ HTML — semantic sheet không phủ nhận, giữ lại).",
+      "primaryKey": ["template_code", "block_id", "slot_code"],
+      "columns": {
+        "template_code": { "type": "VARCHAR(20)", "nullable": false },
+        "block_id":      { "type": "VARCHAR(40)", "nullable": false },
+        "slot_code":     { "type": "VARCHAR(60)", "nullable": false },
+        "frame_value":   { "type": "VARCHAR(255)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["template_code"],         "references": { "entity": "product_template", "columns": ["code"] }, "onDelete": "CASCADE" },
+        { "columns": ["block_id", "slot_code"], "references": { "entity": "answer_slot", "columns": ["block_id", "code"] } }
+      ]
+    },
+
+    "product_config": {
+      "x-layer": "III", "x-semantic-object": "#19 Product Config",
+      "description": "Bản cấu hình (34 config): gán giá trị qua Fragment+Scope, chạy mô phỏng (rel #25), trình maker–checker (rel #26, LIFE_CONFIG 6 state).",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":               { "type": "VARCHAR(20)", "nullable": false },
+        "name":               { "type": "VARCHAR(200)", "nullable": false },
+        "from_template_code": { "type": "VARCHAR(20)", "nullable": false },
+        "status":             { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["from_template_code"], "references": { "entity": "product_template", "columns": ["code"] } }
+      ]
+    },
+
+    "product_variant": {
+      "x-layer": "III", "x-semantic-object": "#20 Product Variant",
+      "description": "Biến thể đã duyệt & đóng gói (21 variant). SỬA so với v2: rel #27 xác nhận Config đóng gói thành Variant 1:N (34 config → 21 variant, một config có thể sinh nhiều biến thể theo kênh/tên thương mại) → BỎ unique trên from_config_code.",
+      "primaryKey": ["code"],
+      "columns": {
+        "code":              { "type": "VARCHAR(20)", "nullable": false },
+        "name":              { "type": "VARCHAR(200)", "nullable": false },
+        "from_config_code":  { "type": "VARCHAR(20)", "nullable": false },
+        "family":            { "type": "VARCHAR(40)", "nullable": true },
+        "limit_range":       { "type": "VARCHAR(60)", "nullable": true },
+        "display_rate":      { "type": "VARCHAR(40)", "nullable": true },
+        "marketing_content": { "type": "TEXT", "nullable": true },
+        "status":            { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["from_config_code"], "references": { "entity": "product_config", "columns": ["code"] } }
+      ]
+    },
+
+    "product_catalog": {
+      "x-layer": "III", "x-semantic-object": "#21 Product Catalog",
+      "description": "Kệ sản phẩm — object riêng theo semantic sheet (rel #28: Variant published to Catalog N:1). Mỗi kệ gắn 1 kênh bán; 18 sản phẩm trên kệ = số dòng catalog_listing.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":      { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "name":    { "type": "VARCHAR(120)", "nullable": false },
+        "channel": { "type": "VARCHAR(10)", "nullable": false, "enum": "channel" }
+      }
+    },
+
+    "catalog_listing": {
+      "x-layer": "III", "x-semantic-object": "#21 Product Catalog",
+      "description": "Dòng sản phẩm trên kệ (Variant × Catalog).",
+      "primaryKey": ["catalog_id", "variant_code"],
+      "columns": {
+        "catalog_id":     { "type": "BIGINT", "nullable": false },
+        "variant_code":   { "type": "VARCHAR(20)", "nullable": false },
+        "published_date": { "type": "DATE", "nullable": true },
+        "status":         { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" }
+      },
+      "foreignKeys": [
+        { "columns": ["catalog_id"],   "references": { "entity": "product_catalog", "columns": ["id"] }, "onDelete": "CASCADE" },
+        { "columns": ["variant_code"], "references": { "entity": "product_variant", "columns": ["code"] } }
+      ]
+    },
+
+    "constraint_matrix": {
+      "x-layer": "IV", "x-semantic-object": "#23 Ma trận ràng buộc",
+      "description": "3 loại ma trận chính thức (semantic sheet — bỏ PATTERN_X_BLOCK của v2): (1) Archetype × Element (materialized thêm ở foa_element), (2) ElementType × ElementType tương thích, (3) ObligationType × Block dựng khung Pattern. Thư viện: 9 ma trận.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":            { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "kind":          { "type": "VARCHAR(40)", "nullable": false, "enum": "matrix_kind" },
+        "title":         { "type": "VARCHAR(200)", "nullable": false },
+        "description":   { "type": "TEXT", "nullable": true }
+      }
+    },
+
+    "matrix_cell": {
+      "x-layer": "IV", "x-semantic-object": "#23 Ma trận ràng buộc",
+      "description": "Ô ma trận: row_code/col_code là code thực thể theo kind (element / element_type / OT / block); verdict req/pos/na. FK mềm — enforce ở application/trigger.",
+      "primaryKey": ["matrix_id", "row_code", "col_code"],
+      "columns": {
+        "matrix_id":   { "type": "BIGINT", "nullable": false },
+        "row_code":    { "type": "VARCHAR(60)", "nullable": false },
+        "col_code":    { "type": "VARCHAR(60)", "nullable": false },
+        "verdict":     { "type": "VARCHAR(3)", "nullable": false, "enum": "matrix_verdict" },
+        "is_override": { "type": "BOOLEAN", "nullable": false, "default": false }
+      },
+      "foreignKeys": [
+        { "columns": ["matrix_id"], "references": { "entity": "constraint_matrix", "columns": ["id"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "maker_checker_process": {
+      "x-layer": "IV", "x-semantic-object": "#24 Quy trình Maker–Checker",
+      "description": "Quy trình phê duyệt 8 bước: BI → PI → Pattern → Template → Config → Mô phỏng → Phê duyệt → Phát hành. Ràng buộc nghiệp vụ: maker ≠ checker.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":           { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "variant_code": { "type": "VARCHAR(20)", "nullable": true },
+        "product_name": { "type": "VARCHAR(200)", "nullable": false },
+        "done_count":   { "type": "SMALLINT", "nullable": false, "default": 0 }
+      },
+      "foreignKeys": [
+        { "columns": ["variant_code"], "references": { "entity": "product_variant", "columns": ["code"] } }
+      ]
+    },
+
+    "process_step": {
+      "x-layer": "IV", "x-semantic-object": "#24 Quy trình Maker–Checker",
+      "description": "8 bước của quy trình kèm vai trò, trạng thái, input/output, checklist (checklist tách bảng con).",
+      "primaryKey": ["process_id", "step_no"],
+      "columns": {
+        "process_id":  { "type": "BIGINT", "nullable": false },
+        "step_no":     { "type": "SMALLINT", "nullable": false },
+        "title":       { "type": "VARCHAR(200)", "nullable": false },
+        "role":        { "type": "VARCHAR(40)", "nullable": false, "enum": "release_role" },
+        "step_status": { "type": "VARCHAR(10)", "nullable": false, "enum": "release_step_status" },
+        "input_desc":  { "type": "VARCHAR(200)", "nullable": true },
+        "output_desc": { "type": "VARCHAR(200)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["process_id"], "references": { "entity": "maker_checker_process", "columns": ["id"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "process_step_checklist": {
+      "x-layer": "IV", "x-semantic-object": "#24 Quy trình Maker–Checker",
+      "description": "Mục checklist từng bước.",
+      "primaryKey": ["process_id", "step_no", "sort_order"],
+      "columns": {
+        "process_id": { "type": "BIGINT", "nullable": false },
+        "step_no":    { "type": "SMALLINT", "nullable": false },
+        "sort_order": { "type": "SMALLINT", "nullable": false },
+        "item":       { "type": "VARCHAR(255)", "nullable": false },
+        "is_done":    { "type": "BOOLEAN", "nullable": false, "default": false }
+      },
+      "foreignKeys": [
+        { "columns": ["process_id", "step_no"], "references": { "entity": "process_step", "columns": ["process_id", "step_no"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "simulation_scenario": {
+      "x-layer": "IV", "x-semantic-object": "#25 Simulation Engine",
+      "description": "Rel #25: Config kiểm thử bởi Simulation Engine trước khi trình duyệt. Kịch bản chạy trên Variant (HTML) hoặc Config (trước đóng gói) → 2 FK nullable, ít nhất 1 phải có. Kết quả tổng hợp inline, lịch trả nợ tách bảng con; hỗ trợ pin A/B/C/D.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":               { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "config_code":      { "type": "VARCHAR(20)", "nullable": true },
+        "variant_code":     { "type": "VARCHAR(20)", "nullable": true },
+        "amount":           { "type": "DECIMAL(18,0)", "nullable": false },
+        "months":           { "type": "SMALLINT", "nullable": false },
+        "base_rate_pct":    { "type": "DECIMAL(6,3)", "nullable": false },
+        "asset_value":      { "type": "DECIMAL(18,0)", "nullable": true },
+        "segment_code":     { "type": "VARCHAR(40)", "nullable": true },
+        "start_date":       { "type": "DATE", "nullable": true },
+        "appraisal_fee":    { "type": "DECIMAL(18,0)", "nullable": true },
+        "periodic_fee_pct": { "type": "DECIMAL(6,3)", "nullable": true },
+        "grace_months":     { "type": "SMALLINT", "nullable": true },
+        "pinned_label":     { "type": "CHAR(1)", "nullable": true },
+        "effective_rate":   { "type": "DECIMAL(6,3)", "nullable": true },
+        "monthly_payment":  { "type": "DECIMAL(18,0)", "nullable": true },
+        "total_interest":   { "type": "DECIMAL(18,0)", "nullable": true },
+        "total_payment":    { "type": "DECIMAL(18,0)", "nullable": true },
+        "ltv_pct":          { "type": "DECIMAL(6,2)", "nullable": true }
+      },
+      "foreignKeys": [
+        { "columns": ["config_code"],  "references": { "entity": "product_config", "columns": ["code"] } },
+        { "columns": ["variant_code"], "references": { "entity": "product_variant", "columns": ["code"] } },
+        { "columns": ["segment_code"], "references": { "entity": "customer_segment", "columns": ["code"] } }
+      ]
+    },
+
+    "simulation_schedule_row": {
+      "x-layer": "IV", "x-semantic-object": "#25 Simulation Engine",
+      "description": "Lịch trả nợ từng kỳ của kịch bản (output engine — chỉ lưu khi cần audit, còn lại tính runtime).",
+      "primaryKey": ["scenario_id", "period_no"],
+      "columns": {
+        "scenario_id":     { "type": "BIGINT", "nullable": false },
+        "period_no":       { "type": "SMALLINT", "nullable": false },
+        "due_date":        { "type": "DATE", "nullable": true },
+        "opening_balance": { "type": "DECIMAL(18,0)", "nullable": false },
+        "principal":       { "type": "DECIMAL(18,0)", "nullable": false },
+        "interest":        { "type": "DECIMAL(18,0)", "nullable": false },
+        "fee":             { "type": "DECIMAL(18,0)", "nullable": true },
+        "penalty":         { "type": "DECIMAL(18,0)", "nullable": true },
+        "payment":         { "type": "DECIMAL(18,0)", "nullable": false },
+        "closing_balance": { "type": "DECIMAL(18,0)", "nullable": false }
+      },
+      "foreignKeys": [
+        { "columns": ["scenario_id"], "references": { "entity": "simulation_scenario", "columns": ["id"] }, "onDelete": "CASCADE" }
+      ]
+    },
+
+    "version_entry": {
+      "x-layer": "IV", "x-semantic-object": "#24 (versioning maker–checker, từ HTML)",
+      "description": "Version polymorphic của Pattern/Template/Config: head/active, compare, restore.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":          { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "entity_type": { "type": "VARCHAR(12)", "nullable": false, "enum": "version_entity_type" },
+        "entity_code": { "type": "VARCHAR(20)", "nullable": false },
+        "version":     { "type": "VARCHAR(12)", "nullable": false },
+        "status":      { "type": "VARCHAR(12)", "nullable": false, "enum": "entity_status" },
+        "is_active":   { "type": "BOOLEAN", "nullable": false, "default": false },
+        "is_head":     { "type": "BOOLEAN", "nullable": false, "default": false },
+        "author":      { "type": "VARCHAR(120)", "nullable": false },
+        "created_at":  { "type": "TIMESTAMP", "nullable": false },
+        "note":        { "type": "TEXT", "nullable": true }
+      },
+      "uniques": [["entity_type", "entity_code", "version"]]
+    },
+
+    "activity_log": {
+      "x-layer": "IV", "x-semantic-object": "#26 Activity Log",
+      "description": "Rel #29: mọi thao tác ghi vết vào nhật ký; lọc theo actor/thời gian, xuất CSV/JSON.",
+      "primaryKey": ["id"],
+      "columns": {
+        "id":          { "type": "BIGINT", "nullable": false, "autoIncrement": true },
+        "occurred_at": { "type": "TIMESTAMP", "nullable": false },
+        "actor":       { "type": "VARCHAR(120)", "nullable": false },
+        "action":      { "type": "VARCHAR(40)", "nullable": false },
+        "entity_type": { "type": "VARCHAR(60)", "nullable": false },
+        "entity_code": { "type": "VARCHAR(60)", "nullable": true },
+        "detail":      { "type": "TEXT", "nullable": true }
+      }
+    }
+  },
+
+  "x-semantic-relationship-mapping": {
+    "description": "Ánh xạ 29 relationships trong sheet '3. Relationships' sang hiện thực hóa relational",
+    "map": [
+      { "rel": 1,  "semantic": "ElementType classifies Element 1:N",            "implementation": "obligation_element.element_type_code FK" },
+      { "rel": 2,  "semantic": "Element composes Type N:1 (đúng 1/OET)",        "implementation": "obligation_type_composition, PK(type,element_type)" },
+      { "rel": 3,  "semantic": "Nature identifies Family 1:1",                  "implementation": "obligation_family.identified_by_nature_code FK UNIQUE" },
+      { "rel": 4,  "semantic": "Type belongs to Family N:1",                    "implementation": "obligation_type.family_code FK" },
+      { "rel": 5,  "semantic": "Archetype constrains Element N:M (Ma trận 1)",  "implementation": "foa_element (junction + requirement)" },
+      { "rel": 6,  "semantic": "Type instantiates Archetype N:1",               "implementation": "obligation_type.archetype_code FK (MỚI)" },
+      { "rel": 7,  "semantic": "ElementType compatible ElementType N:M (Ma trận 2)", "implementation": "constraint_matrix(kind=ELEMENTTYPE_X_ELEMENTTYPE) + matrix_cell" },
+      { "rel": 8,  "semantic": "Lifecycle governs objects 1:N",                 "implementation": "lifecycle.governs + status enum trên các entity" },
+      { "rel": 9,  "semantic": "Type × Block N:M (Ma trận 3)",                  "implementation": "constraint_matrix(kind=OBLIGATIONTYPE_X_BLOCK) + matrix_cell" },
+      { "rel": 10, "semantic": "Block governed by Element N:1",                 "implementation": "block.governed_by_element_code FK nullable + governed_by_aspect" },
+      { "rel": 11, "semantic": "Block contains Slot 1:N",                       "implementation": "answer_slot.block_id FK, PK(block_id,code)" },
+      { "rel": 12, "semantic": "Slot binds Attribute N:1",                      "implementation": "answer_slot.attribute_code FK" },
+      { "rel": 13, "semantic": "Attribute grouped in Group N:1",                "implementation": "attribute.group_code FK" },
+      { "rel": 14, "semantic": "Attribute typed as DataType N:1",               "implementation": "attribute.data_type_code FK (data_type là bảng, MỚI)" },
+      { "rel": 15, "semantic": "Group owned by Domain N:1",                     "implementation": "attribute_group.domain_code FK (MỚI)" },
+      { "rel": 16, "semantic": "Attribute valued by Fragment&Scope 1:N",        "implementation": "fragment (qua answer_slot→attribute) + selector_scope; invariant ≥1 fragment default" },
+      { "rel": 17, "semantic": "Attribute constrained by Constraint 1:N",       "implementation": "attribute_constraint (5 kind, dependency có depends_on FK)" },
+      { "rel": 18, "semantic": "BusinessIntent derives ProductIntent 1:N",      "implementation": "product_intent.business_intent_id FK" },
+      { "rel": 19, "semantic": "Intent anchored to Nature/Archetype N:1",       "implementation": "product_intent.nature_element_code + archetype_code FK" },
+      { "rel": 20, "semantic": "Intent shapes Pattern 1:N",                     "implementation": "product_pattern.product_intent_id FK" },
+      { "rel": 21, "semantic": "Pattern assembled from Type × Block N:M",       "implementation": "pattern_block (usage active/locked) + pattern_obligation_type" },
+      { "rel": 22, "semantic": "Pattern produces Template 1:N",                 "implementation": "product_template.from_pattern_code FK" },
+      { "rel": 23, "semantic": "Template targets Segment N:M",                  "implementation": "template_segment junction (MỚI)" },
+      { "rel": 24, "semantic": "Template configured into Config 1:N",           "implementation": "product_config.from_template_code FK; giá trị qua fragment" },
+      { "rel": 25, "semantic": "Config validated by Simulation N:1",            "implementation": "simulation_scenario.config_code FK" },
+      { "rel": 26, "semantic": "Config approved via Maker–Checker N:1",         "implementation": "status enum + version_entry + maker_checker_process" },
+      { "rel": 27, "semantic": "Config packaged into Variant 1:N",              "implementation": "product_variant.from_config_code FK — BỎ unique của v2 (SỬA)" },
+      { "rel": 28, "semantic": "Variant published to Catalog N:1",              "implementation": "product_catalog (entity riêng, MỚI) + catalog_listing" },
+      { "rel": 29, "semantic": "Mọi thao tác audited by Log N:1",               "implementation": "activity_log (entity_type + entity_code)" }
+    ]
+  },
+
+  "x-instance-counts": {
+    "description": "Số lượng instance theo semantic sheet (app / thư viện đầy đủ)",
+    "counts": {
+      "obligation_element_type": "6 (+1 thư viện)", "obligation_element": "17 (47)",
+      "financial_obligation_archetype": 3, "obligation_family": 3, "obligation_type": 5,
+      "lifecycle": 6, "block": "12 (26)", "answer_slot": "~30", "attribute": 64,
+      "attribute_group": 6, "data_type": 7, "domain": 5,
+      "business_intent": 7, "product_intent": 12, "product_pattern": 8,
+      "product_template": 15, "product_config": 34, "product_variant": 21,
+      "catalog_listing": 18, "constraint_matrix": "3 (9)"
+    }
+  },
+
+  "x-design-notes": [
+    "Nguồn ưu tiên khi 2 nguồn mâu thuẫn: semantic xlsx thắng về NGỮ NGHĨA/CARDINALITY (vd Config→Variant 1:N), HTML thắng về CỘT/KIỂU DỮ LIỆU/INSTANCE.",
+    "Các thay đổi so với v2: + obligation_family (Nature 1:1), + obligation_type.archetype_code, + data_type thành bảng, + attribute_group.domain_code, + attribute_constraint (5 loại, có dependency liên thuộc tính), + customer_segment & template_segment N:M, + selector_scope có priority, + product_catalog thành entity, Config→Variant bỏ unique (1:N), khóa block chuyển về pattern_block.usage, ma trận còn 3 kind.",
+    "Ràng buộc nghiệp vụ ngoài FK (application/trigger): nature_element phải thuộc OET_NATURE; pattern_block bắt buộc theo Ma trận 3 không được usage=locked; mỗi (config,slot) ≥1 fragment scope=default; simulation_scenario cần config_code hoặc variant_code; maker ≠ checker khi approve.",
+    "matrix_cell.row_code/col_code là FK mềm (đổi đích theo kind) — enforce ngoài DB."
+  ]
+}
