@@ -11,4 +11,7 @@ public interface AnswerSlotRepository extends JpaRepository<AnswerSlot, AnswerSl
 
     /** Đếm slot của một block — cho cột "ANSWER SLOT" ở màn danh sách. */
     long countByBlockId(String blockId);
+
+    /** Các slot dùng một attribute — cho cột "DÙNG TRONG ANSWER SLOT" ở màn Attribute. */
+    List<AnswerSlot> findByAttributeCode(String attributeCode);
 }

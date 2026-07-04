@@ -34,11 +34,12 @@ code → `cd product-factory/frontend && npm install && npm run build` (0 lỗi 
 **Khác với môi trường web trước:** máy local này **build được backend thật** (`mvn` / `docker compose up --build`) — không còn giới hạn "sandbox chặn Maven 403". Vẫn giữ kỷ luật verify. Không cần đóng zip mỗi lượt nữa — dùng **git commit** từng màn thay cho zip trọn vẹn.
 
 ## MÀN KẾ TIẾP
-**Attribute** (NEXT_WORK mục 2.3): frontend pixel-perfect; backend `/api/attributes` đã có, bổ sung `AttributeGroup`/`AttributeConstraint`/`AttributeEnumValue`/`Domain` nếu màn cần (đọc DDL lấy cột chính xác). nav key `attribute`.
+**Obligation Library + Archetype** (NEXT_WORK mục 2.4): backend Lớp I đã có sẵn, chỉ dựng frontend pixel-perfect (thay `DataTable` tạm) cho nav key `obligation` (obligation_type+family+element+composition) và `archetype` (financial_obligation_archetype+foa_element).
 Sau nhóm nền tảng → wire builder Pattern về DB thật (mục 2.7, xóa `patternBuilderData.ts`) → Pipeline (template→config→variant→catalog).
 
 ## NỢ — LÀM CUỐI, KHÔNG XEN GIỮA
 Business Intent detail+KPI (5.1); ListScreen interactive (5.2); Simulation Engine (`POST /api/simulation/run`, gần cuối); loading/error states; Docker hoàn thiện.
+**Mới:** màn "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values, where-used) + modal tạo/sửa Attribute — hoãn tới khi Pipeline (template/config/variant) + `fragment`/`selector_scope` có backend (tránh lặp lại fix cứng như Pattern builder).
 
 ## ĐÃ XONG
-dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend `structure`), matrix(4-tab + backend `governance`). Còn `patternBuilderData.ts` fix cứng chờ wire (mục 6.A).
+dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend `structure`), matrix(4-tab + backend `governance`), attribute(list 3-tab + backend `Domain`/`AttributeGroup`/`AttributeConstraint`). Còn `patternBuilderData.ts` fix cứng chờ wire (mục 6.A).

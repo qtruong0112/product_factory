@@ -10,6 +10,7 @@ import ProductPatternPage from './pages/ProductPatternPage'
 import ProductPatternDetailPage from './pages/ProductPatternDetailPage'
 import BlockPage from './pages/BlockPage'
 import MatrixPage from './pages/MatrixPage'
+import AttributePage from './pages/AttributePage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -21,6 +22,7 @@ const CUSTOM: Record<string, React.ReactNode> = {
   pattern: <ProductPatternPage />,
   block: <BlockPage />,
   matrix: <MatrixPage />,
+  attribute: <AttributePage />,
 }
 
 function GenericView() {

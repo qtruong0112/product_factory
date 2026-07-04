@@ -157,11 +157,34 @@ Build 0 lỗi TS + render Playwright (mock 5 endpoint = seed thật) 4 tab: verd
 
 **Zip mới nhất đã giao:** `product-factory-phase7-matrix.zip`.
 
+### Giai đoạn 8 — Attribute (list 3-tab, verified) — CHỈ LÀM MÀN LIST
+
+**Bối cảnh quyết định phạm vi:** khảo sát prototype cho thấy khu vực Attribute có 3 phần — (1) màn list 3-tab (Attribute/Attribute Group/Data Type), (2) màn chi tiết riêng "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant + Selector Scope values + where-used), (3) modal tạo/sửa Attribute (đổi field theo Data Type). Phần (2)+(3) cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend (đúng lý do đổi thứ tự "nền tảng trước, pipeline sau"). **User đã chọn "List only"** — phần (2)+(3) ghi nợ, hoãn tới khi Pipeline + fragment/selector_scope có backend (mục 6 NỢ MỚI).
+
+**Backend package `attribute` — MỚI:**
+- `Domain` (PK `code`; `name`/`description`/`entityCount`/`status`) + `DomainRepository`. Chưa có Controller riêng (chưa có màn Domain độc lập — mục 2.5).
+- `AttributeGroup` (PK `code`; `name`/`domainCode`. **KHÔNG có cột description** — khác prototype UI, DDL không có nguồn, đã bỏ cột này khỏi UI thật) + `AttributeGroupRepository`.
+- `AttributeConstraint` (PK `id` Long identity; `attributeCode`/`kind`/`minValue`/`maxValue`/`stepValue`/`expression`/`dependsOnAttributeCode`/`message`) + `AttributeConstraintRepository.findByAttributeCode`. **Chưa tạo `AttributeEnumValue`** — chỉ dùng cho màn Usage đã hoãn.
+- `AttributeRepository`: thêm `countByGroupCode`, `countByDataTypeCode`. `structure/AnswerSlotRepository`: thêm `findByAttributeCode`.
+- `AttributeController` (`/api/attributes`) chuyển từ `extends ReadOnlyController` sang tự viết (join làm giàu, theo mẫu `BlockController`): `GET /` trả `Page<Map>` gồm field phẳng cũ (`code,name,groupCode,dataTypeCode,required,unit` — giữ route generic `/attributes` số nhiều trong `tables.ts` không vỡ) + `dataTypeName` (join `data_type`), `usedInSlots` (join `answer_slot.attribute_code`), `constraintCount`+`constraintSummary` (join `attribute_constraint`, lấy `message` ?? `expression` ?? `kind` của ràng buộc đầu tiên).
+- `structure/DataTypeController` (`/api/data-types`) cũng chuyển sang tự viết: `GET /` trả `Page<Map>{code,name,attributeCount}`.
+- `AttributeGroupController` (mới, `/api/attribute-groups`): `GET /` trả `Page<Map>{code,name,domainCode,domainName,attributeCount}`.
+
+**Frontend:**
+- `pages/AttributePage.tsx` — 3 tab (Attribute/Attribute Group/Data Type) dùng chung `ListScreen`, tab bar tự dựng trích style nút tab của `MatrixPage` (không có prop tabs trong `ListScreen`). Prefetch cả 3 danh sách song song lúc mount, chuyển tab client-side.
+  - Tab Attribute: Mã/Attribute/Data Type (chip info)/Dùng trong Answer Slot (chip mỗi slot, "—" nếu rỗng)/Ràng buộc (text ràng buộc đầu + "+N" nếu nhiều, "—" nếu không có)/Bắt buộc (chip gold/muted).
+  - Tab Attribute Group: Mã/Attribute Group/Số Attribute/Domain (chip neutral). **Bỏ cột Mô tả** (không có nguồn DB).
+  - Tab Data Type: Mã/Data Type/Số Attribute. **Bỏ cột Mô tả và Ví dụ giá trị** (không có nguồn DB, bảng `data_type` chỉ có `code`+`name`).
+  - Không `onRowClick` (chưa có màn detail — tránh dead-link, giống `BlockPage` hiện tại).
+- `main.tsx`: thêm `attribute: <AttributePage />` vào `CUSTOM`. Không cần Route mới.
+
+Build 0 lỗi TS + render Playwright (mock 3 endpoint dựng từ data seed thật: 31 attribute/12 group/9 data type/15 constraint trên 10 attribute) cả 3 tab: cột đúng, join đúng số liệu (vd DT_ENUM = 12 attr, GRP_PRICING = 3 attr, base_rate hiện "Vượt trần 1,65%/tháng +1"), tab bar style khớp MatrixPage. OK.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Ma trận ràng buộc** (nền tảng, màn thứ 2 nhóm thư viện). Màn kế tiếp theo thứ tự nền tảng = **Attribute** (nav `attribute`) — backend `/api/attributes` đã có; dựng **frontend pixel-perfect** (trích markup tab attribute/group), bổ sung backend `attribute_group`/`attribute_constraint`/`attribute_enum_value`/`domain` nếu màn cần — mục 6/A0.3.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Attribute (list 3-tab)** — nền tảng, màn thứ 3 nhóm thư viện. Màn kế tiếp theo thứ tự nền tảng = **Obligation Library + Archetype** (nav `obligation`/`archetype`) — backend Lớp I đã có sẵn; chỉ cần dựng **frontend pixel-perfect** (thay `DataTable` tạm) — mục 6/A0.4.
 
 ---
 
@@ -172,8 +195,8 @@ Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Ma trận r
 ### A0. Thư viện nền tảng (LÀM ĐẦU, thứ tự):
 1. ✅ **block** — Block & Answer Slot (+ `data_type`), package `structure`. **XONG (Giai đoạn 6):** backend `Block`/`AnswerSlot`(+Id)/`DataType` + `/api/blocks` (list làm giàu slotCount/gov + `/{id}/detail` join slots) + `/api/data-types`; frontend `BlockPage` list pixel-perfect. `/{id}/detail` đã sẵn nguồn để gỡ fix cứng builder ở A0.7.
 2. ✅ **matrix** — constraint_matrix + matrix_cell, package `governance`. **XONG (Giai đoạn 7):** `ConstraintMatrix`/`MatrixCell`(+Id) + `/api/constraint-matrices` (list + `/{id}/detail` grid join nhãn + `/pattern-coverage` phái sinh); frontend `MatrixPage` 4-tab pixel-perfect. Logic coverage đã sẵn ở BE để dùng lại ở A0.7.
-3. **attribute** — frontend pixel-perfect (backend đã có) + bổ sung attribute_group/constraint/enum_value, domain nếu cần. ⬅ ĐANG TỚI
-4. **obligation** + **archetype** — frontend pixel-perfect (backend Lớp I đã có).
+3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8) — CHỈ MÀN LIST.** Màn "Attribute Usage" (detail/lineage) + modal tạo/sửa ghi nợ ở mục B dưới, hoãn tới khi Pipeline + fragment/selector_scope có backend.
+4. **obligation** + **archetype** — frontend pixel-perfect (backend Lớp I đã có). ⬅ ĐANG TỚI
 5. **domain** + **lifecycle** — frontend (domain thêm backend).
 6. **ontology** + **sysmap** — màn biểu đồ (cuối nhóm nền tảng).
 7. **Wire builder Pattern về DB** (mục A bên dưới).
@@ -195,6 +218,9 @@ Thay `patternBuilderData.ts` (tĩnh) bằng dữ liệu THẬT từ DB. **Toàn 
 - **Mở rộng `ProductPatternController#/{code}/detail`** để join thêm: mỗi block → `{blockId,position,usage,name,bizGroup,gov,slots:[{name,code,type,required,def,rule,attrName,attrCode}]}`; `assignedOTs` thêm `archetype`; thêm `coverage:[{blockId,label,verdict,inCanvas,...}]` hoặc trả raw matrix cells để FE tự tính (FE đã có logic). Rồi **xóa nội dung tĩnh trong `patternBuilderData.ts`** (chỉ giữ COVER_COLS label nếu cần, hoặc bỏ hẳn).
 - Verify lại render builder với API thật (mock JSON = query DB), so khớp.
 
+### A2. NỢ — Attribute Usage screen + Create/Edit modal (hoãn tới khi có Pipeline + fragment/selector_scope)
+Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant) + modal tạo/sửa Attribute (form đổi field theo Data Type: Money/Percent/Integer/Range/Enum/Text/Boolean/Date/Formula). Cả hai cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend. Làm sau khi Pipeline sản phẩm (mục D) + `fragment`/`selector_scope` (Lớp II) có backend, để tránh fix cứng như từng xảy ra với Pattern builder (mục 6.A cũ).
+
 ### B. NỢ — Business Intent detail + KPI (làm ở đợt polish, KHÔNG xen giữa)
 Backend `BusinessIntentKpi`(+`Id` composite, `findByBusinessIntentIdOrderBySortOrder`) + `/business-intents/{id}/detail` `{intent, kpis}`. Frontend `BusinessIntentDetailPage` + route `/businessintent/:id` + wire `onRowClick`. Seed: BI id=1 có 3 KPI, id=6 có 1 KPI.
 
@@ -207,7 +233,7 @@ Template (`product_template`+template_segment+template_frame) → Config (`produ
 ### E. Lớp IV + Simulation + hoàn thiện
 Release, activity → **Simulation** (gần cuối — annuity, `/api/simulation/run`) → loading/error states, Docker cuối.
 
-Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance).**
+Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint).**
 
 ---
 
@@ -249,7 +275,9 @@ Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành **Ma trận ràng buộc** (Giai đoạn 7): backend package `governance` (ConstraintMatrix/MatrixCell + `/api/constraint-matrices` grid join nhãn + `/pattern-coverage` phái sinh) + frontend MatrixPage 4-tab pixel-perfect, verified. Màn kế = **Attribute** (frontend pixel-perfect; backend `/api/attributes` đã có, bổ sung group/constraint/enum/domain nếu cần). Zip mới nhất: `product-factory-phase7-matrix.zip`.*
+*Cập nhật lần cuối: sau khi hoàn thành **Attribute** (Giai đoạn 8, CHỈ MÀN LIST): backend package `attribute` (Domain/AttributeGroup/AttributeConstraint mới; AttributeController/AttributeGroupController + structure/DataTypeController tự viết join làm giàu) + frontend AttributePage 3-tab (Attribute/Attribute Group/Data Type) pixel-perfect, verified. Màn "Attribute Usage" (lineage) + modal tạo/sửa hoãn (mục 6.A2 — chờ Pipeline + fragment/selector_scope). Màn kế = **Obligation Library + Archetype** (frontend pixel-perfect; backend Lớp I đã có).*
+
+*Ghi chú lịch sử — sau khi hoàn thành **Ma trận ràng buộc** (Giai đoạn 7): backend package `governance` (ConstraintMatrix/MatrixCell + `/api/constraint-matrices` grid join nhãn + `/pattern-coverage` phái sinh) + frontend MatrixPage 4-tab pixel-perfect, verified. Zip mới nhất: `product-factory-phase7-matrix.zip`.*
 
 *Ghi chú lịch sử — Block & Answer Slot (Giai đoạn 6): backend package `structure` (Block/AnswerSlot/DataType) + frontend BlockPage list pixel-perfect.
 
