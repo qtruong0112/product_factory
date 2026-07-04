@@ -10,6 +10,14 @@ import ProductPatternPage from './pages/ProductPatternPage'
 import ProductPatternDetailPage from './pages/ProductPatternDetailPage'
 import BlockPage from './pages/BlockPage'
 import MatrixPage from './pages/MatrixPage'
+import AttributePage from './pages/AttributePage'
+import ObligationPage from './pages/ObligationPage'
+import ArchetypePage from './pages/ArchetypePage'
+import ArchetypeDetailPage from './pages/ArchetypeDetailPage'
+import DomainPage from './pages/DomainPage'
+import LifecyclePage from './pages/LifecyclePage'
+import OntologyPage from './pages/OntologyPage'
+import SysmapPage from './pages/SysmapPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -21,6 +29,13 @@ const CUSTOM: Record<string, React.ReactNode> = {
   pattern: <ProductPatternPage />,
   block: <BlockPage />,
   matrix: <MatrixPage />,
+  attribute: <AttributePage />,
+  obligation: <ObligationPage />,
+  archetype: <ArchetypePage />,
+  domain: <DomainPage />,
+  lifecycle: <LifecyclePage />,
+  ontology: <OntologyPage />,
+  sysmap: <SysmapPage />,
 }
 
 function GenericView() {
@@ -50,6 +65,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/intent/:id" element={<ProductIntentDetailPage />} />
           <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
+          <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
       </Layout>

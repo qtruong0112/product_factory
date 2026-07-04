@@ -157,11 +157,107 @@ Build 0 lỗi TS + render Playwright (mock 5 endpoint = seed thật) 4 tab: verd
 
 **Zip mới nhất đã giao:** `product-factory-phase7-matrix.zip`.
 
+### Giai đoạn 8 — Attribute (list 3-tab, verified) — CHỈ LÀM MÀN LIST
+
+**Bối cảnh quyết định phạm vi:** khảo sát prototype cho thấy khu vực Attribute có 3 phần — (1) màn list 3-tab (Attribute/Attribute Group/Data Type), (2) màn chi tiết riêng "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant + Selector Scope values + where-used), (3) modal tạo/sửa Attribute (đổi field theo Data Type). Phần (2)+(3) cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend (đúng lý do đổi thứ tự "nền tảng trước, pipeline sau"). **User đã chọn "List only"** — phần (2)+(3) ghi nợ, hoãn tới khi Pipeline + fragment/selector_scope có backend (mục 6 NỢ MỚI).
+
+**Backend package `attribute` — MỚI:**
+- `Domain` (PK `code`; `name`/`description`/`entityCount`/`status`) + `DomainRepository`. Chưa có Controller riêng (chưa có màn Domain độc lập — mục 2.5).
+- `AttributeGroup` (PK `code`; `name`/`domainCode`. **KHÔNG có cột description** — khác prototype UI, DDL không có nguồn, đã bỏ cột này khỏi UI thật) + `AttributeGroupRepository`.
+- `AttributeConstraint` (PK `id` Long identity; `attributeCode`/`kind`/`minValue`/`maxValue`/`stepValue`/`expression`/`dependsOnAttributeCode`/`message`) + `AttributeConstraintRepository.findByAttributeCode`. **Chưa tạo `AttributeEnumValue`** — chỉ dùng cho màn Usage đã hoãn.
+- `AttributeRepository`: thêm `countByGroupCode`, `countByDataTypeCode`. `structure/AnswerSlotRepository`: thêm `findByAttributeCode`.
+- `AttributeController` (`/api/attributes`) chuyển từ `extends ReadOnlyController` sang tự viết (join làm giàu, theo mẫu `BlockController`): `GET /` trả `Page<Map>` gồm field phẳng cũ (`code,name,groupCode,dataTypeCode,required,unit` — giữ route generic `/attributes` số nhiều trong `tables.ts` không vỡ) + `dataTypeName` (join `data_type`), `usedInSlots` (join `answer_slot.attribute_code`), `constraintCount`+`constraintSummary` (join `attribute_constraint`, lấy `message` ?? `expression` ?? `kind` của ràng buộc đầu tiên).
+- `structure/DataTypeController` (`/api/data-types`) cũng chuyển sang tự viết: `GET /` trả `Page<Map>{code,name,attributeCount}`.
+- `AttributeGroupController` (mới, `/api/attribute-groups`): `GET /` trả `Page<Map>{code,name,domainCode,domainName,attributeCount}`.
+
+**Frontend:**
+- `pages/AttributePage.tsx` — 3 tab (Attribute/Attribute Group/Data Type) dùng chung `ListScreen`, tab bar tự dựng trích style nút tab của `MatrixPage` (không có prop tabs trong `ListScreen`). Prefetch cả 3 danh sách song song lúc mount, chuyển tab client-side.
+  - Tab Attribute: Mã/Attribute/Data Type (chip info)/Dùng trong Answer Slot (chip mỗi slot, "—" nếu rỗng)/Ràng buộc (text ràng buộc đầu + "+N" nếu nhiều, "—" nếu không có)/Bắt buộc (chip gold/muted).
+  - Tab Attribute Group: Mã/Attribute Group/Số Attribute/Domain (chip neutral). **Bỏ cột Mô tả** (không có nguồn DB).
+  - Tab Data Type: Mã/Data Type/Số Attribute. **Bỏ cột Mô tả và Ví dụ giá trị** (không có nguồn DB, bảng `data_type` chỉ có `code`+`name`).
+  - Không `onRowClick` (chưa có màn detail — tránh dead-link, giống `BlockPage` hiện tại).
+- `main.tsx`: thêm `attribute: <AttributePage />` vào `CUSTOM`. Không cần Route mới.
+
+Build 0 lỗi TS + render Playwright (mock 3 endpoint dựng từ data seed thật: 31 attribute/12 group/9 data type/15 constraint trên 10 attribute) cả 3 tab: cột đúng, join đúng số liệu (vd DT_ENUM = 12 attr, GRP_PRICING = 3 attr, base_rate hiện "Vượt trần 1,65%/tháng +1"), tab bar style khớp MatrixPage. OK.
+
+### Giai đoạn 9 — Obligation Library (list 3-tab, verified) — phần 1 của mục 2.4
+
+**Bối cảnh:** backend Lớp I (9 bảng ontology) đã có từ Giai đoạn 1 nhưng chỉ entity/repo/controller trần (extends `ReadOnlyController`), frontend dùng `DataTable` generic tạm. Khảo sát prototype xác nhận `obligation` là 1 màn **list thường** (nằm trong mảng `isList`, giống Attribute/Block), có 3 tab: **Obligation Type / Obligation Element / Element Type** (không có tab riêng cho `obligation_family` — chỉ là 1 cột trong tab Type; `obligation_type_composition` không hiển thị tường minh, chỉ dùng để đếm cột "Element"). `archetype` KHÔNG nằm trong `isList` — để ở Giai đoạn 10 riêng (card grid + detail).
+
+**Backend package `ontology` — chuyển 3 controller từ `extends ReadOnlyController` sang tự viết (join làm giàu, theo mẫu `BlockController`):**
+- `ObligationTypeController` (`/api/obligation-types`): `GET /` trả `Page<Map>{code,name,familyCode,archetypeCode,status,familyName,archetypeName,elementCount}` (`familyName`/`archetypeName` join; `elementCount` = đếm `obligation_type_composition` — thực tế luôn = 6 vì mỗi Obligation Type có đủ 6 Element Type, khác số liệu minh họa lệch nhau (6/7) của prototype — dùng số thật).
+- `ObligationElementController` (`/api/obligation-elements`): `GET /` trả `Page<Map>{code,name,elementTypeCode,elementTypeName,isIdentify}` (`isIdentify` join từ `obligation_element_type.is_identify` qua `element_type_code`, vì cờ này KHÔNG nằm ở `obligation_element`). **Bỏ cột Trạng thái** — bảng `obligation_element` không có cột `status` (khác prototype UI, không bịa).
+- `ObligationElementTypeController` (`/api/obligation-element-types`): `GET /` trả `Page<Map>{code,name,shortName,description,isIdentify,elementCount}` (`elementCount` = đếm `obligation_element` theo `element_type_code`).
+- Repo mới: `ObligationTypeCompositionRepository.countByObligationTypeCode`, `ObligationElementRepository.countByElementTypeCode`.
+
+**Frontend:**
+- `pages/ObligationPage.tsx` — 3 tab dùng chung `ListScreen`, tab bar tự vẽ theo style `MatrixPage`/`AttributePage` (không tab prop trong `ListScreen`). Prefetch cả 3 danh sách song song, chuyển tab client-side.
+  - Tab Obligation Type: Mã/Obligation Type/Archetype (chip — tông gold nếu tên chứa "Revolving", còn lại info)/Family (text)/Element (đếm thật)/Trạng thái (StatusChip).
+  - Tab Obligation Element: Mã/Obligation Element/Element Type (chip neutral)/Is_identify (chip true/false). **Bỏ cột Trạng thái** (không có nguồn DB).
+  - Tab Element Type: Mã/Element Type/Mô tả (cột thật)/Số Element (đếm thật).
+  - Không `onRowClick` (prototype cũng chỉ mở modal generic no-op, không có detail riêng cho `obligation`).
+- `main.tsx`: thêm `obligation: <ObligationPage />` vào `CUSTOM`.
+
+Build 0 lỗi TS + render Playwright (mock 3 endpoint dựng từ seed thật: 9 obligation_type/18 element/7 element_type) cả 3 tab: family/archetype/element count đúng, is_identify đúng (chỉ 3 element thuộc OET_NATURE = true), số element theo element type đúng (3/3/3/4/2/3/0). OK.
+
+### Giai đoạn 10 — Financial Obligation Archetype (card grid + detail, verified) — phần 2 của mục 2.4
+
+**Bối cảnh:** khảo sát prototype xác nhận `archetype` KHÔNG nằm trong mảng `isList` — là **card grid** (3 card cứng trong prototype: Term Loan/Revolving/Conditional Obligation) + **trang detail thật** khi click card (`view:'archetypeDetail'`, không phải modal no-op như `obligation`/`attribute`/`block`). Bảng `financial_obligation_archetype` **không có cột `status`** (khác prototype UI vốn gắn published/approved cho mỗi card) — không bịa, bỏ khỏi UI thật.
+
+**Backend package `ontology`:**
+- `FinancialObligationArchetypeController` (`/api/archetypes`) chuyển từ `extends ReadOnlyController` sang tự viết (join làm giàu, giữ `Page<Map>` để không phá route generic `/archetypes` cũ trong `tables.ts`):
+  - `GET /` → mỗi row `{code,name,nature,valueStructure,typeCount,elementCount,productCount}`. `typeCount`/`elementCount` đếm `obligation_type`/`foa_element` theo `archetype_code`. `productCount` = số **pattern khác nhau** đang dùng ít nhất 1 Obligation Type của archetype (join 2 chặng qua `pattern_obligation_type`, dùng `Set` để loại trùng).
+  - `GET /{code}/detail` → `{archetype, typeCount, elementCount, productCount, elementRows:[{code,name,elementTypeName,requirement}], typeRows:[{code,name,status,productCount}]}` (elementRows join `foa_element`+`obligation_element`+`obligation_element_type`; typeRows join `obligation_type` theo archetype, mỗi type kèm productCount riêng qua `pattern_obligation_type`).
+- Repo mới: `ObligationTypeRepository.findByArchetypeCode`/`countByArchetypeCode`, `FoaElementRepository.findByArchetypeCode`, `PatternObligationTypeRepository.findByObligationTypeCode` (tái dùng module `pipeline` đã có từ Giai đoạn 5 Pattern).
+
+**Frontend:**
+- `pages/ArchetypePage.tsx` — card grid (`grid-template-columns: repeat(auto-fill,minmax(300px,1fr))`), mỗi card: header gradient màu riêng theo code (thuần chrome, không có nguồn DB — giữ đúng tinh thần 3 màu gốc của prototype), tên/mã, Obligation Nature/Value Structure (text thật), 3 stat (Obligation Type/Element/Product — số thật). Click card → `navigate('/archetype/:code')`.
+- `pages/ArchetypeDetailPage.tsx` (route `/archetype/:code`, đăng ký TRƯỚC `/:view`) — header gradient (back button + tên + mã), 3 stat card, 2 card Nature/Value (kèm mô tả dài `nature_desc`/`value_desc`), bảng Obligation Element (chip Bắt buộc/Possible/Không áp dụng theo `requirement` 3 trạng thái thật req/pos/na — KHÔNG rút gọn còn 2 trạng thái như prototype), bảng Obligation Type thuộc archetype (kèm `productCount` + `StatusChip`).
+- `main.tsx`: thêm `archetype: <ArchetypePage />` vào `CUSTOM` + `<Route path="/archetype/:code" element={<ArchetypeDetailPage />} />` trước `/:view`.
+
+Build 0 lỗi TS + render Playwright (mock endpoint dựng từ seed thật) cả card grid (3 card, element/type count đúng: 6/6/6 element, 5/2/2 type = 9 tổng khớp seed) và trang detail (element rows đúng requirement, type rows đúng status). OK.
+
+### Giai đoạn 11 — Domain + Lifecycle & State (list đơn giản, verified) — mục 2.5
+
+**Bối cảnh:** khảo sát prototype xác nhận cả `domain` và `lifecycle` đều là **list thường 1 bảng, không tab, không detail riêng** (`onClick` row chỉ mở lại modal generic `openCreate`, giống `obligation`/`attribute`/`block`) — đơn giản hơn hẳn `archetype`.
+
+**Backend:**
+- `attribute/DomainController` (mới, `/api/domains`) — **read-only thuần**, `extends ReadOnlyController<Domain,String>`. Không cần join: cột `entity_count` là cột thật lưu sẵn trong bảng `domain` (không phải số suy ra), entity `Domain` đã tạo sẵn từ Giai đoạn 8.
+- `ontology/LifecycleController` (`/api/lifecycles`) chuyển từ `extends ReadOnlyController` sang tự viết join làm giàu: `GET /` trả `Page<Map>{code,name,governs,status,stateCount}` (`stateCount` = đếm `lifecycle_state` theo `lifecycle_code`, cột "SỐ STATE" prototype hiển thị số thật 7/6/5/5/6/4). Thêm `LifecycleStateRepository.countByLifecycleCode`.
+
+**Frontend:**
+- `pages/DomainPage.tsx` — list đơn giản (không tab, không filter — đúng prototype `filters:[]`): Mã/Domain/Mô tả/Thực thể/Trạng thái (StatusChip). Không `onRowClick`.
+- `pages/LifecyclePage.tsx` — list đơn giản, 1 filter `['Đối tượng']` (đúng prototype): Mã/Lifecycle/Áp dụng cho (`governs`)/Số State (đếm thật)/Trạng thái. Không `onRowClick`.
+- `main.tsx`: thêm `domain: <DomainPage />` và `lifecycle: <LifecyclePage />` vào `CUSTOM`.
+
+Build 0 lỗi TS + render Playwright (mock 2 endpoint dựng từ seed thật: 5 domain, 6 lifecycle) khớp prototype: cột đúng, số state đúng 7/6/5/5/6/4, entity count đúng 142/98/37/54/29. OK.
+
+### Giai đoạn 12 — Ontology + Sysmap (biểu đồ, verified) — mục 2.6, HOÀN TẤT NHÓM NỀN TẢNG
+
+**Bối cảnh:** khảo sát prototype xác nhận `ontology` và `sysmap` **KHÔNG nằm trong `isList`** (có cờ riêng `isOntology`/`isSysMap`), nhưng cũng **KHÔNG phải SVG/canvas node-edge thật** — cả hai là layout card/flex/grid tĩnh mô phỏng sơ đồ bằng box + icon mũi tên (giống các khối info-card đã dùng ở Archetype detail), không có `<svg>`/`<line>`/`<circle>`/`<path>`/`position:absolute`.
+
+**Không cần backend mới** — toàn bộ dữ liệu tổng hợp phía client từ các API đã có sẵn từ các giai đoạn trước:
+
+- `pages/OntologyPage.tsx`: fetch song song `/api/obligation-types`, `/api/obligation-families`, `/api/obligation-type-compositions` (raw), `/api/obligation-elements`, `/api/obligation-element-types`.
+  - **Khối 1 (chuỗi ER):** 4 card khái niệm (Element Type→Element→Type→Family) với số đếm thật + nhãn quan hệ/cardinality tĩnh (mô tả cấu trúc FK thật đã xác minh trong DDL — không phải data hàng, tương tự cách Dashboard KPI được phép tổng hợp).
+  - **Khối 2:** cột trái chọn Obligation Type (nhóm theo Family, dữ liệu thật), cột phải hiển thị 6 dòng decomposition thật (join `obligation_type_composition` với tên Element Type/Element phía client, dòng `OET_NATURE` được highlight viền xanh).
+  - **Khối 3:** accordion "từ vựng" theo Element Type → Element (thật), đánh dấu ✓ Element nào thực sự được dùng trong ít nhất 1 `obligation_type_composition` (tính từ dữ liệu thật, không bịa).
+- `pages/SysmapPage.tsx`: không gọi API (toàn bộ nội dung là cấu trúc/điều hướng tĩnh, tương tự cách Dashboard hiển thị số tổng hợp).
+  - **Khối 1:** 7 nút pipeline (Business Intent→...→Catalog), click điều hướng đúng route thật (`navigate('/${key}')` — các màn Pipeline chưa dựng sẽ tự rơi vào placeholder có sẵn của `GenericView`, không lỗi).
+  - **Khối 2:** 7 thư viện nền tảng (đã dựng xong tất cả), mỗi cái ghi rõ "nuôi vào" tầng pipeline nào (quan hệ cấu trúc thật, click điều hướng đúng màn).
+  - **Khối 3:** bảng 15 quan hệ thực thể (nguồn/quan hệ/đích/cardinality) — mô tả FK thật đã xác minh qua DDL của các bảng đã có backend, không phải data hàng tự bịa.
+- `nav.ts`: bổ sung `VIEW_TITLES.ontology`/`VIEW_TITLES.sysmap` (thiếu từ trước, đúng breadcrumb prototype: `ontology`→"Thư viện", `sysmap`→"Tổng quan").
+- `main.tsx`: thêm `ontology: <OntologyPage />`, `sysmap: <SysmapPage />` vào `CUSTOM`.
+
+Build 0 lỗi TS + render Playwright (mock 5 endpoint dựng từ seed thật) — chuỗi ER hiện đúng số 7/18/9/3, chọn Obligation Type đổi decomposition đúng, accordion vocab mở/đóng đúng và tick ✓ Element đang dùng chính xác; Sysmap hiện đủ 7 pipeline + 7 foundation + 15 dòng quan hệ. OK.
+
+**Nhóm "thư viện nền tảng" (A0, mục 2.1-2.6) chính thức HOÀN TẤT** sau giai đoạn này.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Ma trận ràng buộc** (nền tảng, màn thứ 2 nhóm thư viện). Màn kế tiếp theo thứ tự nền tảng = **Attribute** (nav `attribute`) — backend `/api/attributes` đã có; dựng **frontend pixel-perfect** (trích markup tab attribute/group), bổ sung backend `attribute_group`/`attribute_constraint`/`attribute_enum_value`/`domain` nếu màn cần — mục 6/A0.3.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Ontology + Sysmap** — hoàn tất toàn bộ nhóm thư viện nền tảng. Việc kế tiếp theo NEXT_WORK mục 2.7 = **wire builder Pattern về DB thật** (xóa `patternBuilderData.ts`).
 
 ---
 
@@ -172,11 +268,12 @@ Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Ma trận r
 ### A0. Thư viện nền tảng (LÀM ĐẦU, thứ tự):
 1. ✅ **block** — Block & Answer Slot (+ `data_type`), package `structure`. **XONG (Giai đoạn 6):** backend `Block`/`AnswerSlot`(+Id)/`DataType` + `/api/blocks` (list làm giàu slotCount/gov + `/{id}/detail` join slots) + `/api/data-types`; frontend `BlockPage` list pixel-perfect. `/{id}/detail` đã sẵn nguồn để gỡ fix cứng builder ở A0.7.
 2. ✅ **matrix** — constraint_matrix + matrix_cell, package `governance`. **XONG (Giai đoạn 7):** `ConstraintMatrix`/`MatrixCell`(+Id) + `/api/constraint-matrices` (list + `/{id}/detail` grid join nhãn + `/pattern-coverage` phái sinh); frontend `MatrixPage` 4-tab pixel-perfect. Logic coverage đã sẵn ở BE để dùng lại ở A0.7.
-3. **attribute** — frontend pixel-perfect (backend đã có) + bổ sung attribute_group/constraint/enum_value, domain nếu cần. ⬅ ĐANG TỚI
-4. **obligation** + **archetype** — frontend pixel-perfect (backend Lớp I đã có).
-5. **domain** + **lifecycle** — frontend (domain thêm backend).
-6. **ontology** + **sysmap** — màn biểu đồ (cuối nhóm nền tảng).
-7. **Wire builder Pattern về DB** (mục A bên dưới).
+3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8) — CHỈ MÀN LIST.** Màn "Attribute Usage" (detail/lineage) + modal tạo/sửa ghi nợ ở mục B dưới, hoãn tới khi Pipeline + fragment/selector_scope có backend.
+4. ✅ **obligation** — list 3-tab (Obligation Type/Obligation Element/Element Type), backend `ontology` 3 controller chuyển sang join làm giàu. **XONG (Giai đoạn 9).**
+   ✅ **archetype** — card grid + trang detail riêng (route `/archetype/:code`), backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount). **XONG (Giai đoạn 10).**
+5. ✅ **domain** + **lifecycle** — list đơn giản, backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount). **XONG (Giai đoạn 11).**
+6. ✅ **ontology** + **sysmap** — màn biểu đồ, không backend mới (tổng hợp client-side). **XONG (Giai đoạn 12) — HOÀN TẤT NHÓM NỀN TẢNG.**
+7. **Wire builder Pattern về DB** (mục A bên dưới). ⬅ ĐANG TỚI
 
 Sau nền tảng → **Pipeline**: template → config → variant → catalog (đều DB-driven). Rồi Lớp IV (release, activity) → simulation → polish.
 
@@ -195,6 +292,9 @@ Thay `patternBuilderData.ts` (tĩnh) bằng dữ liệu THẬT từ DB. **Toàn 
 - **Mở rộng `ProductPatternController#/{code}/detail`** để join thêm: mỗi block → `{blockId,position,usage,name,bizGroup,gov,slots:[{name,code,type,required,def,rule,attrName,attrCode}]}`; `assignedOTs` thêm `archetype`; thêm `coverage:[{blockId,label,verdict,inCanvas,...}]` hoặc trả raw matrix cells để FE tự tính (FE đã có logic). Rồi **xóa nội dung tĩnh trong `patternBuilderData.ts`** (chỉ giữ COVER_COLS label nếu cần, hoặc bỏ hẳn).
 - Verify lại render builder với API thật (mock JSON = query DB), so khớp.
 
+### A2. NỢ — Attribute Usage screen + Create/Edit modal (hoãn tới khi có Pipeline + fragment/selector_scope)
+Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant) + modal tạo/sửa Attribute (form đổi field theo Data Type: Money/Percent/Integer/Range/Enum/Text/Boolean/Date/Formula). Cả hai cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend. Làm sau khi Pipeline sản phẩm (mục D) + `fragment`/`selector_scope` (Lớp II) có backend, để tránh fix cứng như từng xảy ra với Pattern builder (mục 6.A cũ).
+
 ### B. NỢ — Business Intent detail + KPI (làm ở đợt polish, KHÔNG xen giữa)
 Backend `BusinessIntentKpi`(+`Id` composite, `findByBusinessIntentIdOrderBySortOrder`) + `/business-intents/{id}/detail` `{intent, kpis}`. Frontend `BusinessIntentDetailPage` + route `/businessintent/:id` + wire `onRowClick`. Seed: BI id=1 có 3 KPI, id=6 có 1 KPI.
 
@@ -207,7 +307,7 @@ Template (`product_template`+template_segment+template_frame) → Config (`produ
 ### E. Lớp IV + Simulation + hoàn thiện
 Release, activity → **Simulation** (gần cuối — annuity, `/api/simulation/run`) → loading/error states, Docker cuối.
 
-Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance).**
+Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail), domain(list), lifecycle(list, join stateCount), ontology(ER-chain+decomposition+vocab), sysmap(pipeline+foundations+relations). Nhóm thư viện nền tảng ĐÃ HOÀN TẤT.**
 
 ---
 
@@ -249,7 +349,17 @@ Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành **Ma trận ràng buộc** (Giai đoạn 7): backend package `governance` (ConstraintMatrix/MatrixCell + `/api/constraint-matrices` grid join nhãn + `/pattern-coverage` phái sinh) + frontend MatrixPage 4-tab pixel-perfect, verified. Màn kế = **Attribute** (frontend pixel-perfect; backend `/api/attributes` đã có, bổ sung group/constraint/enum/domain nếu cần). Zip mới nhất: `product-factory-phase7-matrix.zip`.*
+*Cập nhật lần cuối: sau khi hoàn thành **Ontology + Sysmap** (Giai đoạn 12, mục 2.6 — HOÀN TẤT NHÓM NỀN TẢNG): 2 màn dạng biểu đồ (card/flex/grid, không SVG/canvas), không cần backend mới — tổng hợp client-side từ API đã có (obligation-types/families/compositions/elements/element-types cho Ontology; cấu trúc tĩnh + điều hướng cho Sysmap), verified. Việc kế tiếp theo NEXT_WORK mục 2.7 = **wire builder Pattern về DB thật** (xóa `patternBuilderData.ts`).*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Domain + Lifecycle & State** (Giai đoạn 11, mục 2.5): backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount qua lifecycle_state) + frontend `DomainPage`/`LifecyclePage` (list đơn giản, không tab/detail — đúng prototype), verified.*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4): backend `FinancialObligationArchetypeController` (join làm giàu typeCount/elementCount/productCount qua obligation_type/foa_element/pattern_obligation_type) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified.*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Obligation Library** (Giai đoạn 9, phần 1 mục 2.4): backend package `ontology` (ObligationTypeController/ObligationElementController/ObligationElementTypeController chuyển sang tự viết join làm giàu: familyName/archetypeName/elementCount/elementTypeName/isIdentify) + frontend ObligationPage 3-tab pixel-perfect, verified.*
+
+*Ghi chú lịch sử — sau khi hoàn thành **Attribute** (Giai đoạn 8, CHỈ MÀN LIST): backend package `attribute` (Domain/AttributeGroup/AttributeConstraint mới; AttributeController/AttributeGroupController + structure/DataTypeController tự viết join làm giàu) + frontend AttributePage 3-tab (Attribute/Attribute Group/Data Type) pixel-perfect, verified. Màn "Attribute Usage" (lineage) + modal tạo/sửa hoãn (mục 6.A2 — chờ Pipeline + fragment/selector_scope).*
+
+*Ghi chú lịch sử — sau khi hoàn thành **Ma trận ràng buộc** (Giai đoạn 7): backend package `governance` (ConstraintMatrix/MatrixCell + `/api/constraint-matrices` grid join nhãn + `/pattern-coverage` phái sinh) + frontend MatrixPage 4-tab pixel-perfect, verified. Zip mới nhất: `product-factory-phase7-matrix.zip`.*
 
 *Ghi chú lịch sử — Block & Answer Slot (Giai đoạn 6): backend package `structure` (Block/AnswerSlot/DataType) + frontend BlockPage list pixel-perfect.
 
