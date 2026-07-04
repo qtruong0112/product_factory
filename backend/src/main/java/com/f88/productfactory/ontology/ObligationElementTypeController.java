@@ -1,18 +1,66 @@
 package com.f88.productfactory.ontology;
 
-import com.f88.productfactory.common.ReadOnlyController;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Obligation Element Type (Layer I — ontology).
+ *
+ * KHÁC read-only thuần: tab "Element Type" của màn Obligation Library cần thêm
+ * SỐ ELEMENT (đếm obligation_element theo element_type_code) — dữ liệu đếm,
+ * nên list tự dựng Page<Map>.
+ */
 @RestController
 @RequestMapping("/api/obligation-element-types")
-public class ObligationElementTypeController extends ReadOnlyController<ObligationElementType, String> {
+public class ObligationElementTypeController {
 
     private final ObligationElementTypeRepository repo;
+    private final ObligationElementRepository elementRepo;
 
-    public ObligationElementTypeController(ObligationElementTypeRepository repo) { this.repo = repo; }
+    public ObligationElementTypeController(ObligationElementTypeRepository repo,
+                                           ObligationElementRepository elementRepo) {
+        this.repo = repo;
+        this.elementRepo = elementRepo;
+    }
 
-    @Override
-    protected JpaRepository<ObligationElementType, String> repository() { return repo; }
+    /**
+     * Danh sách Element Type (làm giàu):
+     * { code, name, shortName, description, isIdentify, elementCount }.
+     */
+    @GetMapping
+    public Page<Map<String, Object>> list(@PageableDefault(size = 50) Pageable pageable) {
+        Page<ObligationElementType> page = repo.findAll(pageable);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (ObligationElementType t : page.getContent()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("code", t.getCode());
+            row.put("name", t.getName());
+            row.put("shortName", t.getShortName());
+            row.put("description", t.getDescription());
+            row.put("isIdentify", t.isIsIdentify());
+            row.put("elementCount", elementRepo.countByElementTypeCode(t.getCode()));
+            rows.add(row);
+        }
+        return new PageImpl<>(rows, pageable, page.getTotalElements());
+    }
+
+    /** Chi tiết entity theo PK (code). */
+    @GetMapping("/{code}")
+    public ResponseEntity<ObligationElementType> byId(@PathVariable String code) {
+        return repo.findById(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
