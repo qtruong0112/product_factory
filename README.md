@@ -1,76 +1,74 @@
-# Product Factory 5.1 — Web (Giai đoạn 0)
+# Product Factory 5.1
 
-Read-only data explorer (90% chỉ đọc) + Simulation Engine (10% tính toán).
+Hệ thống cấu hình sản phẩm cho vay (F88-style), rebuild từ prototype HTML tĩnh thành ứng dụng thật: **Java 21 + Spring Boot 3.3.4 + Maven** (backend) · **React 18 + Vite + TypeScript** (frontend) · **PostgreSQL 16** (schema + seed 43 bảng, nạp bằng Flyway).
 
-- **Backend**: Java 21 · Spring Boot 3.3 · Maven
-- **Frontend**: React 18 · Vite · TypeScript
-- **Database**: PostgreSQL 16 (schema + seed 43 bảng nạp bằng Flyway)
+> Chi tiết quy ước code, quy tắc vàng, trạng thái từng màn: xem `CLAUDE.md`, `PROJECT_STATUS.md`, `NEXT_WORK.md`. File này chỉ tóm tắt cách chạy dự án.
 
-## Giai đoạn 0 gồm gì
+## Kiến trúc
 
-Khung dự án chạy được đầu-cuối, kèm **1 lát cắt mẫu** (`attribute`) xuyên suốt DB → API → UI để kiểm chứng kiến trúc trước khi nhân ra 43 bảng.
-
-- Database tự nạp schema (`V1__schema.sql`) và seed (`V2__seed.sql`) khi khởi động — đã test: 43/43 bảng có dữ liệu, bảng `attribute` có 31 dòng.
-- Backend: `GET /api/attributes` (phân trang) và `GET /api/attributes/{code}`.
-- Frontend: màn "Attributes" đọc API và hiển thị bảng.
+- **Read-only 90%**: hầu hết bảng chỉ có `GET` (list phân trang + chi tiết theo khóa). Bảng thuần không cần join dùng chung `common/ReadOnlyController<T,ID>`; bảng cần join làm giàu (đếm, tên liên kết…) có controller viết tay trả `Page<Map<String,Object>>`.
+- **Enum Postgres** ánh xạ bằng `@Column String` (không `@Enumerated`).
+- **Frontend pixel-perfect** theo prototype `docs/Product_Factory_5_1.html` — dùng chung `ListScreen`, `StatusChip`, `Icon`, bảng màu/font cố định (Be Vietnam Pro, xanh `#0E8C5A`).
+- **Simulation Engine** (chưa dựng — nợ cuối): `POST /api/simulation/run`, không ghi DB.
 
 ## Chạy bằng Docker (1 lệnh)
 
 ```bash
+cd product-factory
 docker compose up --build
 ```
 
-Sau khi build xong:
-
 - Frontend: http://localhost:5173
-- Backend API: http://localhost:8080/api/attributes
-- PostgreSQL: localhost:5432 (product_factory / pf_user / pf_pass)
+- Backend API: http://localhost:8080/api/...
+- PostgreSQL: localhost:5432 (`product_factory` / `pf_user` / `pf_pass`)
 
 Dừng: `docker compose down` · Xóa cả dữ liệu: `docker compose down -v`
 
 ## Chạy tay (không Docker)
 
 ```bash
-# 1) Postgres: tạo DB product_factory (user pf_user / pf_pass) — Flyway sẽ tự nạp schema+seed
+# 1) Postgres: tạo DB product_factory (user pf_user / pf_pass) — Flyway tự nạp schema+seed khi backend khởi động
 # 2) Backend
-cd backend && mvn spring-boot:run
+cd product-factory/backend && mvn spring-boot:run
 # 3) Frontend (cửa sổ khác)
-cd frontend && npm install && npm run dev
+cd product-factory/frontend && npm install && npm run dev
 ```
 
-## Kiến trúc (đã chốt)
+## Trạng thái hiện tại
 
-- **Read-only**: mỗi bảng chỉ có 2 endpoint GET, dùng chung `ReadOnlyController` để đồng nhất.
-- **Simulation** (giai đoạn sau): `GET /api/simulation/configs` lấy tham số mặc định từ một Config; `POST /api/simulation/run` nhận tham số đã chỉnh, chạy engine annuity, trả lịch trả nợ + LTV. `POST` không ghi DB.
+**Nhóm "thư viện nền tảng" đã hoàn tất** — 13 màn đã dựng pixel-perfect, đọc dữ liệu thật qua API:
 
-## Lộ trình tiếp theo
+dashboard · business intent (list) · product intent (list + detail) · product pattern (builder) · block · matrix (ma trận ràng buộc) · attribute (3 tab) · obligation (3 tab) · financial obligation archetype (card grid + detail) · domain · lifecycle & state · ontology (sơ đồ) · sysmap (sơ đồ quan hệ tổng thể).
 
-- **Giai đoạn 1**: sinh entity/repo/controller cho toàn bộ 43 bảng (dùng lại `ReadOnlyController`).
-- **Giai đoạn 2**: Simulation Engine (port công thức annuity từ prototype).
-- **Giai đoạn 3**: dựng đủ 18 màn hình React theo prototype HTML.
-- **Giai đoạn 4**: xử lý lỗi/loading, hoàn thiện đóng gói.
+**Tiếp theo** (`NEXT_WORK.md` mục 2.7): wire builder Product Pattern về DB thật (bỏ `patternBuilderData.ts` fix cứng), sau đó dựng lớp Pipeline (template → config → variant → catalog).
+
+**Nợ, làm cuối**: Business Intent detail+KPI, ListScreen tương tác (search/filter), màn Attribute Usage (lineage) + modal tạo/sửa Attribute, Simulation Engine, loading/error state, đóng gói Docker hoàn thiện.
 
 ## Cấu trúc thư mục
 
 ```
 product-factory/
 ├─ docker-compose.yml
+├─ docs/                                  Prototype HTML + tài liệu tham chiếu
 ├─ backend/
 │  ├─ Dockerfile · pom.xml
 │  └─ src/main/
 │     ├─ java/com/f88/productfactory/
-│     │  ├─ ProductFactoryApplication.java
-│     │  ├─ config/WebConfig.java              (CORS)
-│     │  ├─ common/ReadOnlyController.java      (base GET cho mọi bảng)
-│     │  ├─ common/GlobalExceptionHandler.java
-│     │  └─ attribute/                          (lát cắt mẫu: Entity·Repo·Controller)
+│     │  ├─ common/       ReadOnlyController, GlobalExceptionHandler
+│     │  ├─ config/       WebConfig (CORS)
+│     │  ├─ ontology/     Obligation Type/Element/Family, Archetype, Lifecycle
+│     │  ├─ attribute/    Attribute, AttributeGroup, Domain, AttributeConstraint
+│     │  ├─ structure/    Block, AnswerSlot, DataType
+│     │  ├─ governance/   ConstraintMatrix, MatrixCell
+│     │  └─ pipeline/     Business/Product Intent, Product Pattern, ...
 │     └─ resources/
 │        ├─ application.yml
-│        └─ db/migration/V1__schema.sql · V2__seed.sql   (Flyway)
+│        └─ db/migration/  V1__schema.sql (43 bảng) · V2__seed.sql (Flyway)
 └─ frontend/
    ├─ Dockerfile · nginx.conf · package.json · vite.config.ts
    └─ src/
-      ├─ main.tsx (router + sidebar)
-      ├─ api/client.ts · api/types.ts
-      └─ pages/AttributesPage.tsx
+      ├─ main.tsx           router + sidebar (nav key → resource path)
+      ├─ api/client.ts       getList/getById/getDetail
+      ├─ components/         Layout, ListScreen, StatusChip, Icon, DataTable
+      └─ pages/              1 file / màn (Dashboard, Attribute, Obligation, Archetype, ...)
 ```
