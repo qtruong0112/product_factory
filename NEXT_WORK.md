@@ -1,0 +1,165 @@
+# NEXT_WORK.md — Kế hoạch bước tiếp theo (Product Factory 5.1)
+
+> **Bổ trợ `PROJECT_STATUS.md`.** Ghi QUYẾT ĐỊNH về thứ tự ưu tiên + đặc tả màn kế. Đọc cùng `PROJECT_STATUS.md` (nguồn sự thật về convention, kiến trúc, ghi chú kỹ thuật).
+> **Quy tắc:** Code là chuẩn. MD lệch code → tin code. Giải nén zip mới nhất, quét code trước khi làm.
+
+---
+
+## 0. QUYẾT ĐỊNH ĐÃ CHỐT (ưu tiên) — ĐÃ ĐỔI THỨ TỰ
+
+**Quyết định mới (user chốt):** làm **THƯ VIỆN NỀN TẢNG trước, PIPELINE SẢN PHẨM sau.**
+
+Lý do: các màn Pipeline (pattern/template/config/variant/catalog) *đọc dữ liệu từ* thư viện nền tảng (`block`, `answer_slot`, `attribute`, `data_type`, `constraint_matrix`, obligation, archetype…). Dựng nền tảng trước → khi tới Pipeline, mọi thứ **join API thật, KHÔNG fix cứng dòng nào**. Builder Pattern hiện tại giữ nguyên (hình đã đúng); khi backend nền tảng xong thì wire nó chỉ còn **đổi nguồn data** — không phí công đã làm.
+
+1. **VIỆC KẾ TIẾP = Thư viện nền tảng.** Bắt đầu **Block & Answer Slot (+ data_type)** — vừa là màn thư viện, vừa cấp nguồn để gỡ fix cứng builder Pattern. Thứ tự + đặc tả ở **mục 2**.
+2. **Khi backend nền tảng đủ → WIRE builder Pattern về API thật** (chỉ đổi nguồn data, mục 2.7) → rồi **Pipeline** (template → config → variant → catalog), đều DB-driven (mục 3).
+3. **NỢ (Business Intent detail+KPI, ListScreen interactive) → vẫn để đợt polish cuối, KHÔNG xen giữa.** Mục 5.
+
+---
+
+## 1. TIẾN ĐỘ HIỆN TẠI (snapshot — đã quét code)
+
+Đã xong pixel-perfect + verify:
+- **dashboard** — Layout + Dashboard.
+- **businessintent** — **chỉ màn LIST**. *Chưa* detail/KPI (không có `BusinessIntentKpi`, không có `BusinessIntentDetailPage`, không có endpoint detail). → nợ (5.1).
+- **intent (Product Intent)** — **list + detail + backend** đầy đủ.
+- **pattern (Product Pattern)** — **backend + BUILDER pixel-perfect** ("Trình dựng Product Pattern" 3 cột). Còn `patternBuilderData.ts` **fix cứng** (thư viện block/answer-slot/attribute/ma-trận) — sẽ gỡ ở mục 2.7.
+- **block (Block & Answer Slot)** — ✅ **XONG (Giai đoạn 6).** Backend package `structure`: `Block`/`AnswerSlot`(+`AnswerSlotId`)/`DataType` + repos; `BlockController` `/api/blocks` (list làm giàu `slotCount`/`gov` + `/{id}/detail` join answer_slot+attribute+data_type) + `DataTypeController` `/api/data-types`. Frontend `BlockPage` list 6 cột pixel-perfect (bỏ footer giả, hiện đủ 12 block thật). Build + render verify OK. `/{id}/detail` đã sẵn nguồn cho việc wire builder Pattern (2.7).
+- **matrix (Ma trận ràng buộc)** — ✅ **XONG (Giai đoạn 7).** Backend package `governance`: `ConstraintMatrix`/`MatrixCell`(+`MatrixCellId`) + repos; `ConstraintMatrixController` `/api/constraint-matrices` (list + `/{id}/detail` grid join nhãn theo kind + `/pattern-coverage` phái sinh từ pattern OT × ma trận 3). Frontend `MatrixPage` 4-tab pixel-perfect (grid verdict tô màu, stats, legend). Verdict khớp seed 100%; nhãn cột/hàng dùng name thật DB (khác nhẹ nhãn rút gọn prototype); tab 4 phái sinh hiện đủ 6 pattern. Logic coverage tính ở BE — dùng lại cho 2.7.
+
+Backend đã có sẵn (đừng làm trùng):
+- **Lớp I Ontology (9 bảng): backend XONG** (Giai đoạn 1) — obligation_element_type, obligation_element, financial_obligation_archetype, foa_element, obligation_family, obligation_type, obligation_type_composition, lifecycle, lifecycle_state. **Chỉ thiếu frontend pixel-perfect** (đang dùng DataTable tạm).
+- **`attribute`**: entity/repo/controller đã có (`/api/attributes`).
+
+Chưa có backend: `block`, `answer_slot`, `data_type`, `domain`, `attribute_group`, `attribute_constraint`, `attribute_enum_value`, `selector_scope`, `fragment` (Lớp II); `constraint_matrix`, `matrix_cell` (Lớp IV); và toàn bộ Pipeline sau pattern.
+
+Zip mới nhất: **`product-factory-phase5-pattern-builder.zip`**.
+
+nav key nhóm nền tảng (từ `nav.ts`): `obligation`, `ontology`, `sysmap`, `archetype`, `attribute`, `block`, `matrix`, `lifecycle`, `domain`.
+
+---
+
+## 2. VIỆC KẾ TIẾP: THƯ VIỆN NỀN TẢNG (thứ tự thực thi)
+
+> Làm từng màn trọn vẹn (backend + frontend + build + render verify + zip). Xếp để đồng thời gỡ fix cứng builder Pattern sớm nhất.
+
+### 2.1 Block & Answer Slot (+ data_type) — nav key `block` — ✅ XONG (Giai đoạn 6)
+> Đã hoàn thành đúng đặc tả dưới đây. `Block`/`AnswerSlot`(+Id)/`DataType` package `structure`; `/api/blocks` (+`/{id}/detail`), `/api/data-types`; `BlockPage` list pixel-perfect. Backend `/{id}/detail` trả `{block, slots:[{code,name,type,required,def,rule,attrName,attrCode}]}` — nguồn thật để gỡ fix cứng builder ở 2.7. **Không có block detail page** (prototype click row = create no-op, không có màn chi tiết → không bịa). **Kế tiếp = 2.2 Ma trận ràng buộc.**
+
+
+Backend **package `structure`** (Lớp II):
+- **`Block`** (PK `id` varchar(40)): `code` varchar(60) UNIQUE, `name` varchar(160), `biz_group` `biz_group_enum` (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi), `governed_by_element_code` varchar(60) NULL, `governed_by_aspect` varchar(80) NULL, `status`. + `BlockRepository` + `BlockController` `/api/blocks` (+ `/{id}/detail` join answer slots).
+- **`AnswerSlot`** (+`AnswerSlotId` composite `[block_id, code]`): `name` varchar(160), `attribute_code` varchar(60), `is_required` bool, `default_value` varchar(255) NULL, `rule_text` varchar(255) NULL. + `AnswerSlotRepository.findByBlockId(String)` (giữ thứ tự seed; nếu cần thứ tự ổn định thì `OrderByCode`).
+- **`DataType`** (PK `code` varchar(20)): `name` varchar(60). + `DataTypeRepository`. (Map: DT_MONEY→Money, DT_PERCENT→Percent, DT_INT→Integer, DT_ENUM→Enum, DT_RANGE→Range, DT_BOOL→Boolean, DT_FORMULA→Formula, DT_REF→Reference, DT_TEXT→Text.)
+
+Frontend: **trích markup màn `block` từ prototype** trước khi code (list các block + panel answer slot — có thể giống builder right-panel). `pages/BlockPage.tsx` (+ detail nếu prototype có). Hiển thị: block (name/biz_group/gov/status) + answer slots (name/type=data_type.name/attribute/required/default/rule). nav key `block`.
+
+Seed thật đã có: 12 block (BLK_ELIGIBILITY…BLK_BILLING) + answer_slot đầy đủ (vd `('BLK_ELIGIBILITY','age','Độ tuổi','age',true,'18 – 60','MIN 18')`). Dùng làm mock render verify.
+
+### 2.2 Ma trận ràng buộc — nav key `matrix` — ✅ XONG (Giai đoạn 7)
+> Đã hoàn thành. `ConstraintMatrix`/`MatrixCell`(+Id) package `governance`; `/api/constraint-matrices` (list + `/{id}/detail` grid + `/pattern-coverage`); `MatrixPage` 4-tab pixel-perfect. Nhãn hàng/cột join theo kind (element/archetype/OET/obligation_type/block name). Tab 4 "Pattern × Block" phái sinh từ DB (OT của pattern × ma trận 3, rank na<pos<req) — **logic coverage này dùng lại cho 2.7**. Verdict khớp seed 100%. **Kế tiếp = 2.3 Attribute.**
+
+<details><summary>Đặc tả gốc (đã thực hiện)</summary>
+
+
+Backend **package `governance`** (Lớp IV):
+- **`ConstraintMatrix`** (PK `id`): `kind` `matrix_kind_enum`, `title`, `description`. + repo `findFirstByKind(String)` / `findAll`.
+- **`MatrixCell`** (+`MatrixCellId` composite `[matrix_id, row_code, col_code]`): `verdict` `matrix_verdict_enum` (req|pos|na…), `is_override` bool. + repo `findByMatrixId(Long)`.
+- Controller `/api/constraint-matrices` (+ `/{id}/cells` hoặc `/{id}/detail` trả matrix + cells dạng grid).
+
+Seed: 3 ma trận — id=1 ARCHETYPE_X_ELEMENT, id=2 ELEMENTTYPE_X_ELEMENTTYPE, id=3 **OBLIGATIONTYPE_X_BLOCK** (row=OT code, col=block_id, verdict req/pos/na). Đây là nguồn ma trận cho builder Pattern (2.7).
+
+Frontend: trích markup màn `matrix`, dựng lưới ma trận (row × col, ô verdict tô màu). nav key `matrix`.
+</details>
+
+### 2.3 Attribute — nav key `attribute` ⬅ ĐANG TỚI
+Backend đã có `Attribute` (`/api/attributes`). Bổ sung nếu màn cần: `AttributeGroup`, `AttributeConstraint`, `AttributeEnumValue`, `Domain` (đọc canonical/DDL lấy cột chính xác). Frontend pixel-perfect (trích markup `attribute` — prototype có tab attribute/group…). nav key `attribute`.
+
+### 2.4 Obligation Library + Financial Obligation Archetype — nav key `obligation`, `archetype`
+Backend Lớp I **đã có**. Chỉ dựng **frontend pixel-perfect** (thay DataTable tạm): màn `obligation` (obligation_type + family + element + composition…), màn `archetype` (financial_obligation_archetype + foa_element). Trích markup từ prototype.
+
+### 2.5 Domain + Lifecycle & State — nav key `domain`, `lifecycle`
+- `lifecycle` (Lớp I): backend đã có (Lifecycle + LifecycleState) → dựng frontend.
+- `domain` (Lớp II): tạo backend `Domain` (+repo/controller) nếu chưa, rồi frontend.
+
+### 2.6 Sơ đồ Ontology + Sơ đồ quan hệ tổng thể — nav key `ontology`, `sysmap`
+Màn dạng **biểu đồ** (phức tạp: node/edge, có thể SVG/canvas trong prototype). Trích markup kỹ. Để **cuối nhóm nền tảng**.
+
+### 2.7 WIRE builder Pattern về DB thật (sau khi có 2.1 + 2.2)
+Khi đã có entity/endpoint `block`, `answer_slot`, `data_type`, `constraint_matrix`, `matrix_cell`:
+- **Mở rộng `ProductPatternController#GET /{code}/detail`** trả builder-ready:
+  ```
+  { pattern, productIntentName,
+    assignedOTs:[{code,name,role,archetype}],            // archetype = obligation_type.archetype_code → financial_obligation_archetype.name
+    blocks:[{blockId,position,usage, name,bizGroup,gov,  // join block: gov = governed_by_element_code ?? governed_by_aspect
+             slots:[{code,name,type,required,def,rule,attrName,attrCode}]}],  // join answer_slot + attribute + data_type
+    coverage:[{blockId,label,verdict,inCanvas}] }        // matrix_cell kind=OBLIGATIONTYPE_X_BLOCK × assignedOTs, agg rank {na<pos<req}
+  ```
+- Frontend `ProductPatternDetailPage`: đọc field mới, **xóa import + nội dung `patternBuilderData.ts`** (giữ lại đúng phần không có nguồn DB nếu còn — hiện gần như bỏ hết được). Coverage: chọn 1 nơi tính (BE hoặc FE), đừng để 2 nơi.
+- Render verify builder lại với API thật, so khớp bản cũ (data trùng verbatim nên hình không đổi).
+
+---
+
+## 3. SAU NỀN TẢNG: PIPELINE SẢN PHẨM (DB-driven)
+
+Thứ tự: **template → config → variant → catalog.** Mỗi màn: backend `pipeline/` + frontend pixel-perfect, **join hết vào thư viện nền tảng (API thật), không fix cứng.**
+
+### 3.1 Product Template — nav key `template`
+- `product_template` (PK `code`, `from_pattern_code`→product_pattern, `status`) + `template_segment` (PK ghép) + `template_frame` (kiểm cột từ DDL/canonical).
+- **Trích markup trước:** template có thể cũng là **builder** như pattern (kiểm `openBuilder('template')` trong prototype) — KHÔNG rút gọn nếu là builder.
+- Seed: TPL-001..006 (TPL-001/002←PT-001, TPL-003←PT-002, TPL-004←PT-006, TPL-005←PT-003, TPL-006←PT-005).
+
+### 3.2 → 3.4 Config / Variant / Catalog
+- `product_config` + `fragment` (giá trị theo scope people/place/time) — nav `config`.
+- `product_variant` — nav `variant`.
+- `product_catalog` + `catalog_listing` — nav `catalog`.
+Trích markup từng màn; join vào block/attribute/pattern/template thật.
+
+---
+
+## 4. QUY TRÌNH BẮT BUỘC (nhắc lại — mục 7 PROJECT_STATUS)
+
+code → `cd frontend && npm run build` (0 lỗi TS) → render Playwright (mock API = seed thật, SPA fallback, dist tuyệt đối) → view PNG so khớp prototype → đóng **zip trọn vẹn** → cập nhật PROJECT_STATUS + NEXT_WORK. Backend không compile được ở sandbox → kiểm cú pháp/ngoặc/import thủ công. Dùng `ListScreen`, `StatusChip`, `Icon`, bảng màu chuẩn. **Màn builder/biểu đồ không rút gọn thành detail thường.**
+
+---
+
+## 5. HẠNG MỤC NỢ — LÀM SAU CÙNG (đợt polish, KHÔNG xen giữa)
+
+### 5.1 Business Intent — detail + KPI
+Backend `BusinessIntentKpi`(+`Id` composite `[business_intent_id, sort_order]`; cột `metric`,`target`,`unit`) + repo `findByBusinessIntentIdOrderBySortOrder` + `/business-intents/{id}/detail` `{intent, kpis}`. Frontend `BusinessIntentDetailPage` + route `/businessintent/:id` + wire `onRowClick`. Seed: BI id=1 (3 KPI), id=6 (1 KPI).
+
+### 5.2 ListScreen interactive
+Wire search (lọc text) + filter dropdown thật; áp cho mọi màn list. (Tùy chọn đổi `rows` → `{cells, raw, onClick}`; nếu đổi cập nhật tất cả page.)
+
+### 5.3 Khác
+Loading/error states nhất quán; đóng gói Docker cuối; (tùy chọn) kéo-thả THẬT trong builder — hiện read-only nên không cần.
+
+---
+
+## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
+
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**.
+
+**NỀN TẢNG trước:**
+1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
+2. ✅ **matrix** (constraint_matrix + matrix_cell) — XONG (Giai đoạn 7)
+3. **attribute** (frontend; backend đã có + bổ sung group/constraint/enum) ← ĐANG TỚI
+3. **attribute** (frontend; backend đã có + bổ sung group/constraint/enum)
+4. **obligation** + **archetype** (frontend; backend Lớp I đã có)
+5. **domain** + **lifecycle** (frontend; domain thêm backend)
+6. **ontology** + **sysmap** (biểu đồ — cuối nhóm nền tảng)
+7. **WIRE builder Pattern về DB** (mục 2.7)
+
+**PIPELINE sau:**
+8. **template** → 9. **config** → 10. **variant** → 11. **catalog**
+
+**CÔNG CỤ / HỆ THỐNG / CUỐI:**
+12. **release** (Quy trình phát hành), **activity** (Nhật ký hoạt động)
+13. **simulation** (gần cuối — backend annuity + `/api/simulation/run`)
+14. **ĐỢT POLISH CUỐI:** mục 5 (BI detail+KPI, ListScreen interactive, loading/error, Docker).
+
+> Vì làm nền tảng trước: khi tới màn thư viện Block/Ma trận/Attribute là dựng luôn cả backend + frontend; tới Pipeline chỉ còn join API thật. Không còn fix cứng.
+
+---
+
+*Cập nhật: ✅ Hoàn thành **Ma trận ràng buộc** (Giai đoạn 7) — backend package `governance` + frontend MatrixPage 4-tab pixel-perfect, verified. Zip `product-factory-phase7-matrix.zip`. **Kế tiếp = Attribute (frontend pixel-perfect; backend /api/attributes đã có).** Sau nhóm nền tảng → wire builder Pattern về DB (dùng `/api/blocks/{id}/detail` + `/api/constraint-matrices` + logic coverage đã có ở BE) → Pipeline sản phẩm. Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
