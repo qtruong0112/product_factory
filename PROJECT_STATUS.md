@@ -217,11 +217,26 @@ Build 0 lỗi TS + render Playwright (mock 3 endpoint dựng từ seed thật: 9
 
 Build 0 lỗi TS + render Playwright (mock endpoint dựng từ seed thật) cả card grid (3 card, element/type count đúng: 6/6/6 element, 5/2/2 type = 9 tổng khớp seed) và trang detail (element rows đúng requirement, type rows đúng status). OK.
 
+### Giai đoạn 11 — Domain + Lifecycle & State (list đơn giản, verified) — mục 2.5
+
+**Bối cảnh:** khảo sát prototype xác nhận cả `domain` và `lifecycle` đều là **list thường 1 bảng, không tab, không detail riêng** (`onClick` row chỉ mở lại modal generic `openCreate`, giống `obligation`/`attribute`/`block`) — đơn giản hơn hẳn `archetype`.
+
+**Backend:**
+- `attribute/DomainController` (mới, `/api/domains`) — **read-only thuần**, `extends ReadOnlyController<Domain,String>`. Không cần join: cột `entity_count` là cột thật lưu sẵn trong bảng `domain` (không phải số suy ra), entity `Domain` đã tạo sẵn từ Giai đoạn 8.
+- `ontology/LifecycleController` (`/api/lifecycles`) chuyển từ `extends ReadOnlyController` sang tự viết join làm giàu: `GET /` trả `Page<Map>{code,name,governs,status,stateCount}` (`stateCount` = đếm `lifecycle_state` theo `lifecycle_code`, cột "SỐ STATE" prototype hiển thị số thật 7/6/5/5/6/4). Thêm `LifecycleStateRepository.countByLifecycleCode`.
+
+**Frontend:**
+- `pages/DomainPage.tsx` — list đơn giản (không tab, không filter — đúng prototype `filters:[]`): Mã/Domain/Mô tả/Thực thể/Trạng thái (StatusChip). Không `onRowClick`.
+- `pages/LifecyclePage.tsx` — list đơn giản, 1 filter `['Đối tượng']` (đúng prototype): Mã/Lifecycle/Áp dụng cho (`governs`)/Số State (đếm thật)/Trạng thái. Không `onRowClick`.
+- `main.tsx`: thêm `domain: <DomainPage />` và `lifecycle: <LifecyclePage />` vào `CUSTOM`.
+
+Build 0 lỗi TS + render Playwright (mock 2 endpoint dựng từ seed thật: 5 domain, 6 lifecycle) khớp prototype: cột đúng, số state đúng 7/6/5/5/6/4, entity count đúng 142/98/37/54/29. OK.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Financial Obligation Archetype** (card grid + detail) — hoàn tất mục 2.4. Màn kế tiếp theo thứ tự nền tảng = **Domain + Lifecycle & State** (nav `domain`/`lifecycle`) — mục 6/A0.5.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Domain + Lifecycle & State**. Màn kế tiếp theo thứ tự nền tảng (cuối nhóm) = **Ontology + Sysmap** (nav `ontology`/`sysmap`) — dạng biểu đồ, KHÔNG rút gọn thành list — mục 6/A0.6.
 
 ---
 
@@ -235,8 +250,8 @@ Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Financial O
 3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8) — CHỈ MÀN LIST.** Màn "Attribute Usage" (detail/lineage) + modal tạo/sửa ghi nợ ở mục B dưới, hoãn tới khi Pipeline + fragment/selector_scope có backend.
 4. ✅ **obligation** — list 3-tab (Obligation Type/Obligation Element/Element Type), backend `ontology` 3 controller chuyển sang join làm giàu. **XONG (Giai đoạn 9).**
    ✅ **archetype** — card grid + trang detail riêng (route `/archetype/:code`), backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount). **XONG (Giai đoạn 10).**
-5. **domain** + **lifecycle** — frontend (domain thêm backend `DomainController` — entity `Domain` đã có sẵn từ Giai đoạn 8). ⬅ ĐANG TỚI
-6. **ontology** + **sysmap** — màn biểu đồ (cuối nhóm nền tảng).
+5. ✅ **domain** + **lifecycle** — list đơn giản, backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount). **XONG (Giai đoạn 11).**
+6. **ontology** + **sysmap** — màn biểu đồ (cuối nhóm nền tảng). ⬅ ĐANG TỚI
 7. **Wire builder Pattern về DB** (mục A bên dưới).
 
 Sau nền tảng → **Pipeline**: template → config → variant → catalog (đều DB-driven). Rồi Lớp IV (release, activity) → simulation → polish.
@@ -271,7 +286,7 @@ Template (`product_template`+template_segment+template_frame) → Config (`produ
 ### E. Lớp IV + Simulation + hoàn thiện
 Release, activity → **Simulation** (gần cuối — annuity, `/api/simulation/run`) → loading/error states, Docker cuối.
 
-Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail).**
+Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail), domain(list), lifecycle(list, join stateCount).**
 
 ---
 
@@ -313,7 +328,9 @@ Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4): backend `FinancialObligationArchetypeController` (join làm giàu typeCount/elementCount/productCount qua obligation_type/foa_element/pattern_obligation_type) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified. Màn kế = **Domain + Lifecycle & State** (mục 2.5).*
+*Cập nhật lần cuối: sau khi hoàn thành **Domain + Lifecycle & State** (Giai đoạn 11, mục 2.5): backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount qua lifecycle_state) + frontend `DomainPage`/`LifecyclePage` (list đơn giản, không tab/detail — đúng prototype), verified. Màn kế = **Ontology + Sysmap** (mục 2.6, cuối nhóm nền tảng) — dạng biểu đồ, không rút gọn thành list.*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4): backend `FinancialObligationArchetypeController` (join làm giàu typeCount/elementCount/productCount qua obligation_type/foa_element/pattern_obligation_type) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified.*
 
 *Ghi chú lịch sử: sau khi hoàn thành **Obligation Library** (Giai đoạn 9, phần 1 mục 2.4): backend package `ontology` (ObligationTypeController/ObligationElementController/ObligationElementTypeController chuyển sang tự viết join làm giàu: familyName/archetypeName/elementCount/elementTypeName/isIdentify) + frontend ObligationPage 3-tab pixel-perfect, verified.*
 

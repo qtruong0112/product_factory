@@ -14,6 +14,8 @@ import AttributePage from './pages/AttributePage'
 import ObligationPage from './pages/ObligationPage'
 import ArchetypePage from './pages/ArchetypePage'
 import ArchetypeDetailPage from './pages/ArchetypeDetailPage'
+import DomainPage from './pages/DomainPage'
+import LifecyclePage from './pages/LifecyclePage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -28,6 +30,8 @@ const CUSTOM: Record<string, React.ReactNode> = {
   attribute: <AttributePage />,
   obligation: <ObligationPage />,
   archetype: <ArchetypePage />,
+  domain: <DomainPage />,
+  lifecycle: <LifecyclePage />,
 }
 
 function GenericView() {

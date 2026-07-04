@@ -80,11 +80,10 @@ Frontend: trích markup màn `matrix`, dựng lưới ma trận (row × col, ô 
 - **`obligation`** — ✅ **XONG (Giai đoạn 9).** List 3-tab (Obligation Type/Obligation Element/Element Type), backend 3 controller (`ObligationTypeController`/`ObligationElementController`/`ObligationElementTypeController`) chuyển từ `ReadOnlyController` sang tự viết join làm giàu (familyName/archetypeName/elementCount/elementTypeName/isIdentify). Không có tab riêng cho `obligation_family` (chỉ 1 cột) hay `obligation_type_composition` (chỉ dùng đếm). Không có detail — giống prototype (row click mở modal generic no-op).
 - **`archetype`** — ✅ **XONG (Giai đoạn 10).** Card grid (3 card Term Loan/Revolving/Conditional Obligation) + trang detail riêng thật sự (route `/archetype/:code`). Backend `FinancialObligationArchetypeController` join làm giàu: card có typeCount/elementCount/productCount (productCount = số pattern khác nhau qua `pattern_obligation_type`, join 2 chặng archetype→obligation_type→pattern_obligation_type). Detail có elementRows (foa_element+obligation_element+obligation_element_type, giữ đủ 3 trạng thái requirement req/pos/na) + typeRows (obligation_type theo archetype, kèm productCount riêng từng type). Bảng `financial_obligation_archetype` không có cột status — đã bỏ khỏi UI (không bịa).
 
-### 2.5 Domain + Lifecycle & State — nav key `domain`, `lifecycle`
-- `lifecycle` (Lớp I): backend đã có (Lifecycle + LifecycleState) → dựng frontend.
-- `domain` (Lớp II): tạo backend `Domain` (+repo/controller) nếu chưa, rồi frontend.
+### 2.5 Domain + Lifecycle & State — nav key `domain`, `lifecycle` — ✅ XONG (Giai đoạn 11)
+Cả 2 đều là list đơn giản (không tab, không detail — prototype xác nhận `onClick` row chỉ mở modal generic). `lifecycle`: backend `LifecycleController` chuyển sang join làm giàu `stateCount` (đếm `lifecycle_state`). `domain`: `DomainController` mới, read-only thuần (entity `Domain` đã có từ Giai đoạn 8, cột `entity_count` là cột thật không cần đếm). Frontend `DomainPage`/`LifecyclePage` pixel-perfect. **Kế tiếp = 2.6 Ontology + Sysmap.**
 
-### 2.6 Sơ đồ Ontology + Sơ đồ quan hệ tổng thể — nav key `ontology`, `sysmap`
+### 2.6 Sơ đồ Ontology + Sơ đồ quan hệ tổng thể — nav key `ontology`, `sysmap` ⬅ ĐANG TỚI
 Màn dạng **biểu đồ** (phức tạp: node/edge, có thể SVG/canvas trong prototype). Trích markup kỹ. Để **cuối nhóm nền tảng**.
 
 ### 2.7 WIRE builder Pattern về DB thật (sau khi có 2.1 + 2.2)
@@ -143,15 +142,15 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
 
-Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**.
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**.
 
 **NỀN TẢNG trước:**
 1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
 2. ✅ **matrix** (constraint_matrix + matrix_cell) — XONG (Giai đoạn 7)
 3. ✅ **attribute** (list 3-tab; backend Domain/AttributeGroup/AttributeConstraint) — XONG (Giai đoạn 8, chỉ màn list — Usage screen+modal hoãn, mục 5.4)
 4. ✅ **obligation** (list 3-tab) — XONG (Giai đoạn 9). ✅ **archetype** (card grid + detail riêng) — XONG (Giai đoạn 10)
-5. **domain** + **lifecycle** (frontend; domain thêm backend `DomainController` — entity `Domain` đã có sẵn) ← ĐANG TỚI
-6. **ontology** + **sysmap** (biểu đồ — cuối nhóm nền tảng)
+5. ✅ **domain** + **lifecycle** (list đơn giản) — XONG (Giai đoạn 11)
+6. **ontology** + **sysmap** (biểu đồ — cuối nhóm nền tảng) ← ĐANG TỚI
 7. **WIRE builder Pattern về DB** (mục 2.7)
 
 **PIPELINE sau:**
@@ -166,7 +165,9 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ---
 
-*Cập nhật: ✅ Hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4) — backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified. **Kế tiếp = Domain + Lifecycle & State** (mục 2.5) — `lifecycle` chỉ cần frontend (backend Lớp I đã có), `domain` cần thêm `DomainController` (entity `Domain` đã có sẵn từ Giai đoạn 8) + frontend. Sau nhóm nền tảng → wire builder Pattern về DB (dùng `/api/blocks/{id}/detail` + `/api/constraint-matrices` + logic coverage đã có ở BE) → Pipeline sản phẩm. Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+*Cập nhật: ✅ Hoàn thành **Domain + Lifecycle & State** (Giai đoạn 11, mục 2.5) — backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount) + frontend `DomainPage`/`LifecyclePage` (list đơn giản, không tab/detail), verified. **Kế tiếp = Ontology + Sysmap** (mục 2.6, cuối nhóm nền tảng) — màn dạng biểu đồ (node/edge), cần trích markup kỹ, KHÔNG rút gọn thành list. Sau đó → wire builder Pattern về DB (dùng `/api/blocks/{id}/detail` + `/api/constraint-matrices` + logic coverage đã có ở BE) → Pipeline sản phẩm. Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+
+*Ghi chú lịch sử: ✅ Hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4) — backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified.*
 
 *Ghi chú lịch sử: ✅ Hoàn thành **Obligation Library** (Giai đoạn 9, phần 1 mục 2.4) — backend package `ontology` (3 controller chuyển sang tự viết join làm giàu) + frontend ObligationPage 3-tab pixel-perfect, verified.*
 
