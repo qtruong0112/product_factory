@@ -34,7 +34,7 @@ code → `cd product-factory/frontend && npm install && npm run build` (0 lỗi 
 **Khác với môi trường web trước:** máy local này **build được backend thật** (`mvn` / `docker compose up --build`) — không còn giới hạn "sandbox chặn Maven 403". Vẫn giữ kỷ luật verify. Không cần đóng zip mỗi lượt nữa — dùng **git commit** từng màn thay cho zip trọn vẹn.
 
 ## MÀN KẾ TIẾP
-**Archetype** (NEXT_WORK mục 2.4, phần còn lại): nav key `archetype` — KHÔNG phải list đơn giản. Prototype là card grid (3 card Term Loan/Revolving/Conditional) + trang detail riêng khi click card (route `/archetype/:code`, giống `intent`/`pattern`). Cần join thêm số Obligation Type theo archetype + (nếu có nguồn) số sản phẩm liên quan.
+**Domain + Lifecycle & State** (NEXT_WORK mục 2.5): nav key `domain`, `lifecycle`. `lifecycle` (Lớp I: `Lifecycle`+`LifecycleState`) backend đã có, chỉ dựng frontend. `domain` — entity `Domain` đã tạo sẵn ở Giai đoạn 8 (package `attribute`, chưa có Controller riêng) — cần thêm `DomainController` (`/api/domains`, có thể enrich đếm `attribute_group` theo domain) + frontend pixel-perfect.
 Sau nhóm nền tảng → wire builder Pattern về DB thật (mục 2.7, xóa `patternBuilderData.ts`) → Pipeline (template→config→variant→catalog).
 
 ## NỢ — LÀM CUỐI, KHÔNG XEN GIỮA
@@ -42,4 +42,4 @@ Business Intent detail+KPI (5.1); ListScreen interactive (5.2); Simulation Engin
 Màn "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values, where-used) + modal tạo/sửa Attribute — hoãn tới khi Pipeline (template/config/variant) + `fragment`/`selector_scope` có backend (tránh lặp lại fix cứng như Pattern builder).
 
 ## ĐÃ XONG
-dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend `structure`), matrix(4-tab + backend `governance`), attribute(list 3-tab + backend `Domain`/`AttributeGroup`/`AttributeConstraint`), obligation(list 3-tab, join làm giàu ontology có sẵn). Còn `patternBuilderData.ts` fix cứng chờ wire (mục 6.A).
+dashboard, businessintent(list), intent(list+detail), pattern(builder), block(list + backend `structure`), matrix(4-tab + backend `governance`), attribute(list 3-tab + backend `Domain`/`AttributeGroup`/`AttributeConstraint`), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail, route `/archetype/:code`). Còn `patternBuilderData.ts` fix cứng chờ wire (mục 6.A).
