@@ -1,40 +1,65 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail } from '../api/client'
+import { getDetail, getList } from '../api/client'
 import Icon from '../components/Icon'
 import { STATUS_COLORS, STATUS_LABELS } from '../components/StatusChip'
-import {
-  BLOCK_LIB,
-  BLOCK_BY_ID,
-  OT_ARCHETYPE,
-  OT_BLOCK_MATRIX,
-  COVER_COLS,
-  attrLabel,
-  type BlockDef,
-} from '../patternBuilderData'
 
-// ---- kiểu dữ liệu từ API /product-patterns/{code}/detail ----
+// ---- kiểu dữ liệu từ API /product-patterns/{code}/detail (đã wire DB thật, mục 2.7) ----
 interface Pattern {
   code: string
   name: string
   productIntentId: number | null
   status: string
 }
+interface ApiSlot {
+  code: string
+  name: string
+  type: string | null
+  required: boolean
+  def: string | null
+  rule: string | null
+  attrCode: string
+  attrName: string
+}
 interface ApiBlock {
   blockId: string
   position: number
   usage: string
+  name: string
+  bizGroup: string | null
+  gov: string | null
+  status: string | null
+  slots: ApiSlot[]
 }
 interface ApiOT {
   code: string
   name: string
   role: string
+  archetype: string | null
+}
+interface ApiCoverage {
+  blockId: string
+  label: string
+  verdict: 'req' | 'pos' | 'na'
+  inCanvas: boolean
 }
 interface Detail {
   pattern: Pattern
   productIntentName: string | null
+  assignedOTs: ApiOT[]
   blocks: ApiBlock[]
-  obligationTypes: ApiOT[]
+  coverage: ApiCoverage[]
+}
+
+// Thư viện Block đầy đủ (cho palette bên trái) — /api/blocks (làm giàu slotCount/gov, Giai đoạn 6).
+interface BlockLibRow {
+  id: string
+  code: string
+  name: string
+  bizGroup: string
+  gov: string | null
+  slotCount: number
+  status: string
 }
 
 const mono = (t: string, extra: React.CSSProperties = {}) => (
@@ -48,6 +73,7 @@ export default function ProductPatternDetailPage() {
   const { code } = useParams()
   const navigate = useNavigate()
   const [data, setData] = useState<Detail | null>(null)
+  const [blockLib, setBlockLib] = useState<BlockLibRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -59,9 +85,10 @@ export default function ProductPatternDetailPage() {
   useEffect(() => {
     if (!code) return
     setLoading(true)
-    getDetail<Detail>('product-patterns', code)
-      .then((d) => {
+    Promise.all([getDetail<Detail>('product-patterns', code), getList<BlockLibRow>('blocks', 0, 200)])
+      .then(([d, lib]) => {
         setData(d)
+        setBlockLib(lib.content)
         const ordered = [...d.blocks].sort((a, b) => a.position - b.position)
         setSelectedBlockId(ordered[0]?.blockId ?? null)
       })
@@ -69,73 +96,65 @@ export default function ProductPatternDetailPage() {
       .finally(() => setLoading(false))
   }, [code])
 
-  // canvas = block thật của pattern (order theo position) enrich bằng thư viện block
+  // canvas = block thật của pattern (order theo position, đã enrich sẵn từ API).
   const canvas = useMemo(() => {
     if (!data) return []
-    return [...data.blocks]
-      .sort((a, b) => a.position - b.position)
-      .map((b) => {
-        const def: BlockDef | undefined = BLOCK_BY_ID[b.blockId]
-        return {
-          id: b.blockId,
-          position: b.position,
-          usage: b.usage,
-          name: def?.name ?? b.blockId,
-          code: def?.code ?? b.blockId,
-          group: def?.group ?? '',
-          gov: def?.gov ?? '',
-          slots: def?.slots ?? [],
-        }
-      })
+    return [...data.blocks].sort((a, b) => a.position - b.position)
   }, [data])
 
-  const canvasIds = useMemo(() => new Set(canvas.map((b) => b.id)), [canvas])
-  const assignedOTCodes = useMemo(() => (data?.obligationTypes ?? []).map((o) => o.code), [data])
+  const canvasIds = useMemo(() => new Set(canvas.map((b) => b.blockId)), [canvas])
+  const blockLibById = useMemo(() => Object.fromEntries(blockLib.map((b) => [b.id, b])), [blockLib])
 
-  // độ phủ theo ma trận OT × Block (tái tạo logic blockCoverage của prototype)
+  // độ phủ theo ma trận OT × Block — đã tính sẵn ở backend (ProductPatternController#detail),
+  // chỉ còn map verdict → nhãn/màu hiển thị ở FE.
   const coverage = useMemo(() => {
-    const rank: Record<string, number> = { no: 0, pos: 1, req: 2 }
-    const rows = COVER_COLS.map((c, ci) => {
-      let agg = 'no'
-      assignedOTCodes.forEach((otId) => {
-        const row = OT_BLOCK_MATRIX[otId]
-        if (row && rank[row[ci]] > rank[agg]) agg = row[ci]
+    const M: Record<string, { label: string; bg: string; fg: string; dot: string; mark: string }> = {
+      covered: { label: 'Bắt buộc · đã có', bg: '#DCF3E7', fg: '#0B7349', dot: '#0E8C5A', mark: '✓' },
+      missing: { label: 'Bắt buộc · THIẾU', bg: '#FBE3E3', fg: '#B23B3B', dot: '#B23B3B', mark: '!' },
+      'covered-opt': { label: 'Tùy chọn · đã có', bg: '#E5EEF9', fg: '#2F73C4', dot: '#2F73C4', mark: '✓' },
+      suggest: { label: 'Tùy chọn', bg: '#F1F5F2', fg: '#8A998F', dot: '#C2D0C8', mark: '+' },
+    }
+    const rows = (data?.coverage ?? [])
+      .filter((c) => c.verdict !== 'na')
+      .map((c) => {
+        const status =
+          c.verdict === 'req' ? (c.inCanvas ? 'covered' : 'missing') : c.inCanvas ? 'covered-opt' : 'suggest'
+        const m = M[status]
+        return {
+          key: c.blockId,
+          blockId: c.blockId,
+          blockLabel: c.label,
+          status,
+          inCanvas: c.inCanvas,
+          chipLabel: m.label,
+          bg: m.bg,
+          fg: m.fg,
+          dot: m.dot,
+          mark: m.mark,
+          showAdd: status === 'missing' || status === 'suggest',
+        }
       })
-      const inCanvas = canvasIds.has(c.blockId)
-      let status: string
-      if (agg === 'req') status = inCanvas ? 'covered' : 'missing'
-      else if (agg === 'pos') status = inCanvas ? 'covered-opt' : 'suggest'
-      else status = 'na'
-      const M: Record<string, { label: string; bg: string; fg: string; dot: string; mark: string }> = {
-        covered: { label: 'Bắt buộc · đã có', bg: '#DCF3E7', fg: '#0B7349', dot: '#0E8C5A', mark: '✓' },
-        missing: { label: 'Bắt buộc · THIẾU', bg: '#FBE3E3', fg: '#B23B3B', dot: '#B23B3B', mark: '!' },
-        'covered-opt': { label: 'Tùy chọn · đã có', bg: '#E5EEF9', fg: '#2F73C4', dot: '#2F73C4', mark: '✓' },
-        suggest: { label: 'Tùy chọn', bg: '#F1F5F2', fg: '#8A998F', dot: '#C2D0C8', mark: '+' },
-        na: { label: 'Không áp dụng', bg: '#F4F7F5', fg: '#B8C5BD', dot: '#E0E7E2', mark: '–' },
-      }
-      const m = M[status]
-      return { ...c, status, agg, inCanvas, chipLabel: m.label, chipBg: m.bg, chipFg: m.fg, dot: m.dot, mark: m.mark, showAdd: status === 'missing' || status === 'suggest' }
-    }).filter((r) => r.status !== 'na')
 
     const missing = rows.filter((r) => r.status === 'missing')
-    const reqTotal = rows.filter((r) => r.agg === 'req').length
-    const reqCovered = rows.filter((r) => r.agg === 'req' && r.inCanvas).length
+    const reqTotal = (data?.coverage ?? []).filter((c) => c.verdict === 'req').length
+    const reqCovered = rows.filter((r) => r.status === 'covered').length
+    const assignedCount = data?.assignedOTs.length ?? 0
     const verdict =
-      assignedOTCodes.length === 0
+      assignedCount === 0
         ? { label: 'Chưa gán Obligation Type — gán trước để kiểm tra độ phủ', bg: '#FEF3D6', fg: '#9A6B00' }
         : missing.length > 0
         ? { label: '⚠ Thiếu ' + missing.length + ' Block bắt buộc theo ma trận', bg: '#FBE3E3', fg: '#B23B3B' }
         : { label: '✓ Đủ Block bắt buộc theo ma trận Obligation Type × Block', bg: '#DCF3E7', fg: '#0B7349' }
     return { rows, missing, reqTotal, reqCovered, verdict, pctLabel: reqCovered + '/' + reqTotal }
-  }, [assignedOTCodes, canvasIds])
+  }, [data])
 
-  // palette block (lọc theo query)
+  // palette block (lọc theo query) — thư viện block thật /api/blocks.
   const paletteBlocks = useMemo(() => {
     const q = paletteQuery.toLowerCase()
-    return BLOCK_LIB.filter((b) => !q || b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q))
-  }, [paletteQuery])
+    return blockLib.filter((b) => !q || b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q))
+  }, [paletteQuery, blockLib])
 
-  const selBlock = selectedBlockId ? BLOCK_BY_ID[selectedBlockId] : undefined
+  const selBlock = selectedBlockId ? canvas.find((b) => b.blockId === selectedBlockId) : undefined
 
   if (loading) return <div style={{ padding: '22px 26px', color: '#5E6F66' }}>Đang tải dữ liệu…</div>
   if (error || !data)
@@ -267,7 +286,7 @@ export default function ProductPatternDetailPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</div>
-                        <div style={{ fontSize: 10.5, color: '#A7B5AC', marginTop: 1 }}>{b.group} · {b.slots.length} slot</div>
+                        <div style={{ fontSize: 10.5, color: '#A7B5AC', marginTop: 1 }}>{b.bizGroup} · {b.slotCount} slot</div>
                       </div>
                       <span style={{ width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flex: 'none', background: inC ? '#DCF3E7' : '#F1F5F2', color: inC ? '#0B7349' : '#5E6F66' }}>
                         {inC ? '✓' : '+'}
@@ -283,7 +302,7 @@ export default function ProductPatternDetailPage() {
                 <div style={{ fontSize: 11, color: '#A7B5AC', margin: '4px 2px 0', fontWeight: 600, letterSpacing: '.3px' }}>GÁN OBLIGATION TYPE VÀO KHUÔN</div>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {(data.obligationTypes ?? []).map((o) => {
+                {(data.assignedOTs ?? []).map((o) => {
                   const on = true // các OT thật của pattern đều đang gán
                   return (
                     <div key={o.code} title={READONLY} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 12, border: '1px solid ' + (on ? '#9ED9BC' : '#E6ECE8'), borderRadius: 11, background: on ? '#F4FBF7' : '#fff', cursor: 'pointer' }}>
@@ -291,7 +310,7 @@ export default function ProductPatternDetailPage() {
                         <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{o.name}</div>
                         <div style={{ fontSize: 10.5, color: '#8A998F', marginTop: 3, display: 'flex', gap: 6, alignItems: 'center' }}>{mono(o.code)}</div>
                         <div style={{ marginTop: 7 }}>
-                          <span style={{ fontSize: 10.5, fontWeight: 600, color: '#9A6B00', background: '#FBEFC7', padding: '2px 8px', borderRadius: 99 }}>Archetype: {OT_ARCHETYPE[o.code] ?? '—'}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: '#9A6B00', background: '#FBEFC7', padding: '2px 8px', borderRadius: 99 }}>Archetype: {o.archetype ?? '—'}</span>
                         </div>
                       </div>
                       <span style={{ width: 22, height: 22, borderRadius: 7, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, border: '1.5px solid ' + (on ? '#0E8C5A' : '#D7E1DB'), background: on ? '#0E8C5A' : '#fff', color: '#fff' }}>
@@ -311,12 +330,12 @@ export default function ProductPatternDetailPage() {
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.6px', color: '#8A998F', marginBottom: 9 }}>OBLIGATION TYPE ĐÃ GÁN</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
-              {(data.obligationTypes ?? []).map((a) => (
+              {(data.assignedOTs ?? []).map((a) => (
                 <div key={a.code} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #B7E6CE', borderRadius: 10, padding: '9px 11px 9px 13px', boxShadow: '0 1px 2px rgba(11,59,46,.04)' }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#0E8C5A', flex: 'none' }} />
                   <div>
                     <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{a.name}</div>
-                    <div style={{ fontSize: 10.5, color: '#8A998F', marginTop: 1 }}>{a.role} · {OT_ARCHETYPE[a.code] ?? '—'}</div>
+                    <div style={{ fontSize: 10.5, color: '#8A998F', marginTop: 1 }}>{a.role} · {a.archetype ?? '—'}</div>
                   </div>
                   <button title={READONLY} style={{ width: 22, height: 22, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A7B5AC', border: 'none', background: 'none', cursor: 'default' }}>
                     <Icon name="x" size={13} color="#A7B5AC" />
@@ -334,7 +353,7 @@ export default function ProductPatternDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', background: coverage.verdict.bg }}>
               <span style={{ display: 'flex', width: 15, height: 15, flex: 'none' }}><Icon name="matrix" size={15} color={coverage.verdict.fg} /></span>
               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 700, color: coverage.verdict.fg }}>{coverage.verdict.label}</span>
-              {assignedOTCodes.length > 0 && (
+              {(data.assignedOTs?.length ?? 0) > 0 && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: coverage.verdict.fg, background: 'rgba(255,255,255,.5)', padding: '2px 9px', borderRadius: 99 }}>Bắt buộc {coverage.pctLabel}</span>
               )}
             </div>
@@ -343,8 +362,8 @@ export default function ProductPatternDetailPage() {
                 {coverage.rows.map((c) => (
                   <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '9px 11px', border: '1px solid #EEF2EF', borderRadius: 9 }}>
                     <span style={{ width: 20, height: 20, borderRadius: 6, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', background: c.dot }}>{c.mark}</span>
-                    <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{c.label}</span>
-                    <span style={{ fontSize: 10.5, fontWeight: 600, color: c.chipFg, background: c.chipBg, padding: '3px 9px', borderRadius: 99 }}>{c.chipLabel}</span>
+                    <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{c.blockLabel}</span>
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: c.fg, background: c.bg, padding: '3px 9px', borderRadius: 99 }}>{c.chipLabel}</span>
                     {c.showAdd && (
                       <button title={READONLY} style={{ fontSize: 11, fontWeight: 700, color: '#0B7349', background: '#DCF3E7', borderRadius: 7, padding: '5px 11px', flex: 'none', border: 'none', cursor: 'default', fontFamily: 'inherit' }}>+ Thêm Block</button>
                     )}
@@ -361,13 +380,13 @@ export default function ProductPatternDetailPage() {
           </div>
           <div>
             {canvas.map((b) => {
-              const seld = selectedBlockId === b.id
-              const reqd = b.slots.some((s) => s.req)
+              const seld = selectedBlockId === b.blockId
+              const reqd = b.slots.some((s) => s.required)
               const preview = b.slots.slice(0, 2).map((s) => s.name).join(', ')
               return (
                 <div
-                  key={b.id}
-                  onClick={() => setSelectedBlockId(b.id)}
+                  key={b.blockId}
+                  onClick={() => setSelectedBlockId(b.blockId)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 12, background: '#fff', border: '1.5px solid ' + (seld ? '#0E8C5A' : '#E6ECE8'), boxShadow: seld ? '0 4px 14px rgba(14,140,90,.14)' : '0 1px 2px rgba(11,59,46,.04)', cursor: 'pointer', marginBottom: 10 }}
                 >
                   <span style={{ display: 'flex', color: '#C2D0C8', flex: 'none', cursor: 'grab' }}><Icon name="grip" size={15} color="#C2D0C8" /></span>
@@ -377,7 +396,7 @@ export default function ProductPatternDetailPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                       <span style={{ fontSize: 13.5, fontWeight: 600, color: '#243A30' }}>{b.name}</span>
-                      {mono(b.code, { fontSize: 10.5, color: '#A7B5AC' })}
+                      {mono(blockLibById[b.blockId]?.code ?? b.blockId, { fontSize: 10.5, color: '#A7B5AC' })}
                     </div>
                     <div style={{ fontSize: 11.5, color: '#8A998F', marginTop: 3 }}>{b.slots.length} answer slot{preview ? ` · ${preview}` : ''}</div>
                   </div>
@@ -406,17 +425,17 @@ export default function ProductPatternDetailPage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 14.5, fontWeight: 700, color: '#122019' }}>{selBlock.name}</div>
-                    {mono(selBlock.code, { fontSize: 11, color: '#8A998F', marginTop: 2, display: 'block' })}
+                    {mono(blockLibById[selBlock.blockId]?.code ?? selBlock.blockId, { fontSize: 11, color: '#8A998F', marginTop: 2, display: 'block' })}
                   </div>
                 </div>
                 <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 9 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: '#8A998F' }}>Nhóm nghiệp vụ</span>
-                    <span style={{ fontWeight: 600, color: '#243A30' }}>{selBlock.group}</span>
+                    <span style={{ fontWeight: 600, color: '#243A30' }}>{selBlock.bizGroup}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                     <span style={{ color: '#8A998F' }}>Chi phối bởi Obligation Element</span>
-                    <span style={{ fontWeight: 600, color: '#0B7349', textAlign: 'right', maxWidth: 170 }}>{selBlock.gov}</span>
+                    <span style={{ fontWeight: 600, color: '#0B7349', textAlign: 'right', maxWidth: 170 }}>{selBlock.gov ?? '—'}</span>
                   </div>
                 </div>
               </div>
@@ -430,25 +449,25 @@ export default function ProductPatternDetailPage() {
                     <div key={s.code} style={{ border: '1px solid #EEF2EF', borderRadius: 10, padding: '11px 12px', background: '#FBFDFC' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{s.name}</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: s.req ? '#FBEFC7' : '#EEF1EF', color: s.req ? '#8A6300' : '#5E6F66' }}>{s.req ? 'Bắt buộc' : 'Tùy chọn'}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: s.required ? '#FBEFC7' : '#EEF1EF', color: s.required ? '#8A6300' : '#5E6F66' }}>{s.required ? 'Bắt buộc' : 'Tùy chọn'}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: '#2F73C4', background: '#E5EEF9', padding: '2px 8px', borderRadius: 6 }}>{s.type}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: '#2F73C4', background: '#E5EEF9', padding: '2px 8px', borderRadius: 6 }}>{s.type ?? '—'}</span>
                         {mono(s.code, { fontSize: 10.5, color: '#A7B5AC' })}
                       </div>
                       <div style={{ fontSize: 11.5, color: '#5E6F66', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: '#A7B5AC' }}>Mặc định</span>
-                        <span style={{ fontWeight: 500, textAlign: 'right' }}>{s.def}</span>
+                        <span style={{ fontWeight: 500, textAlign: 'right' }}>{s.def ?? '—'}</span>
                       </div>
                       <div style={{ fontSize: 11, color: '#8A998F', marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: '#A7B5AC' }}>Ràng buộc</span>
-                        {mono(s.rule, { color: '#9A6B00' })}
+                        {mono(s.rule ?? '—', { color: '#9A6B00' })}
                       </div>
                       <div style={{ marginTop: 9, paddingTop: 9, borderTop: '1px dashed #E6ECE8', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ display: 'flex', color: '#1F5FAF', flex: 'none' }}><Icon name="tag" size={14} color="#1F5FAF" /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.3px', color: '#A7B5AC' }}>ĐỊNH NGHĨA BỞI ATTRIBUTE</div>
-                          <div style={{ fontSize: 11.5, fontWeight: 600, color: '#1F5FAF', marginTop: 1 }}>{attrLabel(s.code)}</div>
+                          <div style={{ fontSize: 11.5, fontWeight: 600, color: '#1F5FAF', marginTop: 1 }}>{s.attrName} · {s.attrCode}</div>
                         </div>
                         <button onClick={() => navigate('/attribute')} style={{ fontSize: 10.5, fontWeight: 600, color: '#1F5FAF', background: '#E5EEF9', padding: '3px 9px', borderRadius: 7, flex: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Mở →</button>
                       </div>
