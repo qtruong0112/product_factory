@@ -16,6 +16,8 @@ import ArchetypePage from './pages/ArchetypePage'
 import ArchetypeDetailPage from './pages/ArchetypeDetailPage'
 import DomainPage from './pages/DomainPage'
 import LifecyclePage from './pages/LifecyclePage'
+import OntologyPage from './pages/OntologyPage'
+import SysmapPage from './pages/SysmapPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -32,6 +34,8 @@ const CUSTOM: Record<string, React.ReactNode> = {
   archetype: <ArchetypePage />,
   domain: <DomainPage />,
   lifecycle: <LifecyclePage />,
+  ontology: <OntologyPage />,
+  sysmap: <SysmapPage />,
 }
 
 function GenericView() {

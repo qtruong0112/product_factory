@@ -65,6 +65,8 @@ export const VIEW_TITLES: Record<string, [string, string]> = {
   variant: ['Product Variant', 'Pipeline'],
   catalog: ['Product Catalog', 'Pipeline'],
   obligation: ['Obligation Library', 'Thư viện'],
+  ontology: ['Sơ đồ Ontology nghĩa vụ', 'Thư viện'],
+  sysmap: ['Sơ đồ quan hệ tổng thể', 'Tổng quan'],
   archetype: ['Financial Obligation Archetype', 'Thư viện'],
   attribute: ['Attribute', 'Thư viện'],
   block: ['Block & Answer Slot', 'Thư viện'],

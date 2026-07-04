@@ -83,8 +83,8 @@ Frontend: trích markup màn `matrix`, dựng lưới ma trận (row × col, ô 
 ### 2.5 Domain + Lifecycle & State — nav key `domain`, `lifecycle` — ✅ XONG (Giai đoạn 11)
 Cả 2 đều là list đơn giản (không tab, không detail — prototype xác nhận `onClick` row chỉ mở modal generic). `lifecycle`: backend `LifecycleController` chuyển sang join làm giàu `stateCount` (đếm `lifecycle_state`). `domain`: `DomainController` mới, read-only thuần (entity `Domain` đã có từ Giai đoạn 8, cột `entity_count` là cột thật không cần đếm). Frontend `DomainPage`/`LifecyclePage` pixel-perfect. **Kế tiếp = 2.6 Ontology + Sysmap.**
 
-### 2.6 Sơ đồ Ontology + Sơ đồ quan hệ tổng thể — nav key `ontology`, `sysmap` ⬅ ĐANG TỚI
-Màn dạng **biểu đồ** (phức tạp: node/edge, có thể SVG/canvas trong prototype). Trích markup kỹ. Để **cuối nhóm nền tảng**.
+### 2.6 Sơ đồ Ontology + Sơ đồ quan hệ tổng thể — nav key `ontology`, `sysmap` — ✅ XONG (Giai đoạn 12, HOÀN TẤT NHÓM NỀN TẢNG)
+Khảo sát prototype xác nhận: KHÔNG nằm trong `isList` (cờ riêng `isOntology`/`isSysMap`) nhưng cũng KHÔNG phải SVG/canvas — cả hai là layout card/flex/grid tĩnh mô phỏng sơ đồ bằng box + icon mũi tên. Không cần backend mới, tổng hợp client-side từ API Lớp I đã có (obligation-types/families/compositions/elements/element-types cho `ontology`; cấu trúc/điều hướng tĩnh cho `sysmap`). Frontend `OntologyPage.tsx` (chuỗi ER 4 khái niệm + family/type selector + decomposition + vocab accordion) và `SysmapPage.tsx` (7 pipeline + 7 foundation + bảng 15 quan hệ FK thật). **Kế tiếp = 2.7 Wire builder Pattern về DB.**
 
 ### 2.7 WIRE builder Pattern về DB thật (sau khi có 2.1 + 2.2)
 Khi đã có entity/endpoint `block`, `answer_slot`, `data_type`, `constraint_matrix`, `matrix_cell`:
@@ -142,7 +142,7 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
 
-Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**.
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT.**
 
 **NỀN TẢNG trước:**
 1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
@@ -150,8 +150,8 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 3. ✅ **attribute** (list 3-tab; backend Domain/AttributeGroup/AttributeConstraint) — XONG (Giai đoạn 8, chỉ màn list — Usage screen+modal hoãn, mục 5.4)
 4. ✅ **obligation** (list 3-tab) — XONG (Giai đoạn 9). ✅ **archetype** (card grid + detail riêng) — XONG (Giai đoạn 10)
 5. ✅ **domain** + **lifecycle** (list đơn giản) — XONG (Giai đoạn 11)
-6. **ontology** + **sysmap** (biểu đồ — cuối nhóm nền tảng) ← ĐANG TỚI
-7. **WIRE builder Pattern về DB** (mục 2.7)
+6. ✅ **ontology** + **sysmap** (biểu đồ, không backend mới) — XONG (Giai đoạn 12)
+7. **WIRE builder Pattern về DB** (mục 2.7) ← ĐANG TỚI
 
 **PIPELINE sau:**
 8. **template** → 9. **config** → 10. **variant** → 11. **catalog**
@@ -165,7 +165,9 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ---
 
-*Cập nhật: ✅ Hoàn thành **Domain + Lifecycle & State** (Giai đoạn 11, mục 2.5) — backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount) + frontend `DomainPage`/`LifecyclePage` (list đơn giản, không tab/detail), verified. **Kế tiếp = Ontology + Sysmap** (mục 2.6, cuối nhóm nền tảng) — màn dạng biểu đồ (node/edge), cần trích markup kỹ, KHÔNG rút gọn thành list. Sau đó → wire builder Pattern về DB (dùng `/api/blocks/{id}/detail` + `/api/constraint-matrices` + logic coverage đã có ở BE) → Pipeline sản phẩm. Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+*Cập nhật: ✅ Hoàn thành **Ontology + Sysmap** (Giai đoạn 12, mục 2.6) — **HOÀN TẤT TOÀN BỘ NHÓM THƯ VIỆN NỀN TẢNG.** Cả 2 màn là card/flex/grid tĩnh (không SVG/canvas), không cần backend mới — tổng hợp client-side từ API Lớp I đã có. **Kế tiếp = 2.7 WIRE builder Pattern về DB thật** (xóa `patternBuilderData.ts`, dùng `/api/blocks/{id}/detail` + `/api/constraint-matrices` + logic coverage đã có ở BE) → rồi Pipeline sản phẩm (template→config→variant→catalog). Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+
+*Ghi chú lịch sử: ✅ Hoàn thành **Domain + Lifecycle & State** (Giai đoạn 11, mục 2.5) — backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount) + frontend `DomainPage`/`LifecyclePage` (list đơn giản, không tab/detail), verified.*
 
 *Ghi chú lịch sử: ✅ Hoàn thành **Financial Obligation Archetype** (Giai đoạn 10, phần 2 mục 2.4 — hoàn tất mục 2.4) — backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount) + frontend `ArchetypePage` (card grid) + `ArchetypeDetailPage` (route `/archetype/:code`), verified.*
 
