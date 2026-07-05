@@ -502,8 +502,12 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_BILLING', 'stmt_cycle', 'Hàng tháng');
 
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
+-- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra
+-- block nào "đang áp dụng"), trong khi toàn bộ 15 fragment của CFG-0042 dùng đúng 6 block mà
+-- TPL-003 có template_frame (BLK_COUNTERPARTY/LIMIT/INTEREST/COLLATERAL/REPAYMENT/PENALTY) và
+-- version_entry lịch sử ghi rõ "Khởi tạo Config từ Template TPL-003 v1.2" — TPL-001 là lỗi seed.
 INSERT INTO "product_config" ("code", "name", "from_template_code", "status") VALUES
-  ('CFG-0042', 'Vay nhanh Xe máy 18 tháng', 'TPL-001', 'review'),
+  ('CFG-0042', 'Vay nhanh Xe máy 18 tháng', 'TPL-003', 'review'),
   ('CFG-0041', 'Vay ô tô hạn mức HCM', 'TPL-003', 'approved'),
   ('CFG-0040', 'Vay xe máy KH thân thiết', 'TPL-001', 'published'),
   ('CFG-0039', 'Vay Bullet vàng 3 tháng', 'TPL-005', 'approved'),
@@ -511,7 +515,12 @@ INSERT INTO "product_config" ("code", "name", "from_template_code", "status") VA
   ('CFG-0037', 'Vay cầm cố DN nhỏ', 'TPL-002', 'review'),
   ('CFG-0021', 'Vay cầm cố laptop', 'TPL-001', 'retired');
 
--- ===== 30. fragment — 15 fragment của CFG-0042 (configBase; base_rate Place HCM,HN warn 'Gần trần') =====
+-- ===== 30. fragment — 18 fragment của CFG-0042 (configBase; base_rate Place HCM,HN warn 'Gần trần') =====
+-- 3 dòng cuối (interest_calc/capacity_range/asset_valuation) BỔ SUNG so với configBase() gốc
+-- của prototype: bundler chỉ mô phỏng rút gọn 2/3 slot mỗi block Lãi suất/Hạn mức/Tài sản đảm
+-- bảo, nhưng answer_slot thật của các block này có thêm slot bắt buộc thứ 3 (interest_calc,
+-- capacity_range, asset_valuation) mà bundler không mô phỏng. Vật chất hóa đúng default_value
+-- đã có sẵn của answer_slot/attribute thành fragment scope mặc định — không bịa giá trị mới.
 INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
   ('CFG-0042', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88 (Cho vay)', false, 'Hợp lệ'),
   ('CFG-0042', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
@@ -527,7 +536,10 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0042', 'BLK_COLLATERAL', 'ltv', 'place', 'HCM, HN', '75%', false, 'Hợp lệ'),
   ('CFG-0042', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
   ('CFG-0042', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '1 – 18 kỳ', false, 'Hợp lệ'),
-  ('CFG-0042', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
+  ('CFG-0042', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '70% giá trị', false, 'Hợp lệ');
 
 -- ===== 31. product_variant — 7 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
