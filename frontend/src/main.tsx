@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useParams, Navigate } from 'react-router-
 import Layout from './components/Layout'
 import DashboardPage from './pages/DashboardPage'
 import BusinessIntentPage from './pages/BusinessIntentPage'
+import BusinessIntentDetailPage from './pages/BusinessIntentDetailPage'
 import ProductIntentPage from './pages/ProductIntentPage'
 import ProductIntentDetailPage from './pages/ProductIntentDetailPage'
 import ProductPatternPage from './pages/ProductPatternPage'
@@ -79,6 +80,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/businessintent/:id" element={<BusinessIntentDetailPage />} />
           <Route path="/intent/:id" element={<ProductIntentDetailPage />} />
           <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
           <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />

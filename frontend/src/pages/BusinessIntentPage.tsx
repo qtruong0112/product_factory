@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../api/client'
 import ListScreen from '../components/ListScreen'
 import { StatusChip } from '../components/StatusChip'
@@ -13,6 +14,7 @@ interface BusinessIntent {
 }
 
 export default function BusinessIntentPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<BusinessIntent> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +47,9 @@ export default function BusinessIntentPage() {
     { label: 'Trạng thái', width: '130px' },
   ]
 
-  const rows = (data?.content ?? []).map((bi) => [
+  const list = data?.content ?? []
+
+  const rows = list.map((bi) => [
     mono(`BI-${String(bi.id).padStart(2, '0')}`),
     <span style={{ fontWeight: 600, color: '#122019' }}>{bi.name}</span>,
     <span style={{ color: '#5E6F66', fontSize: 12.5 }}>{bi.objective ?? '—'}</span>,
@@ -61,6 +65,7 @@ export default function BusinessIntentPage() {
       searchPlaceholder="Tìm định hướng kinh doanh…"
       filters={['Trạng thái', 'Chủ sở hữu']}
       actionLabel="Tạo Business Intent"
+      onRowClick={(i) => navigate(`/businessintent/${list[i].id}`)}
     />
   )
 }
