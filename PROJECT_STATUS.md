@@ -402,9 +402,23 @@ Build 0 lỗi TS. Render Playwright (mock đúng shape mới, tay tính từ see
 
 ---
 
+### Giai đoạn 22 — Audit toàn diện sample data: lấp mọi lỗ hổng quan hệ N:1/N:M còn trống dòng
+
+**Bối cảnh:** user yêu cầu kiểm tra chéo 7 khu vực (Business Intent, Product Intent, Product Pattern, Product Template, Product Config, Block & Answer Slot, Attribute) xem quan hệ nào còn thiếu dữ liệu con, tự động bổ sung — không fix cứng, không bịa số. Query trực tiếp DB thật (`docker compose exec db psql`) đếm số dòng con theo từng FK thay vì chỉ đọc seed file, phát hiện 5 lỗ hổng thật (Pattern + Block/AnswerSlot đã đầy đủ, không cần sửa):
+
+1. **`business_intent_kpi`**: 5/7 Business Intent (BI-02,03,04,05,07) có 0 dòng KPI (chỉ BI-01 và BI-06 có). Bổ sung 3 KPI/BI, nội dung suy diễn thẳng từ cột `objective` đã có sẵn của từng BI (không bịa số liệu ngẫu nhiên — vd BI-02 "Chiếm thị phần vay nhanh tài sản" → KPI dư nợ/số HĐ/thời gian giải ngân cầm cố xe máy).
+2. **`product_intent_element`**: 4/6 Product Intent (PI-001,002,004,006) có 0 dòng element nền. Bổ sung bằng cách lấy NGUYÊN VẸN bộ `obligation_type_composition` của Obligation Type mà Pattern gắn với Intent đó dùng (PI-001/006 ← OT_UNSECURED, PI-002 ← OT_FACILITY, PI-004 ← OT_AUTO_PLEDGE) — không tạo mã element mới, chỉ tái dùng element đã tồn tại trong ontology.
+3. **`template_frame`**: 5/6 Product Template (TPL-001,002,004,005,006) có 0 dòng khung giá trị (chỉ TPL-003 có, từ Giai đoạn 21). Bổ sung 9-11 dòng/template, slot lấy từ `pattern_block` của Pattern gốc mỗi Template, giá trị suy từ `answer_slot.default_value`/`attribute.default_value` đã có, điều chỉnh hợp lý theo đối tượng KH (cá nhân/doanh nghiệp) và loại tài sản (xe máy/ô tô/vàng) từng template.
+4. **`fragment`**: 6/7 Product Config (tất cả trừ CFG-0042) có 0 dòng fragment — **vi phạm trực tiếp bất biến đã ghi trong comment DDL bảng `fragment`**: "mỗi (config, slot) phải có ≥1 fragment scope=default". Bổ sung 11-16 fragment/config (default cho mọi slot bắt buộc của block đang active + vài scope override cho thực tế — vd CFG-0040 "KH thân thiết" có thêm fragment `people=Loyalty` ưu đãi lãi suất; CFG-0041 "ô tô hạn mức HCM" override `asset_type` từ khung "Xe máy" của TPL-003 thành "Ô tô" + thêm fragment `place=HCM`, minh họa đúng vai trò Config ghi đè Template).
+5. **`attribute_enum_value`**: attribute `occupation` có `data_type_code='DT_ENUM'` nhưng 0 dòng enum value (enum rỗng vô nghĩa). Bổ sung 4 giá trị nghề nghiệp phổ biến trong hồ sơ vay KYC.
+
+**Verify:** `docker compose down -v && up --build` chạy sạch (Flyway áp cả 2 migration không lỗi). Query lại DB thật xác nhận mọi FK đã có ≥1 dòng con: `business_intent_kpi` 7/7 BI có KPI, `product_intent_element` 6/6 PI có element, `template_frame` 6/6 template có khung, `fragment` 7/7 config có fragment (11-18 dòng/config), `occupation` có 4 enum value. Gọi thật `GET /api/product-configs/CFG-0021/detail` xác nhận completeness từ 0% (trước đây trống hoàn toàn) lên đúng 15/15 = 100%. `npm run build` frontend 0 lỗi TS (không đổi code frontend, chỉ đổi seed).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **viết lại Product Config** (Giai đoạn 21) theo phản hồi trực tiếp của user (giao diện phải giống 100% + backend map đúng + tự bổ sung sample data thiếu). Việc kế tiếp: user xác nhận lại sau khi chạy `docker compose down -v && up --build`; sau đó tiếp tục đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit + lấp toàn bộ lỗ hổng sample data còn thiếu (Giai đoạn 22) theo yêu cầu user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 
