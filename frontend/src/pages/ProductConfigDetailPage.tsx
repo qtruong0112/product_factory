@@ -429,7 +429,7 @@ export default function ProductConfigDetailPage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.4px', color: '#8A998F', marginBottom: 10 }}>GIÁ TRỊ RESOLVE</div>
             {resolution && (
               <div style={{ border: '1.5px solid #CDE9DA', borderRadius: 12, padding: 16, background: '#F4FBF7', marginBottom: 8 }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: '#0B7349', letterSpacing: '-.5px' }}>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#0B7349', letterSpacing: '-.5px', lineHeight: 1.15 }}>
                   {resolution.winner ? resolution.winner.value : '— chưa cấu hình —'}
                 </div>
                 {resolution.winner ? (

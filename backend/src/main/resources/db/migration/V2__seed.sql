@@ -729,7 +729,10 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
 -- ===== 30b. fragment — bổ sung CFG-0021/0037/0038/0039/0040/0041 (thiếu trong bản gốc — chỉ CFG-0042 có
 -- fragment, vi phạm bất biến "mỗi (config, slot) phải có ≥1 fragment scope=default" ghi ở comment bảng
 -- fragment). Suy diễn từ block/slot thật của Pattern gắn với Template mỗi Config, giá trị mặc định lấy
--- theo answer_slot/template_frame tương ứng hoặc điều chỉnh hợp lý theo tên Config (không bịa số liệu). =====
+-- theo answer_slot/template_frame tương ứng hoặc điều chỉnh hợp lý theo tên Config (không bịa số liệu).
+-- CFG-0021/0037/0038/0039 có thêm fragment scope people/place/time (không chỉ default) trên slot base_rate
+-- — nếu không, panel "Xem trước Resolution" của các config này sẽ có Place/Time dropdown trống (chỉ
+-- CFG-0040/0041/0042 có biến thể scope trước đó), khác với prototype luôn hiển thị đủ 3 ngữ cảnh. =====
 INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
   -- CFG-0021 'Vay cầm cố laptop' (retired) ← TPL-001/PT-001
   ('CFG-0021', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
@@ -738,6 +741,9 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0021', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,8%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'people', 'Loyalty', '1,5%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,7%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,3%/tháng', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí thẩm định', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
@@ -754,6 +760,8 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0037', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,2%/tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,15%/tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,0%/tháng', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí quản lý', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
@@ -770,6 +778,9 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0038', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
   ('CFG-0038', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
   ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,6%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'people', 'Loyalty', '1,4%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,55%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,3%/tháng', false, 'Hợp lệ'),
   ('CFG-0038', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
   ('CFG-0038', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
   ('CFG-0038', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 24', false, 'Hợp lệ'),
@@ -783,6 +794,9 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0039', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Lãi hàng tháng, gốc cuối kỳ (Bullet)', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,3%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'people', 'VIP', '1,1%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,25%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,0%/tháng', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Vàng (Gold)', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '85% giá trị', false, 'Hợp lệ'),
