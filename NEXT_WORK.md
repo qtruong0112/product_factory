@@ -128,6 +128,25 @@ Frontend `ProductCatalogPage.tsx` (card grid, mẫu `ArchetypePage`): header gra
 
 ---
 
+## 3B. CÔNG CỤ/HỆ THỐNG: Release + Activity Log — nav key `release`, `activity` — ✅ XONG (Giai đoạn 18)
+
+Khảo sát bundler JS xác nhận:
+- **`release`** (`isRelease`) — KHÔNG phải list, là **stepper 8 bước** (`releaseSteps()`/`releaseData()`) + view phụ **Sơ đồ Swimlane**. Dữ liệu 8 bước trong bundler là hardcode nhưng khớp gần như y hệt seed thật `maker_checker_process`(1 dòng, done_count=4)/`process_step`(8 dòng: title/role/step_status/input_desc/output_desc)/`process_step_checklist`(24 dòng, is_done thật). `desc`/`tip`/`icon` không có cột DB — giữ làm hằng số UI `STEP_META` ở backend vì là copy mô tả tĩnh của quy trình chuẩn công ty (không đổi theo instance), không phải dữ liệu nghiệp vụ.
+- **`activity`** (`isList`) — list đơn giản, 8 dòng hardcode khớp y hệt seed thật `activity_log` (8 dòng). Cột "KÊNH" không có cột DB riêng nhưng **suy ra được thật** từ hậu tố `"· kênh X"` luôn có trong `detail` (regex, khớp đúng 8/8 dòng seed) — không bịa. Footer "trên 1.284 hoạt động" của prototype là số bịa → bỏ, dùng COUNT thật (8). Cột "HÀNH ĐỘNG" của prototype là câu diễn giải ghép động từ+đối tượng — map lại `action` code (`create/update/approve/submit_review/publish/retire/assign/sync`) sang động từ tiếng Việt qua `ACTION_LABEL`. Click dòng nào cũng mở modal export tĩnh giống nhau (`openCreate('activity')`) — không phải detail thật → không làm `onRowClick`.
+
+Backend:
+- Package `release` (Lớp IV — Governance): `MakerCheckerProcess`(PK id, variantCode nullable, productName, doneCount) + `ProcessStep`(+`ProcessStepId` composite `[process_id, step_no]`: title, role, stepStatus, inputDesc/outputDesc nullable) + `ProcessStepChecklist`(+`ProcessStepChecklistId` composite `[process_id, step_no, sort_order]`: item, done). `ReleaseProcessController` (`/api/release-processes`, `/{id}/detail`) trả process + 8 step (kèm STEP_META tĩnh desc/tip/icon/nav) + checklist thật.
+- Package `activity`: `ActivityLog`(PK id, occurredAt, actor, action, entityType, entityCode nullable, detail nullable). `ActivityLogController` (`/api/activity-logs`) parse `channel` bằng regex `"kênh\s+(\S+)"` trên `detail`, map `actionLabel`, format `occurredAtLabel` (`dd/MM HH:mm`).
+
+Frontend:
+- `ReleasePage.tsx`: banner gradient (product từ `maker_checker_process`), progress bar thật (`doneCount/totalSteps`), 2 tab (Hướng dẫn từng bước / Sơ đồ Swimlane). Stepper: timeline trái (8 bước, status thật từ `step_status`) + panel chi tiết phải (desc/input/output/checklist thật/tip, nút "Mở màn liên quan →" điều hướng React Router tới nav key thật nếu có — vd `/config`,`/catalog`; nút "Hoàn thành bước"/"Mở lại bước" giữ giao diện, no-op, tooltip "read-only"). Swimlane: CSS Grid (lane=vai trò × cột=bước, không dùng absolute-position canvas như prototype nhưng giữ đúng ý đồ hình — không rút gọn thành list thường), click node quay lại stepper.
+- `ActivityPage.tsx`: dùng `ListScreen` chung, 5 cột Thời gian/Actor/Hành động/Đối tượng/Kênh, filters `['Actor','Loại','Kênh']`, actionLabel "Xuất nhật ký". Không `onRowClick`.
+- `main.tsx`: thêm `release`/`activity` vào `CUSTOM` map (không cần Route mới — không có `/:id` trong URL).
+
+Verified Playwright (mock đúng shape từ seed thật): stepper hiện đúng 4/8 done + bước 5 current + checklist đúng is_done seed; swimlane đúng lane/cột/màu trạng thái; activity list đúng 8/8 dòng, kênh Web/API khớp seed. **Kế tiếp = mục 3C, Simulation Engine.**
+
+---
+
 ## 4. QUY TRÌNH BẮT BUỘC (nhắc lại — mục 7 PROJECT_STATUS)
 
 code → `cd frontend && npm run build` (0 lỗi TS) → render Playwright (mock API = seed thật, SPA fallback, dist tuyệt đối) → view PNG so khớp prototype → đóng **zip trọn vẹn** → cập nhật PROJECT_STATUS + NEXT_WORK. Backend không compile được ở sandbox → kiểm cú pháp/ngoặc/import thủ công. Dùng `ListScreen`, `StatusChip`, `Icon`, bảng màu chuẩn. **Màn builder/biểu đồ không rút gọn thành detail thường.**
@@ -152,7 +171,7 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
 
-Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**, **template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame)**, **config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment)**, **variant(list, backend pipeline.ProductVariant/ProductCatalog/CatalogListing)**, **catalog(card grid, backend pipeline.ProductCatalogController)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT, BUILDER PATTERN ĐÃ HẾT FIX CỨNG, PIPELINE SẢN PHẨM ĐÃ HOÀN TẤT.**
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**, **template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame)**, **config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment)**, **variant(list, backend pipeline.ProductVariant/ProductCatalog/CatalogListing)**, **catalog(card grid, backend pipeline.ProductCatalogController)**, **release(stepper 8 bước + swimlane, backend release.MakerCheckerProcess/ProcessStep/ProcessStepChecklist)**, **activity(list, backend activity.ActivityLog)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT, BUILDER PATTERN ĐÃ HẾT FIX CỨNG, PIPELINE SẢN PHẨM ĐÃ HOÀN TẤT, RELEASE+ACTIVITY LOG ĐÃ HOÀN TẤT.**
 
 **NỀN TẢNG trước:**
 1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
@@ -166,16 +185,18 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 **PIPELINE sau:**
 8. ✅ **template** (list + detail, backend `pipeline.ProductTemplate`/`CustomerSegment`/`TemplateSegment`/`TemplateFrame`) — XONG (Giai đoạn 14). → 9. ✅ **config** (list + detail, backend `pipeline.ProductConfig`/`SelectorScope`/`Fragment`) — XONG (Giai đoạn 15). → 10. ✅ **variant** (list, backend `pipeline.ProductVariant`/`ProductCatalog`/`CatalogListing`) — XONG (Giai đoạn 16). → 11. ✅ **catalog** (card grid, backend `pipeline.ProductCatalogController`) — XONG (Giai đoạn 17). **PIPELINE SẢN PHẨM ĐÃ HOÀN TẤT.**
 
-**CÔNG CỤ / HỆ THỐNG / CUỐI (← ĐANG TỚI):**
-12. **release** (Quy trình phát hành), **activity** (Nhật ký hoạt động)
-13. **simulation** (gần cuối — backend annuity + `/api/simulation/run`)
+**CÔNG CỤ / HỆ THỐNG / CUỐI:**
+12. ✅ **release** (stepper 8 bước + swimlane, backend `release.MakerCheckerProcess`/`ProcessStep`/`ProcessStepChecklist`) — XONG (Giai đoạn 18). ✅ **activity** (list, backend `activity.ActivityLog`) — XONG (Giai đoạn 18).
+13. **simulation** (← ĐANG TỚI, gần cuối — backend annuity + `/api/simulation/run`)
 14. **ĐỢT POLISH CUỐI:** mục 5 (BI detail+KPI, ListScreen interactive, loading/error, Docker).
 
 > Vì làm nền tảng trước: khi tới màn thư viện Block/Ma trận/Attribute là dựng luôn cả backend + frontend; tới Pipeline chỉ còn join API thật. Không còn fix cứng.
 
 ---
 
-*Cập nhật: ✅ Hoàn thành **Product Catalog** (Giai đoạn 17, mục 3.4) — **HOÀN TẤT TOÀN BỘ NHÓM PIPELINE SẢN PHẨM.** `catalog` là card grid riêng (`isCatalog`, không phải `isList`/wizard), không cần entity mới (tái dùng `ProductCatalog`/`CatalogListing` từ Variant). `ProductCatalogController` join `product_variant`+`catalog_listing`→`product_catalog.channel`, chỉ hiện variant đã niêm yết ≥1 catalog. Verified Playwright khớp verbatim 6 card thật. **Kế tiếp = nhóm Công cụ/Hệ thống (Release, Activity Log), rồi Simulation Engine, rồi đợt polish cuối.** Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+*Cập nhật: ✅ Hoàn thành **Release + Activity Log** (Giai đoạn 18, mục 3B). `release` là stepper 8 bước + swimlane (không phải list) — backend package mới `release` (`MakerCheckerProcess`/`ProcessStep`/`ProcessStepChecklist`) đọc thật `maker_checker_process`/`process_step`/`process_step_checklist` (khớp seed y hệt bundler hardcode: done=4/8, step_status/is_done thật). `activity` là list đơn giản — backend package mới `activity` (`ActivityLog`), cột KÊNH suy ra thật bằng regex trên `detail` (hậu tố "· kênh X", khớp 8/8 dòng), bỏ số bịa "1.284" dùng COUNT thật. Verified Playwright (stepper/swimlane/list đều khớp seed thật). **Kế tiếp = Simulation Engine (`POST /api/simulation/run`), rồi đợt polish cuối.** Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+
+*Ghi chú lịch sử: ✅ Hoàn thành **Product Catalog** (Giai đoạn 17, mục 3.4) — **HOÀN TẤT TOÀN BỘ NHÓM PIPELINE SẢN PHẨM.** `catalog` là card grid riêng (`isCatalog`, không phải `isList`/wizard), không cần entity mới (tái dùng `ProductCatalog`/`CatalogListing` từ Variant). `ProductCatalogController` join `product_variant`+`catalog_listing`→`product_catalog.channel`, chỉ hiện variant đã niêm yết ≥1 catalog. Verified Playwright khớp verbatim 6 card thật.*
 
 *Ghi chú lịch sử: ✅ Hoàn thành **Product Variant** (Giai đoạn 16, mục 3.3) — màn LIST (xác nhận `variant` nằm trong `isList`, click dòng chỉ mở drawer tạo-mới chung). Phát hiện: cột "Kênh" của prototype suy ra được THẬT từ `catalog_listing→product_catalog.channel` (không cần bỏ, không fabricate). Backend 4 entity mới package `pipeline` (`ProductVariant`/`ProductCatalog`/`CatalogListing`+Id).*
 
