@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getDetail } from '../api/client'
 import Icon from '../components/Icon'
 import { StatusChip } from '../components/StatusChip'
+import VersionHistoryDrawer from '../components/VersionHistoryDrawer'
 
 // ---- kiểu dữ liệu từ API /product-configs/{code}/detail ----
 interface ConfigMeta {
@@ -98,6 +99,7 @@ export default function ProductConfigDetailPage() {
   const [ctxPeople, setCtxPeople] = useState('')
   const [ctxPlace, setCtxPlace] = useState('')
   const [ctxTime, setCtxTime] = useState(HIEN_TAI)
+  const [versionOpen, setVersionOpen] = useState(false)
 
   useEffect(() => {
     if (!code) return
@@ -193,7 +195,7 @@ export default function ProductConfigDetailPage() {
             <div style={{ fontSize: 10.5, color: '#8A998F' }}>{completeness.reqFilled}/{completeness.totalReq} slot bắt buộc</div>
           </div>
         </div>
-        <button title="read-only" style={{ ...readonlyBtn, display: 'flex', alignItems: 'center', gap: 7 }}>
+        <button style={{ ...readonlyBtn, display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }} onClick={() => setVersionOpen(true)}>
           <Icon name="lifecycle" size={15} color="#41524A" /> Phiên bản
         </button>
         <button title="read-only" style={readonlyBtn}>Lưu nháp</button>
@@ -479,6 +481,13 @@ export default function ProductConfigDetailPage() {
           </div>
         </div>
       </div>
+      <VersionHistoryDrawer
+        open={versionOpen}
+        onClose={() => setVersionOpen(false)}
+        entityType="config"
+        entityCode={data.config.code}
+        entityName={data.config.name}
+      />
     </div>
   )
 }

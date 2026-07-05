@@ -421,9 +421,23 @@ Build 0 lỗi TS. Render Playwright (mock đúng shape mới, tay tính từ see
 
 ---
 
+### Giai đoạn 23 — Version History Drawer (nút "Phiên bản" Pattern/Config) — wire thật, không còn no-op
+
+**Bối cảnh:** user đối chiếu ảnh chụp prototype gốc (Pattern PT-002 và Config CFG-0042 đều có drawer "Lịch sử phiên bản" trượt từ phải, hiển thị danh sách version với badge trạng thái/HEAD/Đang hoạt động, danh sách thay đổi, nút So sánh/Xem/Khôi phục) — hỏi liệu cần dựng thêm DB sample. Trước đó nút "Phiên bản" ở cả 2 màn chỉ là no-op (đúng quy ước CUD read-only), nhưng đây thực chất là hành động ĐỌC (xem lịch sử), không phải ghi — nên quyết định wire thật thay vì giữ no-op.
+
+**Backend** — package mới `com.f88.productfactory.version`: `VersionEntry` (entity read-only ánh xạ `version_entry`), `VersionEntryRepository` (native query `findByEntityTypeAndEntityCodeOrderByCreatedAtDesc` — bắt buộc `CAST(:entityType AS version_entity_type_enum)` tường minh vì cột `entity_type` là Postgres enum thật, không phải varchar như đa số bảng khác trong schema — derived query JPQL thường sẽ lỗi "operator does not exist: enum = varchar" nếu không cast), `VersionEntryController` (`GET /api/version-entries?entityType=&entityCode=`) tách cột `note` gộp ("tóm tắt | change1; change2") thành `title` + `changes[]` để khớp đúng cấu trúc card của bundler.
+
+**Frontend** — component dùng chung mới `VersionHistoryDrawer.tsx` (trích đúng markup bundler dòng 2460-2518: overlay mờ, drawer 460px trượt phải, legend "Đang hoạt động"/"HEAD", timeline nút tròn nối đường dọc theo `nodeColor` suy từ active/head, card mỗi version với badge trạng thái + HEAD + Đang hoạt động, danh sách thay đổi dạng mono, nút So sánh/Xem luôn có, Khôi phục chỉ hiện khi `!active && !head` — đúng logic `restorable` gốc). Nút "Phiên bản" ở `ProductPatternDetailPage.tsx`/`ProductConfigDetailPage.tsx` đổi từ no-op sang `onClick` mở drawer thật (duy nhất 2 nút này không còn no-op trong toàn bộ dự án, vì đây là đọc dữ liệu thật chứ không phải CUD).
+
+**Dữ liệu:** đúng như user dự đoán — trước đó CHỈ PT-002 và CFG-0042 có `version_entry` (từ các giai đoạn trước), 5 pattern + 6 config còn lại chưa có dòng nào → nút "Phiên bản" của chúng sẽ trống. Bổ sung 1-3 phiên bản mỗi entity còn thiếu (PT-001,003,004,005,006 và CFG-0021,0037,0038,0039,0040,0041), nội dung suy diễn nhất quán theo trạng thái/tên thật của từng entity (vd CFG-0021 retired có thêm version "Thu hồi sản phẩm laptop ngừng kinh doanh"). Quy tắc gán `is_active`: chỉ `true` cho version HEAD của entity đang ở status `published` thật (đang vận hành) — draft/review/approved/retired đều `is_active=false`, tránh đánh dấu tùy tiện.
+
+**Verify:** `docker compose down -v && up --build` sạch (Java biên dịch entity/repository/controller mới không lỗi sau khi sửa cast enum). `npm run build` 0 lỗi TS. Query DB xác nhận đủ 6/6 pattern + 7/7 config có version_entry. Playwright chụp `/config/CFG-0021` và `/pattern/PT-002` xác nhận drawer mở đúng, dữ liệu khớp DB thật, badge/timeline/nút Khôi phục hiện đúng theo active/head.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit + lấp toàn bộ lỗ hổng sample data còn thiếu (Giai đoạn 22), rồi tiếp tục sửa Product Template lên đủ 100% giá trị khung + layout đúng prototype theo 2 phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành Version History Drawer (Giai đoạn 23) theo phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 

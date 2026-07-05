@@ -1051,6 +1051,45 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   ('config', 'CFG-0042', 'v0.2', 'draft', false, false, 'Trần Lan', '2026-06-29 10:05:00', 'Điền Answer Slot bắt buộc của Block Trả nợ & Tài sản | + asset_type, ltv; + repay_method, installment_count'),
   ('config', 'CFG-0042', 'v0.1', 'draft', false, false, 'Phạm An', '2026-06-27 16:00:00', 'Khởi tạo Config từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định Base Rate');
 
+-- ===== 38b. version_entry — bổ sung lịch sử cho 5 Pattern (PT-001,003,004,005,006) và 6 Config
+-- (CFG-0021,0037,0038,0039,0040,0041) còn thiếu trong bản gốc (chỉ PT-002/CFG-0042 có, khiến nút
+-- "Phiên bản" của mọi Pattern/Config khác không có gì để hiển thị). is_active=true chỉ gán cho
+-- version HEAD của thực thể đã ở status 'published' (đang thật sự vận hành); approved/review/draft/
+-- retired đều is_active=false — khớp đúng ý nghĩa "đang hoạt động" thay vì đánh dấu tùy tiện. =====
+INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", "is_active", "is_head", "author", "created_at", "note") VALUES
+  -- PT-001 'Khuôn vay cầm cố trả góp' (published, từ PI-005)
+  ('pattern', 'PT-001', 'v0.1', 'draft', false, false, 'Phạm An', '2026-05-10 09:00:00', 'Khởi tạo khuôn từ Product Intent PI-005 | + Block Bên tham gia; + Block Lãi suất; + Block Tài sản ĐB'),
+  ('pattern', 'PT-001', 'v0.2', 'published', true, true, 'Phạm Designer', '2026-05-20 11:30:00', 'Hoàn thiện cấu trúc Block & phát hành | + Block Trả nợ; + Block Phạt & Quá hạn; + Block Tuân thủ & Pháp lý; → Phát hành (Review→Published)'),
+  -- PT-003 'Khuôn vay cầm cố Bullet' (approved, từ PI-001)
+  ('pattern', 'PT-003', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-05-12 10:15:00', 'Khởi tạo khuôn Bullet từ Product Intent PI-001 | + Block Bên tham gia; + Block Lãi suất'),
+  ('pattern', 'PT-003', 'v0.2', 'approved', false, true, 'Lê Minh', '2026-05-25 14:00:00', 'Bổ sung Block Giải ngân & Tài sản, gửi duyệt | + Block Giải ngân; + Block Tài sản ĐB; → Phê duyệt (Review→Approved)'),
+  -- PT-004 'Khuôn vay hạn mức Facility' (draft, từ PI-002 — vừa tạo)
+  ('pattern', 'PT-004', 'v0.1', 'draft', false, true, 'Phạm An', '2026-07-01 08:50:00', 'Khởi tạo khuôn Facility từ Product Intent PI-002 | + Block Bên tham gia; + Block Hạn mức; + Block Lãi suất'),
+  -- PT-005 'Khuôn vay tín chấp lương' (published, từ PI-006)
+  ('pattern', 'PT-005', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-04-15 09:20:00', 'Khởi tạo khuôn tín chấp lương từ Product Intent PI-006 | + Block Điều kiện tham gia; + Block Bên tham gia'),
+  ('pattern', 'PT-005', 'v0.2', 'published', true, true, 'Phạm Designer', '2026-04-28 15:45:00', 'Hoàn thiện Block Lãi suất/Trả nợ/Phạt & phát hành | + Block Lãi suất; + Block Trả nợ; + Block Phạt & Quá hạn; → Phát hành (Review→Published)'),
+  -- PT-006 'Khuôn vay cầm cố ô tô' (approved, từ PI-004)
+  ('pattern', 'PT-006', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-01 09:00:00', 'Khởi tạo khuôn cầm cố ô tô từ Product Intent PI-004 | + Block Bên tham gia; + Block Lãi suất; + Block Tài sản ĐB'),
+  ('pattern', 'PT-006', 'v0.2', 'approved', false, true, 'Phạm An', '2026-06-15 13:30:00', 'Bổ sung Block Phí & Trả nợ, gửi duyệt | + Block Phí; + Block Trả nợ; → Phê duyệt (Review→Approved)'),
+  -- CFG-0021 'Vay cầm cố laptop' (retired, sản phẩm đã ngừng)
+  ('config', 'CFG-0021', 'v0.1', 'draft', false, false, 'Phạm An', '2026-01-10 09:00:00', 'Khởi tạo Config từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0021', 'v0.2', 'published', false, false, 'Trần Lan', '2026-01-20 10:30:00', 'Hoàn thiện fragment & phát hành | + Fragment còn lại; → Phát hành (Approved→Published)'),
+  ('config', 'CFG-0021', 'v0.3', 'retired', false, true, 'Trần Lan', '2026-06-29 14:05:00', 'Thu hồi sản phẩm laptop ngừng kinh doanh | → Thu hồi (Published→Retired)'),
+  -- CFG-0037 'Vay cầm cố DN nhỏ' (review)
+  ('config', 'CFG-0037', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-20 09:30:00', 'Khởi tạo Config từ Template TPL-002 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0037', 'v0.2', 'review', false, true, 'Lê Minh', '2026-07-01 09:10:00', 'Điền đủ Answer Slot bắt buộc, gửi duyệt | + Fragment Base Rate Place/Time; → Gửi duyệt (Draft→Review)'),
+  -- CFG-0038 'Vay tín chấp lương GV' (draft, vừa khởi tạo)
+  ('config', 'CFG-0038', 'v0.1', 'draft', false, true, 'Phạm An', '2026-06-30 11:00:00', 'Khởi tạo Config tín chấp lương GV từ Template TPL-006 v1.0 | Khởi tạo từ Template; + Fragment mặc định Base Rate'),
+  -- CFG-0039 'Vay Bullet vàng 3 tháng' (approved)
+  ('config', 'CFG-0039', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-05-05 09:15:00', 'Khởi tạo Config Bullet vàng từ Template TPL-005 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0039', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-05-18 14:20:00', 'Bổ sung ưu đãi VIP & khu vực, phê duyệt | + Fragment Base Rate People/Place/Time; → Phê duyệt (Review→Approved)'),
+  -- CFG-0040 'Vay xe máy KH thân thiết' (published)
+  ('config', 'CFG-0040', 'v0.1', 'draft', false, false, 'Phạm An', '2026-05-25 10:00:00', 'Khởi tạo Config xe máy KH thân thiết từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0040', 'v0.2', 'published', true, true, 'Trần Lan', '2026-06-30 09:45:00', 'Thêm ưu đãi Loyalty & phát hành | + Fragment Base Rate Loyalty; → Phát hành (Approved→Published)'),
+  -- CFG-0041 'Vay ô tô hạn mức HCM' (approved)
+  ('config', 'CFG-0041', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-05 09:30:00', 'Khởi tạo Config ô tô hạn mức từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0041', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)');
+
 -- ===== 39. activity_log — 8 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
 INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "entity_code", "detail") VALUES
   ('2026-07-01 09:42:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0042', 'Gửi duyệt Config — Vay nhanh Xe máy · kênh Web'),

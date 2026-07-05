@@ -29,3 +29,10 @@ export async function getDetail<T>(resource: string, id: string | number, suffix
   if (!res.ok) throw new Error(`GET ${resource}/${id}/${suffix} thất bại: ${res.status}`)
   return res.json()
 }
+
+// Lịch sử phiên bản (nút "Phiên bản" ở Pattern/Config): GET /api/version-entries?entityType=&entityCode=
+export async function getVersionHistory<T>(entityType: string, entityCode: string): Promise<T[]> {
+  const res = await fetch(`${BASE}/version-entries?entityType=${entityType}&entityCode=${encodeURIComponent(entityCode)}`)
+  if (!res.ok) throw new Error(`GET version-entries thất bại: ${res.status}`)
+  return res.json()
+}

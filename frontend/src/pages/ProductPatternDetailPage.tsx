@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getDetail, getList } from '../api/client'
 import Icon from '../components/Icon'
 import { STATUS_COLORS, STATUS_LABELS } from '../components/StatusChip'
+import VersionHistoryDrawer from '../components/VersionHistoryDrawer'
 
 // ---- kiểu dữ liệu từ API /product-patterns/{code}/detail (đã wire DB thật, mục 2.7) ----
 interface Pattern {
@@ -81,6 +82,7 @@ export default function ProductPatternDetailPage() {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [paletteTab, setPaletteTab] = useState<'block' | 'ot'>('block')
   const [paletteQuery, setPaletteQuery] = useState('')
+  const [versionOpen, setVersionOpen] = useState(false)
 
   useEffect(() => {
     if (!code) return
@@ -229,7 +231,7 @@ export default function ProductPatternDetailPage() {
             )}
           </div>
         </div>
-        <button style={hdrBtn} title={READONLY}>
+        <button style={{ ...hdrBtn, cursor: 'pointer' }} onClick={() => setVersionOpen(true)}>
           <Icon name="activity" size={15} color="#41524A" /> Phiên bản
         </button>
         <button style={hdrBtn} title={READONLY}>
@@ -488,6 +490,13 @@ export default function ProductPatternDetailPage() {
           )}
         </div>
       </div>
+      <VersionHistoryDrawer
+        open={versionOpen}
+        onClose={() => setVersionOpen(false)}
+        entityType="pattern"
+        entityCode={pt.code}
+        entityName={pt.name}
+      />
     </div>
   )
 }
