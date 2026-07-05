@@ -147,6 +147,24 @@ Verified Playwright (mock đúng shape từ seed thật): stepper hiện đúng 
 
 ---
 
+## 3C. Simulation Engine — nav key `simulation` — ✅ XONG (Giai đoạn 19, phần 10% CÓ TÍNH TOÁN)
+
+Khảo sát bundler JS xác nhận `isSimulation` là **form tham số (trái) + panel kết quả realtime (phải)**, KHÔNG phải list. Bundler tính bằng JS thuần `simData()`/`annuity()` (không gọi API) nhưng công thức khớp chính xác seed thật (`simulation_scenario` id=1 CFG-0042/VAR-101: 30tr/18 tháng/1.5%/tháng → PMT 1.914.173đ, khớp seed `monthly_payment`).
+
+**Quyết định kiến trúc:** đây là phần 10% DUY NHẤT có tính toán thật (CLAUDE.md mục 2, PROJECT_STATUS mục 2.2) — nút "Chạy mô phỏng" gọi THẬT `POST /api/simulation/run` (khác mọi nút CUD khác trong dự án luôn no-op). Endpoint này **không ghi DB** — chỉ nhận tham số, tính, trả kết quả.
+
+Backend package mới `simulation` (Lớp IV):
+- `SimulationScenario`/`SimulationScheduleRow`(+Id) — entity read-only chỉ dùng để nạp state ban đầu từ kịch bản mẫu thật (`GET /api/simulation/default` — 1 dòng scenario + 18 dòng schedule seed).
+- `SimulationRequest` (DTO): amount/months/baseRatePct/assetValue/segmentCode/startDate/appraisalFee/periodicFeePct/graceMonths + 3 bộ toggle tình huống (penalty/prepay/early — không có cột lưu trong `simulation_scenario`, chỉ ảnh hưởng runtime, đúng bản chất "mô phỏng").
+- `SimulationEngine` (thuần Java, không phụ thuộc Spring/DB): cổng lại công thức annuity của bundler — PMT dư nợ giảm dần, ân hạn (grace: kỳ chỉ trả lãi+phí, PMT tính lại trên số kỳ còn lại), trả bớt gốc (tái tính PMT phần dư), tất toán sớm (trả hết dư nợ + % phạt, dừng lịch), phạt trễ hạn (`PMT×(số ngày trễ/30)×lãi×1.5`). Điều chỉnh lãi theo tier (`standard`=0/`loyalty`=−0.5/`vip`=−0.3, sàn 0.3%/tháng) — khớp đúng tên hiển thị thật `customer_segment.name` ("Thân thiết (−0,5%/tháng)"), không bịa. **Tổng phải trả = lịch trả nợ + phí thẩm định 1 lần** — khớp đúng seed `total_payment` (35.400.634 = 34.900.634 + 500.000 phí thẩm định, phát hiện qua verify số không khớp lúc đầu, đã sửa).
+- `SimulationController` (`/api/simulation`): `GET /default` (thật, đọc seed) + `POST /run` (tính, không ghi DB). Tra `tier` qua `pipeline.CustomerSegmentRepository` (tái dùng, không tạo entity trùng).
+
+Frontend `pages/SimulationPage.tsx`: cột trái form (slider số tiền/kỳ hạn/lãi/tài sản/phí, chọn phân khúc, ngày giải ngân, 3 toggle tình huống có sub-input) + nút "Chạy mô phỏng" (gọi POST thật) + "Ghim phương án" (lưu snapshot local, tối đa 3, hiện bảng so sánh A/B/C/D); cột phải: 8 KPI card, khối "Kiểm tra ràng buộc" (verdict Hợp lệ/Không hợp lệ + 4 check), bảng lịch trả nợ chi tiết từng kỳ. Nút "Xuất CSV"/"Xuất PDF" giữ giao diện, no-op tooltip "read-only" (ngoài phạm vi tính toán cốt lõi).
+
+Build 0 lỗi TS. Verified Playwright: mock JS annuity y hệt seed → khớp chính xác PMT 1.914.173đ/tổng lãi 4.455.122đ/tổng phải trả 35.400.634đ/LTV 66,67%/18 dòng lịch trả nợ; thử tăng số tiền vay lên 40tr → LTV nhảy lên 88,89% và verdict chuyển đúng "Không hợp lệ" (check LTV≤80% chuyển ✗). **Kế tiếp = đợt polish cuối (mục 5).**
+
+---
+
 ## 4. QUY TRÌNH BẮT BUỘC (nhắc lại — mục 7 PROJECT_STATUS)
 
 code → `cd frontend && npm run build` (0 lỗi TS) → render Playwright (mock API = seed thật, SPA fallback, dist tuyệt đối) → view PNG so khớp prototype → đóng **zip trọn vẹn** → cập nhật PROJECT_STATUS + NEXT_WORK. Backend không compile được ở sandbox → kiểm cú pháp/ngoặc/import thủ công. Dùng `ListScreen`, `StatusChip`, `Icon`, bảng màu chuẩn. **Màn builder/biểu đồ không rút gọn thành detail thường.**
@@ -171,7 +189,7 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
 
-Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**, **template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame)**, **config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment)**, **variant(list, backend pipeline.ProductVariant/ProductCatalog/CatalogListing)**, **catalog(card grid, backend pipeline.ProductCatalogController)**, **release(stepper 8 bước + swimlane, backend release.MakerCheckerProcess/ProcessStep/ProcessStepChecklist)**, **activity(list, backend activity.ActivityLog)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT, BUILDER PATTERN ĐÃ HẾT FIX CỨNG, PIPELINE SẢN PHẨM ĐÃ HOÀN TẤT, RELEASE+ACTIVITY LOG ĐÃ HOÀN TẤT.**
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**, **template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame)**, **config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment)**, **variant(list, backend pipeline.ProductVariant/ProductCatalog/CatalogListing)**, **catalog(card grid, backend pipeline.ProductCatalogController)**, **release(stepper 8 bước + swimlane, backend release.MakerCheckerProcess/ProcessStep/ProcessStepChecklist)**, **activity(list, backend activity.ActivityLog)**, **simulation(form + annuity engine thật, backend simulation.SimulationEngine, POST /api/simulation/run)**. **TẤT CẢ 18 MÀN + SIMULATION ENGINE ĐÃ HOÀN TẤT — chỉ còn ĐỢT POLISH CUỐI (mục 5).**
 
 **NỀN TẢNG trước:**
 1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
@@ -187,14 +205,16 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 **CÔNG CỤ / HỆ THỐNG / CUỐI:**
 12. ✅ **release** (stepper 8 bước + swimlane, backend `release.MakerCheckerProcess`/`ProcessStep`/`ProcessStepChecklist`) — XONG (Giai đoạn 18). ✅ **activity** (list, backend `activity.ActivityLog`) — XONG (Giai đoạn 18).
-13. **simulation** (← ĐANG TỚI, gần cuối — backend annuity + `/api/simulation/run`)
-14. **ĐỢT POLISH CUỐI:** mục 5 (BI detail+KPI, ListScreen interactive, loading/error, Docker).
+13. ✅ **simulation** (form tham số + annuity engine thật, backend `simulation.SimulationScenario`/`SimulationScheduleRow`/`SimulationEngine`, `POST /api/simulation/run`) — XONG (Giai đoạn 19). **TOÀN BỘ 18 MÀN + Simulation Engine ĐÃ HOÀN TẤT.**
+14. **ĐỢT POLISH CUỐI (← ĐANG TỚI):** mục 5 (BI detail+KPI, ListScreen interactive, loading/error, Docker).
 
 > Vì làm nền tảng trước: khi tới màn thư viện Block/Ma trận/Attribute là dựng luôn cả backend + frontend; tới Pipeline chỉ còn join API thật. Không còn fix cứng.
 
 ---
 
-*Cập nhật: ✅ Hoàn thành **Release + Activity Log** (Giai đoạn 18, mục 3B). `release` là stepper 8 bước + swimlane (không phải list) — backend package mới `release` (`MakerCheckerProcess`/`ProcessStep`/`ProcessStepChecklist`) đọc thật `maker_checker_process`/`process_step`/`process_step_checklist` (khớp seed y hệt bundler hardcode: done=4/8, step_status/is_done thật). `activity` là list đơn giản — backend package mới `activity` (`ActivityLog`), cột KÊNH suy ra thật bằng regex trên `detail` (hậu tố "· kênh X", khớp 8/8 dòng), bỏ số bịa "1.284" dùng COUNT thật. Verified Playwright (stepper/swimlane/list đều khớp seed thật). **Kế tiếp = Simulation Engine (`POST /api/simulation/run`), rồi đợt polish cuối.** Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+*Cập nhật: ✅ Hoàn thành **Simulation Engine** (Giai đoạn 19, mục 3C) — **TOÀN BỘ 18 MÀN + phần 10% tính toán ĐÃ HOÀN TẤT.** Backend package mới `simulation` (`SimulationScenario`/`SimulationScheduleRow` đọc kịch bản mẫu thật + `SimulationEngine` thuần Java tính annuity dư nợ giảm dần, cổng lại công thức bundler: PMT, ân hạn, trả bớt gốc, tất toán sớm, phạt trễ hạn, điều chỉnh lãi theo tier). `POST /api/simulation/run` là nút DUY NHẤT trong dự án gọi tính toán thật (không no-op) — không ghi DB. Verified Playwright: khớp chính xác PMT/tổng lãi/tổng phải trả/LTV/18 dòng lịch trả nợ với seed thật (phát hiện+sửa 1 lỗi lúc verify: tổng phải trả thiếu phí thẩm định 1 lần); thử tăng số tiền vay → verdict "Không hợp lệ" đúng khi LTV vượt 80%. **Kế tiếp = đợt polish cuối (mục 5): Business Intent detail+KPI, ListScreen interactive, loading/error, Docker.***
+
+*Ghi chú lịch sử: ✅ Hoàn thành **Release + Activity Log** (Giai đoạn 18, mục 3B). `release` là stepper 8 bước + swimlane (không phải list) — backend package mới `release` (`MakerCheckerProcess`/`ProcessStep`/`ProcessStepChecklist`) đọc thật `maker_checker_process`/`process_step`/`process_step_checklist` (khớp seed y hệt bundler hardcode: done=4/8, step_status/is_done thật). `activity` là list đơn giản — backend package mới `activity` (`ActivityLog`), cột KÊNH suy ra thật bằng regex trên `detail` (hậu tố "· kênh X", khớp 8/8 dòng), bỏ số bịa "1.284" dùng COUNT thật. Verified Playwright (stepper/swimlane/list đều khớp seed thật).*
 
 *Ghi chú lịch sử: ✅ Hoàn thành **Product Catalog** (Giai đoạn 17, mục 3.4) — **HOÀN TẤT TOÀN BỘ NHÓM PIPELINE SẢN PHẨM.** `catalog` là card grid riêng (`isCatalog`, không phải `isList`/wizard), không cần entity mới (tái dùng `ProductCatalog`/`CatalogListing` từ Variant). `ProductCatalogController` join `product_variant`+`catalog_listing`→`product_catalog.channel`, chỉ hiện variant đã niêm yết ≥1 catalog. Verified Playwright khớp verbatim 6 card thật.*
 
