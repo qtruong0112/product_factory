@@ -58,7 +58,7 @@ public class SimulationScenario {
     @Column(name = "grace_months")
     private Short graceMonths;
 
-    @Column(name = "pinned_label", length = 1)
+    @Column(name = "pinned_label", columnDefinition = "char(1)")
     private String pinnedLabel;
 
     public Long getId() { return id; }
