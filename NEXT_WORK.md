@@ -95,10 +95,21 @@ Khảo sát prototype xác nhận: KHÔNG nằm trong `isList` (cờ riêng `isO
 
 Thứ tự: **template → config → variant → catalog.** Mỗi màn: backend `pipeline/` + frontend pixel-perfect, **join hết vào thư viện nền tảng (API thật), không fix cứng.**
 
-### 3.1 Product Template — nav key `template`
-- `product_template` (PK `code`, `from_pattern_code`→product_pattern, `status`) + `template_segment` (PK ghép) + `template_frame` (kiểm cột từ DDL/canonical).
-- **Trích markup trước:** template có thể cũng là **builder** như pattern (kiểm `openBuilder('template')` trong prototype) — KHÔNG rút gọn nếu là builder.
-- Seed: TPL-001..006 (TPL-001/002←PT-001, TPL-003←PT-002, TPL-004←PT-006, TPL-005←PT-003, TPL-006←PT-005).
+### 3.1 Product Template — nav key `template` — ✅ XONG (Giai đoạn 14)
+Khảo sát prototype xác nhận **KHÔNG phải builder**: nav gọi `this.go('template')` (route list thường), khác `pattern` gọi `this.openBuilder('pattern')`. Click 1 dòng gọi `openTplWizard` nhưng hàm này luôn reset `tplStep:0` và không truyền id dòng nào — đây là wizard **TẠO MỚI chung** (state demo tĩnh `TPL_BLOCKS`/`tp.locked`/`tp.frames`), không phải xem chi tiết dòng đã click → cùng bản chất "modal generic no-op" như Obligation/Domain/Lifecycle. Quyết định: **chỉ dựng LIST**, không dựng wizard.
+
+Backend package `pipeline`: `ProductTemplate` (PK `code`, `from_pattern_code`→product_pattern, `status`) + `CustomerSegment` (PK `code`, `name`, `audience`, `tier` nullable, `legal_requirement` nullable) + `TemplateSegment` (+`TemplateSegmentId` composite `[template_code, segment_code]`). `ProductTemplateController` (`/api/product-templates`, tự viết vì cần join) trả `{code,name,fromPatternCode,patternName,segmentCode,segmentName,status}`. Cột "CẬP NHẬT" của prototype **bỏ** (không có cột nguồn). Chưa tạo `TemplateFrame` entity (bảng `template_frame`) — không cần cho list, để dành nếu sau này cần.
+
+Frontend `ProductTemplatePage.tsx` (list đơn giản, mẫu `DomainPage`): 5 cột Mã/Tên Template/Pattern nguồn/Đối tượng KH/Trạng thái, `filters=['Pattern nguồn','Đối tượng']`, không `onRowClick`.
+
+Seed: TPL-001..006 (TPL-001/002←PT-001, TPL-003←PT-002, TPL-004←PT-006, TPL-005←PT-003, TPL-006←PT-005). Build + render verify OK (mock 6 dòng seed thật).
+
+**Bổ sung — Product Template Detail (route `/template/:code`):** user chỉ ra prototype có wizard "Tạo Product Template" 3 bước (đối tượng KH → khóa Block → giá trị khung Answer Slot) và hỏi đã dựng chưa. Đọc lại bundler JS xác nhận `TPL_BLOCKS`/`state.tpl` là dữ liệu TĨNH 100% (không đổi theo dòng click) → quyết định (AskUserQuestion, chọn "Suy ra từ template_frame"): KHÔNG dựng wizard tạo-mới, mà dựng `/{code}/detail` = XEM 1 template thật, tái dùng layout 3 bước:
+- Bước 1 (đối tượng KH): thật 100% (`template_segment`→`customer_segment`).
+- Bước 2 (Block áp dụng): không có cột DB "khóa" theo template (đã kiểm cả `pattern_block.usage` — đó là field khác, ở cấp Pattern, seed toàn `'active'`) → suy ra active = block có ≥1 dòng `template_frame` cho template này.
+- Bước 3 (giá trị khung): thật 100% từ `template_frame`, chỉ hiện block active; slot chưa có giá trị hiện "— chưa đặt —" (không dùng default tĩnh của prototype).
+
+Backend: `TemplateFrame`(+`TemplateFrameId`) entity mới + mở rộng `ProductTemplateController#GET /{code}/detail` join `pattern_block`+`structure.Block`/`AnswerSlot`+`TemplateFrame`. Frontend `ProductTemplateDetailPage.tsx` (route đăng ký trước `/:view`), `ProductTemplatePage` thêm `onRowClick`. Verified Playwright TPL-003 (6/9 block active, giá trị khung khớp seed thật).
 
 ### 3.2 → 3.4 Config / Variant / Catalog
 - `product_config` + `fragment` (giá trị theo scope people/place/time) — nav `config`.
@@ -132,7 +143,7 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ## 6. LỘ TRÌNH 18 MÀN (thứ tự thực thi MỚI)
 
-Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT, BUILDER PATTERN ĐÃ HẾT FIX CỨNG.**
+Đã xong: dashboard, businessintent(list), intent(list+detail), **pattern(builder, đã WIRE về DB thật — Giai đoạn 13)**, **block(list + backend structure)**, **matrix(4-tab grid + backend governance)**, **attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint)**, **obligation(list 3-tab, join làm giàu ontology có sẵn)**, **archetype(card grid + detail)**, **domain(list)**, **lifecycle(list, join stateCount)**, **ontology(ER-chain+decomposition+vocab)**, **sysmap(pipeline+foundations+relations)**, **template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame)**. **NHÓM THƯ VIỆN NỀN TẢNG ĐÃ HOÀN TẤT, BUILDER PATTERN ĐÃ HẾT FIX CỨNG, PIPELINE ĐÃ BẮT ĐẦU.**
 
 **NỀN TẢNG trước:**
 1. ✅ **block** (Block & Answer Slot + data_type) — XONG (Giai đoạn 6)
@@ -143,8 +154,8 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 6. ✅ **ontology** + **sysmap** (biểu đồ, không backend mới) — XONG (Giai đoạn 12)
 7. ✅ **WIRE builder Pattern về DB** (mục 2.7) — XONG (Giai đoạn 13). `patternBuilderData.ts` đã xóa.
 
-**PIPELINE sau (← ĐANG TỚI):**
-8. **template** → 9. **config** → 10. **variant** → 11. **catalog**
+**PIPELINE sau:**
+8. ✅ **template** (list, backend `pipeline.ProductTemplate`/`CustomerSegment`/`TemplateSegment`) — XONG (Giai đoạn 14). → 9. **config** ← ĐANG TỚI → 10. **variant** → 11. **catalog**
 
 **CÔNG CỤ / HỆ THỐNG / CUỐI:**
 12. **release** (Quy trình phát hành), **activity** (Nhật ký hoạt động)
@@ -155,7 +166,9 @@ Màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→
 
 ---
 
-*Cập nhật: ✅ Hoàn thành **WIRE builder Pattern về DB thật** (Giai đoạn 13, mục 2.7) — `ProductPatternController#/{code}/detail` mở rộng join thật `block`/`answer_slot`/`attribute`/`data_type`/`constraint_matrix`/`matrix_cell`; **`patternBuilderData.ts` đã xóa hoàn toàn**, không còn field/dòng nào fix cứng trong toàn bộ nhóm thư viện nền tảng + builder Pattern. **Kế tiếp = mục 3, Pipeline sản phẩm — bắt đầu Product Template** (nav key `template`; kiểm tra prototype xem có phải builder như Pattern không trước khi rút gọn). Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+*Cập nhật: ✅ Hoàn thành **Product Template** (Giai đoạn 14, mục 3.1) — cả list VÀ detail (`/template/:code`). Wizard "Tạo Product Template" gốc của prototype là dữ liệu TĨNH 100% (không đổi theo dòng click) → thay vì dựng lại wizard tạo-mới, dựng `/{code}/detail` là màn XEM 1 template thật (tái dùng layout 3 bước), suy ra "Block đang áp dụng" từ có/không có dòng `template_frame` thật (quyết định qua AskUserQuestion, không có cột "khóa" nào trong DB). Backend 4 entity mới package `pipeline` (`ProductTemplate`/`CustomerSegment`/`TemplateSegment`/`TemplateFrame`). Verified Playwright cả list (6 dòng TPL-001..006) và detail (TPL-003: 6/9 block active, giá trị khung khớp seed). **Kế tiếp = mục 3.2, Product Config.** Business Intent detail+KPI và ListScreen interactive vẫn để đợt polish cuối.*
+
+*Ghi chú lịch sử: ✅ Hoàn thành **WIRE builder Pattern về DB thật** (Giai đoạn 13, mục 2.7) — `ProductPatternController#/{code}/detail` mở rộng join thật `block`/`answer_slot`/`attribute`/`data_type`/`constraint_matrix`/`matrix_cell`; **`patternBuilderData.ts` đã xóa hoàn toàn**, không còn field/dòng nào fix cứng trong toàn bộ nhóm thư viện nền tảng + builder Pattern.*
 
 *Ghi chú lịch sử: ✅ Hoàn thành **Ontology + Sysmap** (Giai đoạn 12, mục 2.6) — **HOÀN TẤT TOÀN BỘ NHÓM THƯ VIỆN NỀN TẢNG.** Cả 2 màn là card/flex/grid tĩnh (không SVG/canvas), không cần backend mới — tổng hợp client-side từ API Lớp I đã có.*
 
