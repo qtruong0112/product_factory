@@ -18,6 +18,7 @@ import DomainPage from './pages/DomainPage'
 import LifecyclePage from './pages/LifecyclePage'
 import OntologyPage from './pages/OntologyPage'
 import SysmapPage from './pages/SysmapPage'
+import ProductTemplatePage from './pages/ProductTemplatePage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -36,6 +37,7 @@ const CUSTOM: Record<string, React.ReactNode> = {
   lifecycle: <LifecyclePage />,
   ontology: <OntologyPage />,
   sysmap: <SysmapPage />,
+  template: <ProductTemplatePage />,
 }
 
 function GenericView() {
