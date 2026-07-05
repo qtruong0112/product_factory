@@ -435,9 +435,25 @@ Build 0 lỗi TS. Render Playwright (mock đúng shape mới, tay tính từ see
 
 ---
 
+### Giai đoạn 25 — Simulation Engine: VIẾT LẠI toàn diện theo đúng builder gốc + chọn Variant + real-time
+
+**Bối cảnh:** user đối chiếu 3 ảnh chụp file prototype gốc (`isSimulation`, bundler dòng 1783-2110) với `/simulation` bản dựng trước và thấy khác biệt lớn: (1) bản cũ cố định 1 sản phẩm (CFG-0042/VAR-101), không chọn được Variant khác; (2) thiếu hẳn 2 hàng KPI phụ (phí/phạt/ân hạn/tất toán), panel "Dòng tiền (Cashflow)" với biểu đồ cột + đường thu hồi lũy kế + điểm hòa vốn, và cột Từ ngày/Đến ngày trong lịch trả nợ; (3) phải bấm "Chạy mô phỏng" thủ công thay vì tự tính lại real-time khi kéo thanh trượt. Yêu cầu: sửa cho giống 100% + chọn được sản phẩm + tình huống mô phỏng đầy đủ + real-time.
+
+**Backend** — viết lại hoàn toàn `SimulationEngine.run()` (cổng đúng `simData()` bundler dòng 2787-2864): bổ sung `chart[]` (% chiều cao cột Gốc/Lãi/Phí+Phạt trên `maxBar=pmt*1.6`), `cumPoints` (polyline đường thu hồi lũy kế), `capitalLineY`/`breakevenX` (đường vốn giải ngân + điểm hòa vốn), tag/rowBg mỗi dòng lịch trả nợ (Ân hạn/Phạt/Trả bớt gốc/Tất toán sớm — đúng thứ tự ưu tiên gốc), `periodStart`/`periodEnd`. Sửa 1 lỗi: `totalFee` phải gồm phí thẩm định t0 (khớp `d.totalFee` bundler = apprFee + Σ phí kỳ) — trước chỉ có phí theo kỳ, sai KPI "TỔNG PHÍ"/"LÃI RÒNG".
+
+`SimulationController` thêm `GET /api/simulation/variants` (danh sách 7 Product Variant thật) và `GET /api/simulation/default?variantCode=` suy tham số khởi tạo THẬT từ variant được chọn: parse `limit_range`/`display_rate` (variant) + fragment `ltv`/`installment_count` (config gốc) → amount/months lấy trung điểm khoảng thật, assetValue suy từ amount/LTV — không bịa số cho sản phẩm khác VAR-101. Kèm theo đó, ràng buộc "trong hạn mức"/"kỳ hạn hợp lệ" cũng phải lấy THEO ĐÚNG khoảng thật của từng sản phẩm (`amountMin/amountMax/termLimit`) thay vì hardcode 1 khoảng cố định của bundler (chỉ đúng cho 1 sản phẩm) — nếu không, sản phẩm hạn mức lớn hơn (vd VAR-102 tới 2 tỷ) sẽ luôn bị báo "không hợp lệ" sai.
+
+Phát hiện lúc verify: CFG-0039 (Vay Bullet vàng) có `ltv=85%` (Giai đoạn 22 lỡ đặt) vượt trần 80% thật — sửa lại 80%. Ngược lại VAR-106 (laptop, đã retired) có `base_rate=1,8%/tháng` vượt trần 1,65% — GIỮ NGUYÊN vì đây là sản phẩm đã ngừng, hợp lý diễn giải là lý do bị thu hồi (không phải lỗi cần sửa).
+
+**Frontend** — viết lại hoàn toàn `SimulationPage.tsx` theo đúng layout bundler: dropdown "Sản phẩm (Variant)" thật (đổi sản phẩm → gọi lại `/default?variantCode=` nạp toàn bộ tham số + slider bounds mới), Selector Scope dạng 3 thẻ bấm (không phải `<select>`), 4 khối tình huống (Phạt trễ hạn/Trả bớt gốc/Ân hạn/Tất toán sớm) dùng toggle switch thật + panel tham số ẩn/hiện đúng theo bundler, 3 hàng KPI (chính/phí-phạt/ân hạn-tất toán), panel Kiểm tra ràng buộc, panel Cashflow (4 KPI + biểu đồ cột SVG/CSS tự dựng — không cần thư viện chart, polyline đường thu hồi + mốc hòa vốn + đường vốn giải ngân), bảng lịch trả nợ đủ cột Từ ngày/Đến ngày + tô màu dòng theo tình huống. **Real-time**: mọi thay đổi form (kéo slider, gõ số, bật toggle) debounce 220ms rồi tự `POST /run` lại — không cần bấm nút (nút "Chạy mô phỏng" vẫn giữ để bấm ngay lập tức, không debounce).
+
+**Verify:** số liệu mặc định VAR-101 khớp CHÍNH XÁC ảnh chụp user (1.166.074đ/4.255.330đ/925.533đ/35.196.785đ/15.922đ/8.000.000đ/hòa vốn kỳ 14). Test đổi Variant (VAR-104 Bullet vàng) load đúng tham số suy từ dữ liệu thật, LTV=80% sau khi sửa. Test real-time: kéo Số tiền vay 30tr→10tr, toàn bộ KPI/biểu đồ/bảng cập nhật ngay không cần bấm nút, kể cả phát hiện tất toán sớm tại kỳ 9 do trả bớt gốc tương đối lớn hơn dư nợ còn lại. `docker compose down -v && up --build` sạch, `npm run build` 0 lỗi TS, 6/7 variant hợp lệ (VAR-106 retired cố tình không hợp lệ, đúng lý do thu hồi).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành Version History Drawer (Giai đoạn 23) theo phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành viết lại toàn diện Simulation Engine (Giai đoạn 25) theo phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 

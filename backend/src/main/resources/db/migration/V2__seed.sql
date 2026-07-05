@@ -799,8 +799,8 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,0%/tháng', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Vàng (Gold)', false, 'Hợp lệ'),
-  ('CFG-0039', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '85% giá trị', false, 'Hợp lệ'),
-  ('CFG-0039', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '85%', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
   ('CFG-0039', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
   -- CFG-0040 'Vay xe máy KH thân thiết' (published) ← TPL-001/PT-001 (ưu đãi Loyalty)
   ('CFG-0040', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),

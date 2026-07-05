@@ -19,7 +19,15 @@ public class SimulationRequest {
     private LocalDate startDate;
     private BigDecimal appraisalFee;
     private BigDecimal periodicFeePct;
+    private boolean graceOn;
     private Integer graceMonths;
+
+    // Khoảng hạn mức/kỳ hạn THẬT của config đang chọn (suy từ limit_range/installment_count) —
+    // dùng để kiểm tra ràng buộc "trong hạn mức"/"kỳ hạn hợp lệ" đúng theo từng sản phẩm, thay vì
+    // hardcode 1 khoảng cố định như bundler gốc (vốn chỉ mô phỏng đúng 1 sản phẩm duy nhất).
+    private BigDecimal amountMin;
+    private BigDecimal amountMax;
+    private Integer termLimit;
 
     private boolean penaltyOn;
     private Integer penaltyPeriod;
@@ -53,8 +61,16 @@ public class SimulationRequest {
     public void setAppraisalFee(BigDecimal v) { this.appraisalFee = v; }
     public BigDecimal getPeriodicFeePct() { return periodicFeePct; }
     public void setPeriodicFeePct(BigDecimal v) { this.periodicFeePct = v; }
+    public boolean isGraceOn() { return graceOn; }
+    public void setGraceOn(boolean v) { this.graceOn = v; }
     public Integer getGraceMonths() { return graceMonths; }
     public void setGraceMonths(Integer v) { this.graceMonths = v; }
+    public BigDecimal getAmountMin() { return amountMin; }
+    public void setAmountMin(BigDecimal v) { this.amountMin = v; }
+    public BigDecimal getAmountMax() { return amountMax; }
+    public void setAmountMax(BigDecimal v) { this.amountMax = v; }
+    public Integer getTermLimit() { return termLimit; }
+    public void setTermLimit(Integer v) { this.termLimit = v; }
 
     public boolean isPenaltyOn() { return penaltyOn; }
     public void setPenaltyOn(boolean v) { this.penaltyOn = v; }
