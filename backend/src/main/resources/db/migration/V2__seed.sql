@@ -557,52 +557,71 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_BILLING', 'stmt_cycle', 'Hàng tháng');
 
 -- ===== 28b. template_frame — bổ sung TPL-001,002,004,005,006 (thiếu trong bản gốc; suy diễn theo đúng block
--- của Pattern gốc mỗi Template — pattern_block — và slot_code/default_value thật của answer_slot) =====
+-- của Pattern gốc mỗi Template — pattern_block — và slot_code/default_value thật của answer_slot). Phủ ĐỦ
+-- mọi slot BẮT BUỘC (is_required=true) của từng block — không chỉ 1 vài slot "tiêu đề" như bản trước, để
+-- tránh hiện "— chưa đặt giá trị khung —" cho slot lẽ ra phải có; slot KHÔNG bắt buộc (beneficiary, min_amount,
+-- fee_amount, grace, disb_syntax, transfer_content, occupation, billing_day) chủ động để trống — đúng nghĩa
+-- "chưa cấu hình", không phải lỗi. =====
 INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
   -- TPL-001 'Vay cầm cố trả góp · KH cá nhân' ← PT-001 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
   ('TPL-001', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-001', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
   ('TPL-001', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-001', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-001', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
   ('TPL-001', 'BLK_INTEREST', 'base_rate', '1,5%/tháng'),
   ('TPL-001', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-001', 'BLK_FEE', 'fee_type', 'Phí thẩm định'),
+  ('TPL-001', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-001', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
   ('TPL-001', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
   ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-001', 'BLK_COLLATERAL', 'asset_valuation', '80% giá trị'),
   ('TPL-001', 'BLK_COLLATERAL', 'ltv', '80%'),
   ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   -- TPL-002 'Vay cầm cố trả góp · KH doanh nghiệp' ← PT-001 (đối tượng doanh nghiệp)
   ('TPL-002', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-002', 'BLK_COUNTERPARTY', 'borrower_type', 'Doanh nghiệp'),
   ('TPL-002', 'BLK_REGULATORY', 'legal_form', 'Hợp đồng tín dụng'),
+  ('TPL-002', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-002', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
   ('TPL-002', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
   ('TPL-002', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-002', 'BLK_FEE', 'fee_type', 'Phí quản lý'),
+  ('TPL-002', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-002', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
   ('TPL-002', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
   ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-002', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   -- TPL-004 'Vay cầm cố ô tô · trả góp' ← PT-006 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
   ('TPL-004', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-004', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
   ('TPL-004', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-004', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-004', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
   ('TPL-004', 'BLK_INTEREST', 'base_rate', '1,1%/tháng'),
   ('TPL-004', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-004', 'BLK_FEE', 'fee_type', 'Phí thẩm định'),
+  ('TPL-004', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-004', 'BLK_REPAYMENT', 'installment_count', '6 – 36'),
   ('TPL-004', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
   ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-004', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-004', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-004', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   -- TPL-005 'Vay Bullet cầm cố · cá nhân' ← PT-003 (COUNTERPARTY/REGULATORY/DISBURSEMENT/INTEREST/COLLATERAL/PENALTY)
   ('TPL-005', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-005', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
   ('TPL-005', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-005', 'BLK_REGULATORY', 'compliance', 'Bật'),
   ('TPL-005', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-005', 'BLK_INTEREST', 'interest_calc', 'Lãi hàng tháng, gốc cuối kỳ (Bullet)'),
   ('TPL-005', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
   ('TPL-005', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng'),
+  ('TPL-005', 'BLK_COLLATERAL', 'asset_valuation', '85% giá trị'),
   ('TPL-005', 'BLK_COLLATERAL', 'ltv', '85%'),
   ('TPL-005', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   -- TPL-006 'Vay tín chấp lương · cá nhân' ← PT-005 (ELIGIBILITY/COUNTERPARTY/INTEREST/REPAYMENT/PENALTY)
@@ -610,11 +629,28 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-006', 'BLK_ELIGIBILITY', 'min_income', '5.000.000đ'),
   ('TPL-006', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-006', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
+  ('TPL-006', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
   ('TPL-006', 'BLK_INTEREST', 'base_rate', '1,6%/tháng'),
   ('TPL-006', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-006', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-006', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
   ('TPL-006', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
   ('TPL-006', 'BLK_PENALTY', 'penalty_rate', '150% lãi');
+
+-- ===== 28c. template_frame — bổ sung TPL-003 (thiếu 3 block ELIGIBILITY/REGULATORY/PENALTY mà Pattern
+-- PT-002 (9 block) thực có nhưng bản gốc Giai đoạn 21 chỉ mới cover 6 block; + slot bắt buộc còn thiếu
+-- trong 4 block đã có: capacity_range/interest_calc/repay_method/asset_valuation) — giữ nguyên 10 dòng
+-- gốc phía trên (28), chỉ bổ sung thêm =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  ('TPL-003', 'BLK_ELIGIBILITY', 'age', '18 – 60'),
+  ('TPL-003', 'BLK_ELIGIBILITY', 'min_income', '5.000.000đ'),
+  ('TPL-003', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-003', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-003', 'BLK_LIMIT', 'capacity_range', 'Có quản trị'),
+  ('TPL-003', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-003', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-003', 'BLK_COLLATERAL', 'asset_valuation', '75% giá trị'),
+  ('TPL-003', 'BLK_PENALTY', 'penalty_rate', '150% lãi');
 
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
 -- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra

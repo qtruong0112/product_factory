@@ -134,10 +134,10 @@ export default function ProductTemplateDetailPage() {
 
           {step === 0 && (
             <>
-              <div style={{ fontSize: 13, color: '#5E6F66', marginBottom: 18 }}>Đối tượng KH định hình điều kiện tham gia, hồ sơ pháp lý và khung giá trị mặc định cho template.</div>
-              <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginBottom: 14 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: '#5E6F66', marginBottom: 8 }}>Tên Product Template</div>
-                <div style={{ border: '1px solid #E6ECE8', borderRadius: 9, padding: '10px 13px', fontSize: 13.5, fontWeight: 600, color: '#122019', background: '#FBFDFC' }}>{data.template.name}</div>
+              <div style={{ fontSize: 13, color: '#5E6F66', marginBottom: 22, lineHeight: 1.55 }}>Đối tượng KH định hình điều kiện tham gia, hồ sơ pháp lý và khung giá trị mặc định cho template.</div>
+              <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '20px 22px', marginBottom: 18 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#41524A', marginBottom: 7 }}>Tên Product Template</div>
+                <div style={{ border: '1px solid #E0E7E2', borderRadius: 9, padding: '11px 13px', fontSize: 13.5, fontWeight: 600, color: '#122019', background: '#FBFDFC' }}>{data.template.name}</div>
               </div>
               {['individual', 'business'].map((aud) => {
                 const on = data.audience === aud
@@ -169,12 +169,12 @@ export default function ProductTemplateDetailPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {data.blocks.map((b) => (
                   <div key={b.blockId} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 15px', border: '1px solid ' + (b.active ? '#CDE9DA' : '#E6ECE8'), borderRadius: 11, background: b.active ? '#fff' : '#F8F9F8', opacity: b.active ? 1 : 0.75 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: b.active ? '#ECF6F1' : '#EEF1EF', color: b.active ? '#0B7349' : '#A7B5AC' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: b.active ? '#ECF6F1' : '#EEF1EF', color: b.active ? '#0B7349' : '#A7B5AC' }}>
                       <Icon name="block" size={15} color={b.active ? '#0B7349' : '#A7B5AC'} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#243A30' }}>{b.name}</div>
-                      <div style={{ fontSize: 11, color: '#A7B5AC', marginTop: 1 }}>{b.bizGroup}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: '#243A30' }}>{b.name}</div>
+                      <div style={{ fontSize: 11, color: '#8A998F', marginTop: 2 }}>{b.bizGroup}</div>
                     </div>
                     <span style={{ fontSize: 10.5, fontWeight: 600, padding: '3px 9px', borderRadius: 99, background: b.active ? '#DCF3E7' : '#EEF1EF', color: b.active ? '#0B7349' : '#8A998F' }}>
                       {b.active ? 'Đang áp dụng' : 'Chưa có giá trị khung'}
@@ -196,16 +196,18 @@ export default function ProductTemplateDetailPage() {
                   Template này chưa có giá trị khung nào trong `template_frame`.
                 </div>
               )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {activeBlocks.map((b) => (
                   <div key={b.blockId} style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '16px 18px' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#122019', marginBottom: 12 }}>{b.name}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#122019', marginBottom: 13 }}>{b.name}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                       {b.slots.map((s) => (
-                        <div key={s.code}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: '#41524A' }}>{s.name}</div>
-                          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: '#A7B5AC', marginBottom: 5 }}>{s.code}</div>
-                          <div style={{ border: '1px solid #E6ECE8', borderRadius: 9, padding: '9px 13px', fontSize: 13, color: s.frameValue ? '#122019' : '#B8C5BD', background: '#FBFDFC' }}>
+                        <div key={s.code} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                          <div style={{ width: 200, flex: 'none' }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{s.name}</div>
+                            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: '#A7B5AC', marginTop: 1 }}>{s.code}</div>
+                          </div>
+                          <div style={{ flex: 1, border: '1px solid #E0E7E2', borderRadius: 8, padding: '9px 12px', fontSize: 13, color: s.frameValue ? '#122019' : '#B8C5BD', background: '#FBFDFC' }}>
                             {s.frameValue ?? '— chưa đặt giá trị khung —'}
                           </div>
                         </div>
