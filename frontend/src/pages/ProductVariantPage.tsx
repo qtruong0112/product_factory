@@ -1,0 +1,71 @@
+import { useEffect, useState } from 'react'
+import { getList, type Page } from '../api/client'
+import ListScreen from '../components/ListScreen'
+import { StatusChip } from '../components/StatusChip'
+
+// Phần tử list do backend làm giàu (tên Config nguồn + kênh phân phối thật qua catalog_listing).
+interface VariantRow {
+  code: string
+  name: string
+  fromConfigCode: string
+  configName: string
+  limitRange: string | null
+  displayRate: string | null
+  channels: string | null
+  status: string
+}
+
+export default function ProductVariantPage() {
+  const [data, setData] = useState<Page<VariantRow> | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getList<VariantRow>('product-variants', 0, 200)
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div style={{ padding: '22px 26px', color: '#5E6F66' }}>Đang tải dữ liệu…</div>
+  if (error)
+    return (
+      <div style={{ padding: '22px 26px', color: '#B23B3B' }}>
+        Lỗi: {error}. Kiểm tra backend đã chạy chưa.
+      </div>
+    )
+
+  const mono = (t: string) => (
+    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#5E6F66', fontWeight: 600 }}>{t}</span>
+  )
+
+  const columns = [
+    { label: 'Mã', width: '100px' },
+    { label: 'Sản phẩm' },
+    { label: 'Hạn mức', width: '150px' },
+    { label: 'Lãi suất', width: '120px' },
+    { label: 'Kênh', width: '160px' },
+    { label: 'Trạng thái', width: '130px' },
+  ]
+
+  const list = data?.content ?? []
+
+  const rows = list.map((v) => [
+    mono(v.code),
+    <span style={{ fontWeight: 600, color: '#122019' }}>{v.name}</span>,
+    <span style={{ color: '#41524A' }}>{v.limitRange ?? '—'}</span>,
+    <span style={{ color: '#41524A' }}>{v.displayRate ?? '—'}</span>,
+    <span style={{ color: '#8A998F' }}>{v.channels ?? '—'}</span>,
+    <StatusChip status={v.status} />,
+  ])
+
+  return (
+    <ListScreen
+      columns={columns}
+      rows={rows}
+      searchPlaceholder="Tìm Product Variant…"
+      filters={['Family', 'Kênh', 'Trạng thái']}
+      actionLabel="Đóng gói Variant"
+    />
+  )
+}
