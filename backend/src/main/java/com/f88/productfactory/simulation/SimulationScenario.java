@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,6 +60,7 @@ public class SimulationScenario {
     @Column(name = "grace_months")
     private Short graceMonths;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "pinned_label", columnDefinition = "char(1)")
     private String pinnedLabel;
 
