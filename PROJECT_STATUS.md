@@ -414,11 +414,16 @@ Build 0 lỗi TS. Render Playwright (mock đúng shape mới, tay tính từ see
 
 **Verify:** `docker compose down -v && up --build` chạy sạch (Flyway áp cả 2 migration không lỗi). Query lại DB thật xác nhận mọi FK đã có ≥1 dòng con: `business_intent_kpi` 7/7 BI có KPI, `product_intent_element` 6/6 PI có element, `template_frame` 6/6 template có khung, `fragment` 7/7 config có fragment (11-18 dòng/config), `occupation` có 4 enum value. Gọi thật `GET /api/product-configs/CFG-0021/detail` xác nhận completeness từ 0% (trước đây trống hoàn toàn) lên đúng 15/15 = 100%. `npm run build` frontend 0 lỗi TS (không đổi code frontend, chỉ đổi seed).
 
+**Sửa tiếp (cùng phiên, theo 2 phản hồi trực tiếp của user đối chiếu ảnh chụp thật):**
+1. Đợt bổ sung `template_frame` ở trên (mục 3) chỉ phủ 1 vài slot "tiêu đề" mỗi block — vẫn còn nhiều slot **bắt buộc** hiện "chưa đặt giá trị khung" (compliance, interest_calc, repay_method, asset_valuation…) và TPL-003 thiếu hẳn 3 block (ELIGIBILITY/REGULATORY/PENALTY) mà Pattern PT-002 (9 block) thực có. Bổ sung đủ mọi slot bắt buộc + 3 block thiếu.
+2. User yêu cầu tiếp: **100% slot phải có giá trị khung, kể cả slot không bắt buộc** — bổ sung nốt 21 dòng còn lại (beneficiary/fee_amount/grace/disb_syntax/transfer_content/occupation/min_amount/billing_day) cho cả 6 template. Slot có `default_value` thật sẵn trong `answer_slot` (min_amount/grace/disb_syntax/billing_day) dùng đúng giá trị đó; slot không có default nào trong DB (beneficiary/fee_amount/transfer_content/occupation) dùng mô tả trung thực đúng ý nghĩa nghiệp vụ (vd occupation "Không giới hạn") — không bịa số liệu giả định. Verify bằng SQL đối chiếu `total_slots` (từ `pattern_block`+`answer_slot`) với `framed_slots` (từ `template_frame`) — cả 6 template đều khớp 100% (18/18, 18/18, 24/24, 18/18, 16/16, 14/14). Playwright chụp lại TPL-001 và TPL-003 xác nhận không còn ô "— chưa đặt giá trị khung —" nào.
+3. Sửa layout `ProductTemplateDetailPage.tsx` bước 3 (Giá trị khung Answer Slot): bản dựng trước xếp nhãn phía trên ô hẹp, khác hẳn bundler gốc (dòng 1454-1457) dùng layout hàng ngang (nhãn cố định 200px trái + ô giá trị flex-1 rộng phải) khiến field nhìn nhỏ hơn hẳn — sửa đúng layout hàng ngang, cùng vài chỉnh sửa padding bước 1-2 để khớp pixel.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit + lấp toàn bộ lỗ hổng sample data còn thiếu (Giai đoạn 22) theo yêu cầu user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit + lấp toàn bộ lỗ hổng sample data còn thiếu (Giai đoạn 22), rồi tiếp tục sửa Product Template lên đủ 100% giá trị khung + layout đúng prototype theo 2 phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 

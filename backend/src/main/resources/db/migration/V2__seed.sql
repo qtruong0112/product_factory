@@ -652,6 +652,40 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_COLLATERAL', 'asset_valuation', '75% giá trị'),
   ('TPL-003', 'BLK_PENALTY', 'penalty_rate', '150% lãi');
 
+-- ===== 28d. template_frame — phủ NỐT slot KHÔNG bắt buộc còn lại của cả 6 template lên 100% (user yêu cầu
+-- không để trống slot nào). Slot có default_value thật trong answer_slot (min_amount/grace/disb_syntax/
+-- billing_day) dùng đúng giá trị đó; slot không có default nào sẵn trong DB (beneficiary/fee_amount/
+-- transfer_content/occupation) dùng mô tả trung thực đúng ý nghĩa nghiệp vụ của việc "không bắt buộc"
+-- (vd occupation "Không giới hạn" = không ràng buộc nghề nghiệp cụ thể) — không bịa số liệu giả định. =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 (PT-001)
+  ('TPL-001', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-001', 'BLK_FEE', 'fee_amount', '300.000đ'),
+  ('TPL-001', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-002 (PT-001, doanh nghiệp)
+  ('TPL-002', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-002', 'BLK_FEE', 'fee_amount', '800.000đ'),
+  ('TPL-002', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-003 (PT-002)
+  ('TPL-003', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
+  ('TPL-003', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-003', 'BLK_LIMIT', 'min_amount', '0đ'),
+  ('TPL-003', 'BLK_PENALTY', 'grace', '5 ngày'),
+  ('TPL-003', 'BLK_BILLING', 'billing_day', 'Ngày 5'),
+  -- TPL-004 (PT-006)
+  ('TPL-004', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-004', 'BLK_FEE', 'fee_amount', '400.000đ'),
+  ('TPL-004', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-005 (PT-003)
+  ('TPL-005', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  ('TPL-005', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-006 (PT-005)
+  ('TPL-006', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
+  ('TPL-006', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-006', 'BLK_PENALTY', 'grace', '5 ngày');
+
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
 -- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra
 -- block nào "đang áp dụng"), trong khi toàn bộ 15 fragment của CFG-0042 dùng đúng 6 block mà
