@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../api/client'
 import ListScreen from '../components/ListScreen'
 import { StatusChip } from '../components/StatusChip'
@@ -15,6 +16,7 @@ interface TemplateRow {
 }
 
 export default function ProductTemplatePage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<TemplateRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -63,6 +65,7 @@ export default function ProductTemplatePage() {
       searchPlaceholder="Tìm Product Template…"
       filters={['Pattern nguồn', 'Đối tượng']}
       actionLabel="Tạo Template"
+      onRowClick={(i) => navigate(`/template/${list[i].code}`)}
     />
   )
 }

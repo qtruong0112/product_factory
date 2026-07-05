@@ -19,6 +19,7 @@ import LifecyclePage from './pages/LifecyclePage'
 import OntologyPage from './pages/OntologyPage'
 import SysmapPage from './pages/SysmapPage'
 import ProductTemplatePage from './pages/ProductTemplatePage'
+import ProductTemplateDetailPage from './pages/ProductTemplateDetailPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -68,6 +69,7 @@ function App() {
           <Route path="/intent/:id" element={<ProductIntentDetailPage />} />
           <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
           <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
+          <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
       </Layout>
