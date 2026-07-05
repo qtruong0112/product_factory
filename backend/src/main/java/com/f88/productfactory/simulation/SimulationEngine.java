@@ -18,7 +18,8 @@ import java.util.Map;
  * sàn 0.3%/tháng. Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí, gốc dồn qua kỳ sau, PMT tính trên
  * số kỳ còn lại sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn
  * lại. Tất toán sớm (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
- * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ/30) × lãi suất × 1.5.
+ * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ/30) × lãi suất × hệ số phạt
+ * (mặc định 1.5 = trần 150% theo attribute_constraint 'penalty_rate', có thể ghi đè qua request).
  *
  * Ngoài lịch trả nợ, còn tính thêm dữ liệu biểu đồ Cashflow (chart bar %, đường thu hồi lũy kế,
  * điểm hòa vốn, đường vốn giải ngân) — cổng đúng công thức `simData()` đoạn cuối của bundler.
@@ -41,6 +42,9 @@ public final class SimulationEngine {
         BigDecimal segAdj = segmentAdjustment(segmentTier);
         BigDecimal effRate = baseRatePct.add(segAdj).max(new BigDecimal("0.3"));
         double r = effRate.doubleValue() / 100.0;
+        // Hệ số phạt trễ hạn lấy THẬT từ attribute_constraint 'penalty_rate' (regulatory, ≤150% lãi
+        // trong hạn) qua SimulationController; fallback 1.5 (=150%) nếu request không kèm theo.
+        double penaltyFactor = req.getPenaltyFactor() != null ? req.getPenaltyFactor().doubleValue() / 100.0 : 1.5;
 
         double balance = amount.doubleValue();
         double pmt = annuity(balance, r, months - grace);
@@ -65,7 +69,7 @@ public final class SimulationEngine {
             double penalty = 0;
             if (isPenalty) {
                 int days = req.getPenaltyDays() != null ? req.getPenaltyDays() : 0;
-                penalty = pmt * (days / 30.0) * r * 1.5;
+                penalty = pmt * (days / 30.0) * r * penaltyFactor;
                 totalPenalty += penalty;
             }
 
@@ -161,14 +165,18 @@ public final class SimulationEngine {
         BigDecimal amtMin = req.getAmountMin() != null ? req.getAmountMin() : new BigDecimal("3000000");
         BigDecimal amtMax = req.getAmountMax() != null ? req.getAmountMax() : new BigDecimal("50000000");
         int termMax = req.getTermLimit() != null ? req.getTermLimit() : 18;
+        // Trần LTV/lãi suất lấy THẬT từ attribute_constraint (kind='regulatory') qua SimulationController;
+        // fallback về giá trị gốc chỉ khi request không kèm theo (gọi /run trực tiếp không qua /default).
+        BigDecimal ltvCap = req.getLtvCapPct() != null ? req.getLtvCapPct() : new BigDecimal("80");
+        BigDecimal rateCap = req.getRateCapPct() != null ? req.getRateCapPct() : new BigDecimal("1.65");
 
         List<Map<String, Object>> checks = new ArrayList<>();
         checks.add(check("Số tiền trong hạn mức cấp", "Limit cho phép " + formatVnd(amtMin.doubleValue()) + "đ – " + formatVnd(amtMax.doubleValue()) + "đ", formatVnd(amount.doubleValue()) + "đ",
                 amount.compareTo(amtMin) >= 0 && amount.compareTo(amtMax) <= 0));
-        checks.add(check("Tỷ lệ cho vay LTV ≤ 80%", "LTV = số tiền vay / giá trị tài sản", (ltvPct == null ? "—" : ltvPct + "%"),
-                ltvPct == null || ltvPct.compareTo(new BigDecimal("80")) <= 0));
-        checks.add(check("Lãi suất ≤ trần quy định", "Trần 1,65%/tháng theo quy định nội bộ", effRate.setScale(2, RoundingMode.HALF_UP) + "%/th",
-                effRate.compareTo(new BigDecimal("1.65")) <= 0));
+        checks.add(check("Tỷ lệ cho vay LTV ≤ " + ltvCap.stripTrailingZeros().toPlainString() + "%", "LTV = số tiền vay / giá trị tài sản", (ltvPct == null ? "—" : ltvPct + "%"),
+                ltvPct == null || ltvPct.compareTo(ltvCap) <= 0));
+        checks.add(check("Lãi suất ≤ trần quy định", "Trần " + rateCap.stripTrailingZeros().toPlainString() + "%/tháng theo quy định nội bộ", effRate.setScale(2, RoundingMode.HALF_UP) + "%/th",
+                effRate.compareTo(rateCap) <= 0));
         checks.add(check("Kỳ hạn hợp lệ (≤ " + termMax + " tháng)", "Answer Slot installment_count tối đa " + termMax + " kỳ", months + " tháng",
                 months <= termMax));
         boolean valid = checks.stream().allMatch(c -> (boolean) c.get("passed"));

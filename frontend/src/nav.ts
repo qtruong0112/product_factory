@@ -10,6 +10,8 @@ export interface NavGroup {
   items: NavItem[]
 }
 
+// `count` để null — số đếm thật được nạp lúc runtime từ API (xem `Layout.tsx`,
+// `NAV_COUNT_RESOURCES`) thay vì hardcode, vì số dòng thật trong DB thay đổi theo seed.
 export const NAV: NavGroup[] = [
   {
     label: 'Tổng quan',
@@ -18,27 +20,27 @@ export const NAV: NavGroup[] = [
   {
     label: 'Pipeline sản phẩm',
     items: [
-      { key: 'businessintent', label: 'Business Intent', icon: 'target', count: '7' },
-      { key: 'intent', label: 'Product Intent', icon: 'intent', count: '12' },
-      { key: 'pattern', label: 'Product Pattern', icon: 'pattern', count: '8' },
-      { key: 'template', label: 'Product Template', icon: 'template', count: '15' },
-      { key: 'config', label: 'Product Config', icon: 'config', count: '34' },
-      { key: 'variant', label: 'Product Variant', icon: 'variant', count: '21' },
-      { key: 'catalog', label: 'Product Catalog', icon: 'catalog', count: '18' },
+      { key: 'businessintent', label: 'Business Intent', icon: 'target', count: null },
+      { key: 'intent', label: 'Product Intent', icon: 'intent', count: null },
+      { key: 'pattern', label: 'Product Pattern', icon: 'pattern', count: null },
+      { key: 'template', label: 'Product Template', icon: 'template', count: null },
+      { key: 'config', label: 'Product Config', icon: 'config', count: null },
+      { key: 'variant', label: 'Product Variant', icon: 'variant', count: null },
+      { key: 'catalog', label: 'Product Catalog', icon: 'catalog', count: null },
     ],
   },
   {
     label: 'Thư viện nền tảng',
     items: [
-      { key: 'obligation', label: 'Obligation Library', icon: 'obligation', count: '47' },
+      { key: 'obligation', label: 'Obligation Library', icon: 'obligation', count: null },
       { key: 'ontology', label: 'Sơ đồ Ontology', icon: 'network', count: null },
       { key: 'sysmap', label: 'Sơ đồ quan hệ tổng thể', icon: 'matrix', count: null },
-      { key: 'archetype', label: 'Financial Obligation Archetype', icon: 'layers', count: '3' },
-      { key: 'attribute', label: 'Attribute', icon: 'tag', count: '64' },
-      { key: 'block', label: 'Block & Answer Slot', icon: 'block', count: '26' },
-      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: '9' },
-      { key: 'lifecycle', label: 'Lifecycle & State', icon: 'lifecycle', count: '6' },
-      { key: 'domain', label: 'Domain', icon: 'domain', count: '5' },
+      { key: 'archetype', label: 'Financial Obligation Archetype', icon: 'layers', count: null },
+      { key: 'attribute', label: 'Attribute', icon: 'tag', count: null },
+      { key: 'block', label: 'Block & Answer Slot', icon: 'block', count: null },
+      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: null },
+      { key: 'lifecycle', label: 'Lifecycle & State', icon: 'lifecycle', count: null },
+      { key: 'domain', label: 'Domain', icon: 'domain', count: null },
     ],
   },
   {

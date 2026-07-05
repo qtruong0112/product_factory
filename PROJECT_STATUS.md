@@ -451,9 +451,25 @@ Phát hiện lúc verify: CFG-0039 (Vay Bullet vàng) có `ltv=85%` (Giai đoạ
 
 ---
 
+### Giai đoạn 26 — Audit toàn dự án tìm dữ liệu fix cứng, sửa lại lấy DB thật
+
+**Bối cảnh:** user yêu cầu duyệt lại toàn bộ dự án xem chỗ nào còn fix cứng (fabricated) thay vì lấy từ database thật. Dùng 2 subagent quét toàn bộ `frontend/src/pages`, `frontend/src/components`, backend Controller — phát hiện 2 lỗ hổng nghiêm trọng và 1 lỗ hổng trung bình.
+
+1. **`DashboardPage.tsx` — 100% hardcode, KHÔNG gọi API nào.** Toàn bộ KPI (Catalog items/Pattern/Config chờ duyệt/Kênh phân phối/Obligation Types), Pipeline 6 bước, "Hoạt động gần đây" (tên người/hành động/sản phẩm/thời gian bịa), "Phân bố theo Obligation Family" đều là mảng hardcode trong source, không liên hệ gì tới DB. Viết lại hoàn toàn: `useEffect` gọi song song `product-intents/patterns/templates/configs/variants/catalogs/obligation-types/obligation-families/activity-logs` (size lớn để lấy hết, đủ nhỏ để không cần phân trang), tính toán mọi con số từ dữ liệu thật (đếm theo `status`, group theo `familyName`, parse chuỗi `channels` để đếm kênh phân phối distinct). "Hoạt động gần đây" dùng thẳng `actor/actionLabel/entityCode/detail/occurredAtLabel` thật từ `/api/activity-logs` (đã sort giảm dần theo `occurredAt`, có sẵn field dịch tiếng Việt).
+
+2. **Sidebar (`nav.ts` + `Layout.tsx`) — mọi số đếm bên cạnh menu (Business Intent 7, Product Config 34, Attribute 64, Block 26, Ma trận 9...) đều là hằng số string hardcode, KHÔNG khớp số dòng thật trong DB** (vd Config thật chỉ có 7 dòng chứ không phải 34 — số cũ từ 1 lần seed trước, đã stale từ lâu không ai phát hiện vì không có gì gọi API để so sánh). Sửa: `nav.ts` đặt toàn bộ `count: null`, `Layout.tsx` thêm `NAV_COUNT_RESOURCES` (map nav key → 1 hoặc nhiều resource cần cộng `totalElements`, vd `obligation` = tổng `obligation-types + obligation-elements + obligation-element-types`, `attribute` = tổng `attributes + attribute-groups + data-types`), fetch lúc mount và merge đè vào `item.count` khi hiển thị. Riêng `matrix` gọi `/api/constraint-matrices` (trả mảng thô không phân trang) nên đếm `.length` client thay vì `totalElements`.
+
+3. **`SimulationEngine.java` — 3 ngưỡng quy định (LTV ≤80%, lãi suất ≤1.65%/tháng, hệ số phạt trễ hạn ×1.5) bị hardcode literal trong code, dù DB đã có sẵn đúng 3 dòng thật trong `attribute_constraint` (kind='regulatory'): `ltv` max 80, `base_rate` max 1.65, `penalty_rate` max 150.** Sửa: thêm `ltvCapPct/rateCapPct/penaltyFactor` vào `SimulationRequest`, `SimulationController` thêm `regulatoryCap(attributeCode)` query `AttributeConstraintRepository.findByAttributeCode()` lọc `kind='regulatory'`, gắn vào request ở cả `/default` và `/run` trước khi gọi engine (`applyRegulatoryCaps()`). `SimulationEngine` dùng giá trị từ request, fallback về hằng số cũ chỉ khi request không kèm theo (gọi trực tiếp không qua Controller). Verify: số liệu VAR-101 sau khi wire DB thật vẫn khớp y hệt kết quả đã verify ở Giai đoạn 25 (1.166.074đ/4.255.330đ/925.533đ/35.196.785đ/hòa vốn kỳ 14) — chứng tỏ DB thật đúng bằng đúng hằng số cũ, chỉ là trước đây không query mà lặp lại thủ công.
+
+**Các mục audit khác được xem xét nhưng QUYẾT ĐỊNH GIỮ NGUYÊN** (không phải data hiển thị bịa, chỉ là cấu trúc/copy UI cố định — chấp nhận được theo tiền lệ Sysmap/Ontology): `ReleaseProcessController` DESC/TIP/ICON/NAV gán theo `stepNo` index (mô tả tĩnh của quy trình chuẩn, không có cột DB tương ứng); `ConstraintMatrixController.COVER_BLOCKS` (danh sách 6 block cố định cho tab "độ phủ" — cấu trúc nghiệp vụ, không phải số liệu); `SimulationEngine.segmentAdjustment()` (−0.5%/−0.3% ưu đãi theo tier Loyalty/VIP — không có cột DB nào lưu mức này, `customer_segment` chỉ có tier/audience, không phải data hiển thị nhầm mà là công thức nghiệp vụ chưa có bảng cấu hình).
+
+Verify: backend compile qua `docker compose up --build backend` (0 lỗi), `npm run build` frontend 0 lỗi TS, curl `/api/simulation/default` xác nhận số liệu không đổi sau khi wire DB thật, Playwright chụp `/dashboard` xác nhận toàn bộ số liệu + sidebar khớp đúng dữ liệu seed thật (Intent 6, Pattern 6, Template 6, Config 7, Variant 7, Catalog 6, Obligation Types 9 / 3 family, Attribute 52, Block 12, Matrix 3).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành viết lại toàn diện Simulation Engine (Giai đoạn 25) theo phản hồi trực tiếp của user. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit toàn dự án + sửa dữ liệu fix cứng (Giai đoạn 26: Dashboard viết lại hoàn toàn, sidebar count lấy thật, Simulation Engine wire trần quy định từ `attribute_constraint`). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 

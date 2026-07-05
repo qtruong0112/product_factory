@@ -29,6 +29,12 @@ public class SimulationRequest {
     private BigDecimal amountMax;
     private Integer termLimit;
 
+    // Trần quy định (LTV/lãi suất/hệ số phạt) lấy THẬT từ attribute_constraint (kind='regulatory')
+    // — xem SimulationController — thay vì hardcode trong SimulationEngine.
+    private BigDecimal ltvCapPct;
+    private BigDecimal rateCapPct;
+    private BigDecimal penaltyFactor;
+
     private boolean penaltyOn;
     private Integer penaltyPeriod;
     private Integer penaltyDays;
@@ -71,6 +77,12 @@ public class SimulationRequest {
     public void setAmountMax(BigDecimal v) { this.amountMax = v; }
     public Integer getTermLimit() { return termLimit; }
     public void setTermLimit(Integer v) { this.termLimit = v; }
+    public BigDecimal getLtvCapPct() { return ltvCapPct; }
+    public void setLtvCapPct(BigDecimal v) { this.ltvCapPct = v; }
+    public BigDecimal getRateCapPct() { return rateCapPct; }
+    public void setRateCapPct(BigDecimal v) { this.rateCapPct = v; }
+    public BigDecimal getPenaltyFactor() { return penaltyFactor; }
+    public void setPenaltyFactor(BigDecimal v) { this.penaltyFactor = v; }
 
     public boolean isPenaltyOn() { return penaltyOn; }
     public void setPenaltyOn(boolean v) { this.penaltyOn = v; }

@@ -1,10 +1,49 @@
-import { type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import Icon from './Icon'
 import { NAV, VIEW_TITLES } from '../nav'
+import { getList } from '../api/client'
+
+// Mỗi nav key → 1 hoặc nhiều resource thật cần cộng totalElements để ra số đếm hiển thị.
+const NAV_COUNT_RESOURCES: Record<string, string[]> = {
+  businessintent: ['business-intents'],
+  intent: ['product-intents'],
+  pattern: ['product-patterns'],
+  template: ['product-templates'],
+  config: ['product-configs'],
+  variant: ['product-variants'],
+  catalog: ['product-catalogs'],
+  obligation: ['obligation-types', 'obligation-elements', 'obligation-element-types'],
+  archetype: ['archetypes'],
+  attribute: ['attributes', 'attribute-groups', 'data-types'],
+  block: ['blocks'],
+  lifecycle: ['lifecycles'],
+  domain: ['domains'],
+}
 
 // Layout tái tạo pixel-perfect từ Product_Factory_5_1.html: sidebar + topbar.
 export default function Layout({ children }: { children: ReactNode }) {
+  const [counts, setCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    Object.entries(NAV_COUNT_RESOURCES).forEach(([key, resources]) => {
+      Promise.all(resources.map((r) => getList(r, 0, 1)))
+        .then((pages) => {
+          if (cancelled) return
+          const total = pages.reduce((s, p) => s + p.totalElements, 0)
+          setCounts((prev) => ({ ...prev, [key]: total }))
+        })
+        .catch(() => {})
+    })
+    // /api/constraint-matrices trả mảng thô (không phân trang) — đếm .length riêng.
+    fetch('/api/constraint-matrices')
+      .then((res) => res.json())
+      .then((arr) => !cancelled && setCounts((prev) => ({ ...prev, matrix: Array.isArray(arr) ? arr.length : 0 })))
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   const loc = useLocation()
   const parts = loc.pathname.split('/').filter(Boolean)
   const active = parts[0] || 'dashboard'
@@ -77,6 +116,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
               {group.items.map((item) => {
                 const isActive = active === item.key
+                const liveCount = counts[item.key]
+                const displayCount = liveCount !== undefined ? String(liveCount) : item.count
                 return (
                   <NavLink
                     key={item.key}
@@ -112,7 +153,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                         {item.label}
                       </span>
                     </span>
-                    {item.count && (
+                    {displayCount && (
                       <span
                         style={{
                           fontSize: 10.5,
@@ -124,7 +165,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                           flex: 'none',
                         }}
                       >
-                        {item.count}
+                        {displayCount}
                       </span>
                     )}
                   </NavLink>

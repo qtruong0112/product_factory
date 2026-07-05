@@ -1,5 +1,7 @@
 package com.f88.productfactory.simulation;
 
+import com.f88.productfactory.attribute.AttributeConstraint;
+import com.f88.productfactory.attribute.AttributeConstraintRepository;
 import com.f88.productfactory.pipeline.CustomerSegment;
 import com.f88.productfactory.pipeline.CustomerSegmentRepository;
 import com.f88.productfactory.pipeline.Fragment;
@@ -55,6 +57,7 @@ public class SimulationController {
     private final ProductConfigRepository configRepo;
     private final ProductTemplateRepository templateRepo;
     private final FragmentRepository fragmentRepo;
+    private final AttributeConstraintRepository constraintRepo;
 
     public SimulationController(SimulationScenarioRepository scenarioRepo,
                                 SimulationScheduleRowRepository scheduleRepo,
@@ -62,7 +65,8 @@ public class SimulationController {
                                 ProductVariantRepository variantRepo,
                                 ProductConfigRepository configRepo,
                                 ProductTemplateRepository templateRepo,
-                                FragmentRepository fragmentRepo) {
+                                FragmentRepository fragmentRepo,
+                                AttributeConstraintRepository constraintRepo) {
         this.scenarioRepo = scenarioRepo;
         this.scheduleRepo = scheduleRepo;
         this.segmentRepo = segmentRepo;
@@ -70,6 +74,15 @@ public class SimulationController {
         this.configRepo = configRepo;
         this.templateRepo = templateRepo;
         this.fragmentRepo = fragmentRepo;
+        this.constraintRepo = constraintRepo;
+    }
+
+    /** Trần "regulatory" thật của 1 attribute (vd base_rate/ltv/penalty_rate) từ attribute_constraint. */
+    private BigDecimal regulatoryCap(String attributeCode) {
+        return constraintRepo.findByAttributeCode(attributeCode).stream()
+                .filter(c -> "regulatory".equals(c.getKind()) && c.getMaxValue() != null)
+                .map(AttributeConstraint::getMaxValue)
+                .findFirst().orElse(null);
     }
 
     /** Danh sách Product Variant thật cho dropdown "Sản phẩm (Variant)". */
@@ -114,6 +127,7 @@ public class SimulationController {
         }
 
         SimulationRequest req = toRequest(scenarioMap);
+        applyRegulatoryCaps(req);
         String tier = tierOf((String) scenarioMap.get("segmentCode"));
         Map<String, Object> engineResult = SimulationEngine.run(req, tier);
 
@@ -126,8 +140,16 @@ public class SimulationController {
     /** Chạy mô phỏng cho tham số bất kỳ — KHÔNG ghi DB, chỉ tính runtime. */
     @PostMapping("/run")
     public Map<String, Object> run(@RequestBody SimulationRequest req) {
+        applyRegulatoryCaps(req);
         String tier = tierOf(req.getSegmentCode());
         return SimulationEngine.run(req, tier);
+    }
+
+    /** Gắn trần LTV/lãi suất/hệ số phạt THẬT từ attribute_constraint vào request trước khi tính. */
+    private void applyRegulatoryCaps(SimulationRequest req) {
+        req.setLtvCapPct(regulatoryCap("ltv"));
+        req.setRateCapPct(regulatoryCap("base_rate"));
+        req.setPenaltyFactor(regulatoryCap("penalty_rate"));
     }
 
     private String tierOf(String segmentCode) {
