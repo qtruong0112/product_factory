@@ -20,6 +20,8 @@ import OntologyPage from './pages/OntologyPage'
 import SysmapPage from './pages/SysmapPage'
 import ProductTemplatePage from './pages/ProductTemplatePage'
 import ProductTemplateDetailPage from './pages/ProductTemplateDetailPage'
+import ProductConfigPage from './pages/ProductConfigPage'
+import ProductConfigDetailPage from './pages/ProductConfigDetailPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -39,6 +41,7 @@ const CUSTOM: Record<string, React.ReactNode> = {
   ontology: <OntologyPage />,
   sysmap: <SysmapPage />,
   template: <ProductTemplatePage />,
+  config: <ProductConfigPage />,
 }
 
 function GenericView() {
@@ -70,6 +73,7 @@ function App() {
           <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
           <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
+          <Route path="/config/:code" element={<ProductConfigDetailPage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
       </Layout>
