@@ -26,6 +26,7 @@ import ProductVariantPage from './pages/ProductVariantPage'
 import ProductCatalogPage from './pages/ProductCatalogPage'
 import ReleasePage from './pages/ReleasePage'
 import ActivityPage from './pages/ActivityPage'
+import SimulationPage from './pages/SimulationPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -50,6 +51,7 @@ const CUSTOM: Record<string, React.ReactNode> = {
   catalog: <ProductCatalogPage />,
   release: <ReleasePage />,
   activity: <ActivityPage />,
+  simulation: <SimulationPage />,
 }
 
 function GenericView() {
