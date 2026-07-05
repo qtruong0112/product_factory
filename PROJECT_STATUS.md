@@ -384,7 +384,7 @@ Build 0 lỗi TS. Render Playwright (mock JS annuity y hệt Java engine, độc
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Simulation Engine** (Giai đoạn 19, mục 3C) — **toàn bộ 18 màn + phần 10% tính toán đã hoàn tất**. Việc kế tiếp theo NEXT_WORK: **đợt polish cuối** (mục 5 — Business Intent detail+KPI, ListScreen interactive, loading/error states, Docker hoàn thiện, màn Attribute Usage đã hoãn).
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Business Intent detail+KPI + ListScreen interactive** (Giai đoạn 20, mục 5.1+5.2 của đợt polish). Việc kế tiếp theo NEXT_WORK: mục 5.3 (loading/error states nhất quán, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 
@@ -422,11 +422,11 @@ Thay `patternBuilderData.ts` (tĩnh) bằng dữ liệu THẬT từ DB. **Toàn 
 ### A2. NỢ — Attribute Usage screen + Create/Edit modal (hoãn tới khi có Pipeline + fragment/selector_scope)
 Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant) + modal tạo/sửa Attribute (form đổi field theo Data Type: Money/Percent/Integer/Range/Enum/Text/Boolean/Date/Formula). Cả hai cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend. Làm sau khi Pipeline sản phẩm (mục D) + `fragment`/`selector_scope` (Lớp II) có backend, để tránh fix cứng như từng xảy ra với Pattern builder (mục 6.A cũ).
 
-### B. NỢ — Business Intent detail + KPI (làm ở đợt polish, KHÔNG xen giữa)
-Backend `BusinessIntentKpi`(+`Id` composite, `findByBusinessIntentIdOrderBySortOrder`) + `/business-intents/{id}/detail` `{intent, kpis}`. Frontend `BusinessIntentDetailPage` + route `/businessintent/:id` + wire `onRowClick`. Seed: BI id=1 có 3 KPI, id=6 có 1 KPI.
+### B. ✅ XONG (Giai đoạn 20) — Business Intent detail + KPI
+Backend `BusinessIntentKpi`(+`BusinessIntentKpiId` composite) + `findByBusinessIntentIdOrderBySortOrder` + `BusinessIntentController#/{id}/detail` `{intent, kpis}` (thêm cạnh 2 endpoint sẵn có từ `ReadOnlyController`, không cần bỏ extends). Frontend `BusinessIntentDetailPage` (mẫu `ProductIntentDetailPage`) + route `/businessintent/:id` (trước `/:view`) + `BusinessIntentPage` thêm `onRowClick`. Prototype KHÔNG có markup detail cho màn này (row click gốc chỉ mở modal tạo-mới chung) — dựng mới hoàn toàn theo quyết định nợ đã chốt, dữ liệu thật 100%. Verified: BI-01 hiện đúng 3 KPI seed (Dư nợ giải ngân mới/Số hợp đồng/NPL).
 
-### C. NỢ — ListScreen interactive (đợt polish)
-Wire search (lọc text) + filter dropdown thật; áp lại cho mọi màn list. (Tùy chọn đổi `rows` sang `{cells, raw, onClick}` — nếu đổi phải cập nhật tất cả page dùng ListScreen.)
+### C. ✅ XONG (Giai đoạn 20) — ListScreen interactive
+`components/ListScreen.tsx` tự lọc search + filter dropdown THẬT, client-side, **không đổi signature `rows: ReactNode[][]`, không sửa bất kỳ page nào khác** (phương án thay thế cho việc đổi `rows` sang `{cells,raw,onClick}` từng cân nhắc — tránh sửa lại toàn bộ ~20 page). `extractText(node)` đệ quy trích text từ cell đã dựng (ưu tiên `props.children`; component tùy biến không có children — như `StatusChip`, chip label riêng — fallback đọc `props.status` (dịch qua `STATUS_LABELS` export từ `StatusChip.tsx`) hoặc `props.label`/`props.text`). `guessColumnIndex()` đoán cột ứng với mỗi tên filter bằng so khớp label (không cần khai báo gì thêm ở từng page); dropdown liệt kê giá trị phân biệt thật của đúng cột đó, chọn nhiều, nút "Xóa lọc". Verified trên `BlockPage`: search "lãi" đúng còn 1/4 dòng; filter "Trạng thái"→"Nháp" đúng còn 1/4 dòng.
 
 ### D. Pipeline sản phẩm (đang làm, đều DB-driven)
 - ✅ **template** — XONG (Giai đoạn 14, list + detail `/template/:code`). Backend package `pipeline`: `ProductTemplate`/`CustomerSegment`/`TemplateSegment`/`TemplateFrame` + `ProductTemplateController`.
@@ -481,7 +481,9 @@ Tổng 18 màn + Simulation Engine. **Đã xong: dashboard, businessintent(list)
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành **Simulation Engine** (Giai đoạn 19, mục 3C) — **TOÀN BỘ 18 MÀN + PHẦN 10% TÍNH TOÁN CHÍNH THỨC HOÀN TẤT.** Backend package mới `simulation` (`SimulationScenario`/`SimulationScheduleRow` đọc kịch bản mẫu thật + `SimulationEngine` thuần Java cổng lại công thức annuity/ân hạn/trả bớt gốc/tất toán sớm/phạt trễ hạn của bundler). `POST /api/simulation/run` — nút DUY NHẤT trong dự án gọi tính toán thật (không no-op), không ghi DB. Verified Playwright khớp chính xác PMT/tổng lãi/tổng phải trả/LTV/18 dòng lịch trả nợ với seed thật (bắt và sửa 1 lỗi: tổng phải trả ban đầu thiếu phí thẩm định 1 lần). Việc kế tiếp theo NEXT_WORK: **đợt polish cuối** (mục 5 — Business Intent detail+KPI, ListScreen interactive, loading/error, Docker, Attribute Usage đã hoãn).*
+*Cập nhật lần cuối: sau khi hoàn thành **Business Intent detail+KPI + ListScreen interactive** (Giai đoạn 20, mục 5.1+5.2). BI detail: `BusinessIntentKpi`(+Id) mới + `/business-intents/{id}/detail`, frontend `BusinessIntentDetailPage` (route `/businessintent/:id` — không có markup gốc trong prototype, dựng mới theo mẫu `ProductIntentDetailPage`, KPI 100% thật). ListScreen interactive: `extractText()` đệ quy trích text từ cell React (fallback đọc `status`/`label` cho component tùy biến như `StatusChip`) để search+filter chạy client-side **không cần sửa bất kỳ page nào khác** — áp dụng ngay cho toàn bộ ~20 màn list. Verified Playwright cả 2 (BI-01 đúng 3 KPI seed; BlockPage search+filter lọc đúng). Việc kế tiếp theo NEXT_WORK: mục 5.3 (loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn.*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Simulation Engine** (Giai đoạn 19, mục 3C) — **TOÀN BỘ 18 MÀN + PHẦN 10% TÍNH TOÁN CHÍNH THỨC HOÀN TẤT.** Backend package mới `simulation` (`SimulationScenario`/`SimulationScheduleRow` đọc kịch bản mẫu thật + `SimulationEngine` thuần Java cổng lại công thức annuity/ân hạn/trả bớt gốc/tất toán sớm/phạt trễ hạn của bundler). `POST /api/simulation/run` — nút DUY NHẤT trong dự án gọi tính toán thật (không no-op), không ghi DB. Verified Playwright khớp chính xác PMT/tổng lãi/tổng phải trả/LTV/18 dòng lịch trả nợ với seed thật (bắt và sửa 1 lỗi: tổng phải trả ban đầu thiếu phí thẩm định 1 lần). Việc kế tiếp theo NEXT_WORK: **đợt polish cuối** (mục 5 — Business Intent detail+KPI, ListScreen interactive, loading/error, Docker, Attribute Usage đã hoãn).*
 
 *Ghi chú lịch sử: sau khi hoàn thành **Release + Activity Log** (Giai đoạn 18, mục 3B). `release` là stepper 8 bước + swimlane (không phải list) — backend package mới `release` đọc thật `maker_checker_process`/`process_step`/`process_step_checklist` (khớp seed y hệt bundler hardcode). `activity` là list đơn giản — backend package mới `activity`, cột KÊNH suy ra thật bằng regex trên `detail` (hậu tố "· kênh X"), bỏ số bịa "1.284" dùng COUNT thật (8). Verified Playwright (stepper 4/8 done + bước 5 current, swimlane 5 lane × 8 cột, activity list 8/8 dòng đều khớp seed).*
 
