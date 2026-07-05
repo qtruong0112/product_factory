@@ -314,11 +314,27 @@ Render Playwright (mock TPL-003 — pattern PT-002 có 9 block, 10 dòng `templa
 
 Build 0 lỗi TS. Render Playwright (mock đúng 15 dòng `fragment` thật của CFG-0042 + 7 dòng `product_config` thật): list hiện đúng cột Fragment (15 vs 0), detail hiện đúng 9 answer-slot có fragment, chọn "Base Rate" (5 fragment: default/time/place/people×2) hiện đúng thứ tự ưu tiên và đúng dòng cảnh báo "Gần trần" ở scope Place HCM,HN. OK.
 
+### Giai đoạn 16 — Product Variant (list, verified) — mục 3.3
+
+**Bối cảnh:** khảo sát bundler JS xác nhận `variant` nằm trong `isList` (KHÔNG có view detail/wizard riêng) — click bất kỳ dòng nào đều gọi `this.openCreate('variant')`, cùng 1 hàm không truyền dữ liệu dòng, chỉ mở drawer "Đóng gói Product Variant" (form tạo mới tĩnh). → Chỉ dựng **LIST**, giống Domain/Lifecycle/Obligation (không có mẫu wizard cần xử lý như Template/Config).
+
+**Phát hiện quan trọng:** cột "KÊNH" (vd "App · Web · PGD") của prototype list KHÔNG cần bỏ/fabricate — suy ra được THẬT từ `catalog_listing.variant_code → product_catalog.channel` (1 variant có thể niêm yết ở nhiều "kệ" catalog, mỗi kệ có 1 kênh cố định: App/Web/PGD). Đối chiếu seed: VAR-101 ở cả 3 catalog → "App · Web · PGD" khớp chính xác prototype; VAR-106 không có dòng `catalog_listing` nào → hiện "—" (khác prototype fabricate "PGD" — ưu tiên dữ liệu thật).
+
+**Backend** — 4 entity mới package `pipeline` (Lớp III), 3 trong số đó (`ProductCatalog`/`CatalogListing`) sẽ tái dùng khi dựng màn Catalog (mục 3.4, tránh làm trùng):
+- `ProductVariant` (PK `code`): `name`, `fromConfigCode`, `family` (nullable), `limitRange` (nullable), `displayRate` (nullable), `marketingContent` (nullable), `status`.
+- `ProductCatalog` (PK `id` auto): `name`, `channel`.
+- `CatalogListing` (+`CatalogListingId` composite `[catalog_id, variant_code]`): `publishedDate` (nullable), `status`. + `CatalogListingRepository.findByVariantCode`.
+- `ProductVariantController` (`/api/product-variants`): `GET /` trả `{code,name,fromConfigCode,configName,limitRange,displayRate,channels,status}` — `configName` join `product_config.name`, `channels` = distinct `product_catalog.channel` qua `catalog_listing` (join `" · "`, `null` nếu chưa niêm yết catalog nào).
+
+**Frontend** — `pages/ProductVariantPage.tsx` (list đơn giản, mẫu `DomainPage`): 6 cột Mã/Sản phẩm/Hạn mức/Lãi suất/Kênh/`StatusChip` (đúng cột prototype, `limitRange`/`displayRate` là cột thật của `product_variant`); `filters=['Family','Kênh','Trạng thái']`; `actionLabel="Đóng gói Variant"`; không `onRowClick` (tránh dẫn tới drawer tạo-mới không dựng).
+
+Build 0 lỗi TS. Render Playwright (mock 7 dòng `product_variant` thật + kênh tính tay từ seed `catalog_listing`): đúng 7 dòng, cột Kênh khớp chính xác (VAR-101 "App · Web · PGD", VAR-106 "—" vì chưa niêm yết). OK.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Product Config** (Giai đoạn 15, mục 3.2) — cả màn list VÀ màn detail (`/config/:code`, xem fragment thật theo bối cảnh). Việc kế tiếp theo NEXT_WORK mục 3.3 = **Product Variant**.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành **Product Variant** (Giai đoạn 16, mục 3.3) — màn list, cột Kênh suy ra thật từ `catalog_listing`. Việc kế tiếp theo NEXT_WORK mục 3.4 = **Product Catalog** (đã có sẵn `ProductCatalog`/`CatalogListing` entity từ giai đoạn này).
 
 ---
 
@@ -365,12 +381,13 @@ Wire search (lọc text) + filter dropdown thật; áp lại cho mọi màn list
 ### D. Pipeline sản phẩm (đang làm, đều DB-driven)
 - ✅ **template** — XONG (Giai đoạn 14, list + detail `/template/:code`). Backend package `pipeline`: `ProductTemplate`/`CustomerSegment`/`TemplateSegment`/`TemplateFrame` + `ProductTemplateController`.
 - ✅ **config** — XONG (Giai đoạn 15, list + detail `/config/:code`). Backend package `pipeline`: `ProductConfig`/`SelectorScope`/`Fragment` + `ProductConfigController` (detail gom fragment theo Answer Slot, sắp theo `selector_scope.priority`).
-- **variant** (`product_variant`) ← ĐANG TỚI → **catalog** (`product_catalog`+catalog_listing). Trích markup từng màn trước khi code (kiểm `openBuilder`/state tĩnh như Template+Config để chắc cách làm phù hợp). Join hết vào block/attribute/pattern/template/config thật.
+- ✅ **variant** — XONG (Giai đoạn 16, list only — xác nhận `isList`, không có wizard/detail thật). Backend package `pipeline`: `ProductVariant`/`ProductCatalog`/`CatalogListing` + `ProductVariantController` (cột Kênh suy ra thật qua `catalog_listing`).
+- **catalog** (`product_catalog`+`catalog_listing`, entity đã có sẵn từ Giai đoạn 16) ← ĐANG TỚI. Trích markup trước khi code (kiểm state tĩnh như Template/Config). Join hết vào variant thật.
 
 ### E. Lớp IV + Simulation + hoàn thiện
 Release, activity → **Simulation** (gần cuối — annuity, `/api/simulation/run`) → loading/error states, Docker cuối.
 
-Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder, đã WIRE về DB thật — Giai đoạn 13), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail), domain(list), lifecycle(list, join stateCount), ontology(ER-chain+decomposition+vocab), sysmap(pipeline+foundations+relations), template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame), config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment). Nhóm thư viện nền tảng ĐÃ HOÀN TẤT, builder Pattern ĐÃ HẾT FIX CỨNG, Pipeline sản phẩm ĐANG TIẾP TỤC (Template + Config xong).**
+Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail), pattern(builder, đã WIRE về DB thật — Giai đoạn 13), block(list + backend structure), matrix(4-tab grid + backend governance), attribute(list 3-tab + backend Domain/AttributeGroup/AttributeConstraint), obligation(list 3-tab, join làm giàu ontology có sẵn), archetype(card grid + detail), domain(list), lifecycle(list, join stateCount), ontology(ER-chain+decomposition+vocab), sysmap(pipeline+foundations+relations), template(list + detail /template/:code, backend pipeline.ProductTemplate/CustomerSegment/TemplateSegment/TemplateFrame), config(list + detail /config/:code, backend pipeline.ProductConfig/SelectorScope/Fragment), variant(list, backend pipeline.ProductVariant/ProductCatalog/CatalogListing). Nhóm thư viện nền tảng ĐÃ HOÀN TẤT, builder Pattern ĐÃ HẾT FIX CỨNG, Pipeline sản phẩm ĐANG TIẾP TỤC (Template + Config + Variant xong).**
 
 ---
 
@@ -412,7 +429,9 @@ Tổng 18 màn. **Đã xong: dashboard, businessintent(list), intent(list+detail
 
 ---
 
-*Cập nhật lần cuối: sau khi hoàn thành **Product Config** (Giai đoạn 15, mục 3.2) — cả list VÀ detail (`/config/:code`). Cùng bài học Template: wizard "configForm" gốc của prototype dùng dữ liệu tĩnh (`configBase()`, không đổi theo dòng click) → dựng `/{code}/detail` là màn XEM fragment thật của từng config, gom theo Answer Slot, sắp theo `selector_scope.priority` (default→time→place→people). Backend 3 entity mới package `pipeline` (`SelectorScope`, `ProductConfig`, `Fragment`). Verified Playwright (15 fragment thật của CFG-0042, đúng thứ tự ưu tiên + cảnh báo "Gần trần"). Việc kế tiếp theo NEXT_WORK mục 3.3 = **Product Variant**.*
+*Cập nhật lần cuối: sau khi hoàn thành **Product Variant** (Giai đoạn 16, mục 3.3) — màn LIST (xác nhận qua bundler JS: `variant` nằm trong `isList`, click dòng chỉ mở drawer tạo-mới chung, không phải detail thật). Phát hiện đáng chú ý: cột "Kênh" của prototype KHÔNG cần bỏ — suy ra được thật từ `catalog_listing.variant_code → product_catalog.channel` (đối chiếu khớp chính xác với seed, trừ VAR-106 hiện "—" đúng thực trạng thay vì fabricate). Backend 4 entity mới package `pipeline` (`ProductVariant`, `ProductCatalog`, `CatalogListing`+Id) — 2 entity sau tái dùng cho màn Catalog sắp tới. Verified Playwright (7 dòng variant thật, cột Kênh khớp tay). Việc kế tiếp theo NEXT_WORK mục 3.4 = **Product Catalog**.*
+
+*Ghi chú lịch sử: sau khi hoàn thành **Product Config** (Giai đoạn 15, mục 3.2) — cả list VÀ detail (`/config/:code`). Cùng bài học Template: wizard "configForm" gốc của prototype dùng dữ liệu tĩnh (`configBase()`, không đổi theo dòng click) → dựng `/{code}/detail` là màn XEM fragment thật của từng config, gom theo Answer Slot, sắp theo `selector_scope.priority` (default→time→place→people). Backend 3 entity mới package `pipeline` (`SelectorScope`, `ProductConfig`, `Fragment`).*
 
 *Ghi chú lịch sử: sau khi hoàn thành **Product Template** (Giai đoạn 14, mục 3.1) — cả list VÀ detail (`/template/:code`). Khảo sát prototype xác nhận wizard "Tạo Product Template" 3 bước là dữ liệu TĨNH 100% (`TPL_BLOCKS` catalog cứng, `state.tpl` khởi tạo cứng, không đổi theo dòng click) → dựng `/{code}/detail` là màn XEM 1 template thật, tái dùng layout 3 bước, suy ra "Block đang áp dụng" từ có/không có dòng `template_frame` (không có cột "khóa" thật trong DB — quyết định qua AskUserQuestion). Backend 4 entity mới package `pipeline` (`CustomerSegment`, `ProductTemplate`, `TemplateSegment`, `TemplateFrame`).*
 

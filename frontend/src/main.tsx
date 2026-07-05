@@ -22,6 +22,7 @@ import ProductTemplatePage from './pages/ProductTemplatePage'
 import ProductTemplateDetailPage from './pages/ProductTemplateDetailPage'
 import ProductConfigPage from './pages/ProductConfigPage'
 import ProductConfigDetailPage from './pages/ProductConfigDetailPage'
+import ProductVariantPage from './pages/ProductVariantPage'
 import DataTable from './components/DataTable'
 import { TABLES } from './tables'
 
@@ -42,6 +43,7 @@ const CUSTOM: Record<string, React.ReactNode> = {
   sysmap: <SysmapPage />,
   template: <ProductTemplatePage />,
   config: <ProductConfigPage />,
+  variant: <ProductVariantPage />,
 }
 
 function GenericView() {
