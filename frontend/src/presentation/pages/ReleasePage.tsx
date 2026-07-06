@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getDetail, getList } from '../../infrastructure/api/client'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getDetail } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 
-// ---- kiểu dữ liệu từ API /release-processes, /release-processes/{id}/detail ----
-interface ProcessRow {
-  id: number
-  productName: string
-  productCode: string | null
-  doneCount: number
-  totalSteps: number
-}
+// Variant mặc định khi vào từ sidebar (không qua Catalog, không có :variantCode trên URL) —
+// VAR-101 đã published thật trong DB nên tự nhiên hiển thị done 8/8.
+const DEFAULT_VARIANT_CODE = 'VAR-101'
+
+// ---- kiểu dữ liệu từ API /release-processes/{variantCode}/detail ----
 interface ChecklistItem {
   sortOrder: number
   item: string
@@ -64,6 +61,7 @@ const STATUS_CHIP: Record<string, { t: string; bg: string; fg: string }> = {
 
 export default function ReleasePage() {
   const navigate = useNavigate()
+  const { variantCode } = useParams()
   const [detail, setDetail] = useState<Detail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -71,12 +69,8 @@ export default function ReleasePage() {
   const [view, setView] = useState<'stepper' | 'swimlane'>('stepper')
 
   useEffect(() => {
-    getList<ProcessRow>('release-processes', 0, 5)
-      .then((page) => {
-        const first = page.content[0]
-        if (!first) throw new Error('Không có quy trình phát hành nào')
-        return getDetail<Detail>('release-processes', first.id)
-      })
+    setLoading(true)
+    getDetail<Detail>('release-processes', variantCode ?? DEFAULT_VARIANT_CODE)
       .then((d) => {
         setDetail(d)
         const current = d.steps.find((s) => s.status === 'current') ?? d.steps[0]
@@ -84,7 +78,7 @@ export default function ReleasePage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [variantCode])
 
   const selectedStep = useMemo(
     () => detail?.steps.find((s) => s.stepNo === selectedStepNo) ?? null,

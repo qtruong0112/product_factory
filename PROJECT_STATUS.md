@@ -515,11 +515,95 @@ com.f88.productfactory
 
 Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đổi 1 dòng logic nào trong bất kỳ page/component nào) — verify bằng cách so **hash bundle JS sau build giống hệt trước khi di chuyển** (`index-DQ8YBQ3i.js`), xác nhận 100% không đổi hành vi. `npm run build` 0 lỗi TS, Playwright chụp `/dashboard` sau khi rebuild Docker render y hệt.
 
+### Giai đoạn 29 — Hoàn thiện click-through list→detail + màn Attribute Usage
+
+**Bối cảnh:** user yêu cầu rà toàn bộ 20 nav key xem bấm vào 1 dòng list có sang detail không, và so với `docs/Product Factory 5.1.html` (prototype gốc) để biết đang thiếu detail nào — tránh tự vẽ thêm detail cho những màn mà bản gốc chưa từng thiết kế.
+
+**Khảo sát (2 Explore agent chạy song song):**
+- Code hiện tại trước khi làm: 6/20 nav key đã có `onRowClick` + route detail thật, dữ liệu DB thật (`businessintent`, `intent`, `pattern`, `template`, `config`, `archetype`).
+- Prototype gốc: đọc `this.state.view`, mảng `isList` (13 nav chỉ là list thuần), và các setter mang theo id thật (`openArchDetail(code)=>setState({view:'archetypeDetail',archCode:code})`, `openAttrUsage(code)=>setState({view:'attrUsage',attrSel:code})`) — xác nhận **chỉ đúng 2 khu vực** có detail phân theo bản ghi trong bản gốc: `archetype→archetypeDetail` (đã có) và `attribute→attrUsage` (chưa có — chính là nợ 5.4 cũ). `pattern`/`template` có "builder", `config` có "configForm" nhưng `onClick` giống hệt nhau cho MỌI dòng (không truyền id qua state) → không phải detail thật theo định nghĩa của bản gốc. 13 nav còn lại (variant/catalog/obligation/block/matrix/lifecycle/domain/activity/dashboard/ontology/sysmap/release/simulation) không có bất kỳ khái niệm detail nào trong bản gốc.
+- User chọn phạm vi (AskUserQuestion): **chỉ làm Attribute Usage**, giữ nguyên 13 list còn lại — đúng nguyên tắc "pixel-perfect từ prototype, không bịa thêm màn bản gốc không có".
+
+**Backend (package `attribute`):**
+- Entity mới `AttributeEnumValue`(+`AttributeEnumValueId` composite `attribute_code+sort_order`) + repo `findByAttributeCodeOrderBySortOrder`.
+- Thêm method vào repo có sẵn: `TemplateFrameRepository.findByBlockIdAndSlotCode`, `FragmentRepository.findByBlockIdAndSlotCode`, `ProductVariantRepository.findByFromConfigCodeIn` — không có FK trực tiếp attribute→fragment/template_frame, phải bắc cầu qua `answer_slot(block_id,code)`.
+- `AttributeUsageService` mới: join attribute→group→domain, constraint, enum values, và với mỗi answer_slot của attribute → template_frame (giá trị khung ở Template) + fragment (giá trị theo Selector Scope ở Config, kèm cờ `isWarning`) → suy ra `usedInVariants` từ tập config_code đã dùng. `AttributeUsageController` mới: `GET /api/attributes/{code}/usage` (404 nếu code không tồn tại).
+
+**Frontend:**
+- `AttributePage.tsx`: tab Attribute (tab 0) thêm `onRowClick` → `/attribute/{code}` (2 tab Attribute Group/Data Type giữ nguyên không click, đúng theo prototype).
+- `AttributeUsageDetailPage.tsx` mới: trích đúng markup `attrUsageModel()`/`ATTR_USAGE()` từ prototype (mục 8.5, tìm marker `isAttrUsage`/`attrUsage`/`ATTR_USAGE`, unescape thủ công) — rail "CHỌN ATTRIBUTE" (điều hướng nhanh giữa các attribute, dùng danh sách thật từ `/api/attributes`), header định nghĩa, 5-stage lineage (Attribute→Answer Slot→Template→Config→Variant, đếm thật), khối Ràng buộc + khối Giá trị theo Selector Scope (2 cột), bảng Where-used. Bỏ phần `desc` (mô tả) của prototype vì bảng `attribute` không có cột description — không bịa. Route `/attribute/:code` đặt trước `/:view` trong `main.tsx`.
+
+**Verify:** `docker compose build backend` 0 lỗi. Chạy thật, curl `/api/attributes/base_rate/usage`: đúng 2 constraint (regulatory+range), slot `BLK_INTEREST.base_rate`, 6 template (TPL-001..006), 7 config đa scope (default/people/place/time, có 1 case `isWarning:true` ở CFG-0042/HCM,HN), 7 variant. Test `/api/attributes/occupation/usage` (enum, không fragment/variant): trả `constraints:[]`, `enumValues` 4 giá trị, `usedInFragments:[]`, `usedInVariants:[]` — không lỗi, không mảng null. `curl .../does_not_exist/usage` → 404. `npm run build` 0 lỗi TS. Playwright chụp `/attribute` (xác nhận mũi tên click-through xuất hiện) + `/attribute/base_rate` + `/attribute/occupation` (trường hợp rỗng) — bố cục khớp prototype, dữ liệu 100% thật.
+
+### Giai đoạn 30 — Popup xem nhanh Attribute Group / Data Type
+
+**Bối cảnh:** sau Giai đoạn 29, user hỏi tiếp về 2 tab còn lại (Attribute Group, Data Type) trong màn Attribute — cũng so với prototype gốc. Đối chiếu markup gốc phát hiện CẢ 2 tab đều có `onClick`, nhưng là `openCreate('attribute')` — mở modal CUD "Tạo Attribute mới" dùng CHUNG với nút "+ Thêm Attribute" góc phải (không mang id riêng theo dòng click). Modal CUD này chưa từng được cài đặt cho bất kỳ nút "Tạo..." nào trong toàn bộ 18 màn (đúng luật cứng "Nút CUD: no-op"). Hỏi lại user có muốn dựng modal tạo/sửa thật không — user chọn **chỉ xem thông tin, không có tác động gì** (không phải CUD).
+
+**Giải pháp:** thêm `InfoModal` (component popup dùng chung, không có nút "Lưu", chỉ "Đóng") trong `AttributePage.tsx`. Bấm dòng ở tab Attribute Group → popup hiện tên/domain/số attribute + danh sách attribute thuộc nhóm (lọc `attrs.content` theo `groupCode`, đã fetch sẵn cho tab Attribute — KHÔNG gọi thêm API). Bấm dòng ở tab Data Type → popup tương tự lọc theo `dataTypeCode`. Đây là UI hoàn toàn mới (prototype gốc không có khái niệm "xem-chỉ-đọc" này, chỉ có modal CUD) nhưng đúng yêu cầu rõ ràng của user, dữ liệu 100% thật (không thêm bảng/cột nào mới).
+
+**Verify:** `npm run build` 0 lỗi TS. Playwright: bấm dòng "Pricing" (Attribute Group) → popup hiện đúng 3 attribute thật (Lãi suất cơ sở/Loại lãi suất/Công thức tính lãi, đúng chip Data Type); bấm dòng "Money" (Data Type) → popup hiện đúng 4 attribute thật (Hạn mức cấp/Số dư tối thiểu/Thu nhập tối thiểu/Số tiền phí, đúng chip Bắt buộc/Tùy chọn) — khớp số đếm hiển thị ở cột "SỐ ATTRIBUTE" ngoài list.
+
+### Giai đoạn 30b — Drill-down xem chi tiết 1 attribute từ popup Group/Data Type
+
+**Bối cảnh:** user muốn khi bấm 1 dòng attribute NGAY TRONG popup Group/Data Type (Giai đoạn 30) thì xem được thông tin chi tiết đầy đủ của attribute đó, không chỉ tên+chip. User cung cấp ảnh chụp trực tiếp từ file prototype gốc (modal "Tạo Attribute mới" — Thông tin cơ bản/Data Type buttons/Ràng buộc chung/Ràng buộc theo kiểu dữ liệu/Tuân thủ & Selector Scope) và đề nghị dùng ĐÚNG bố cục đó làm màn xem-chỉ-đọc.
+
+**2 quyết định đã hỏi user:**
+1. Drill-down thay nội dung popup hiện tại (có nút "← Quay lại"), KHÔNG mở popup thứ 2 chồng lên.
+2. Bỏ HẲN các trường mockup không có cột DB thật (Số chữ số thập phân, Cho phép giá trị âm, Căn cứ pháp lý dạng text, Scope ưu tiên override riêng theo attribute) — đúng tiền lệ "không bịa dữ liệu" đã áp dụng cho Group/Data Type trước đây.
+
+**Backend:** bổ sung 3 field còn thiếu vào `AttributeUsageService.usage()` (đã có endpoint `/api/attributes/{code}/usage` từ Giai đoạn 29, không tạo endpoint mới): `unique` (is_unique), `nullable` (is_nullable), `defaultValue` (default_value) — cả 3 cột đã có sẵn trong entity `Attribute`, chỉ chưa được đưa vào response trước đó.
+
+**Frontend (`AttributePage.tsx`):** `AttrRefRow` trong popup Group/Data Type giờ có `onClick` gọi `openDrill(code)` — fetch `getDetail('attributes', code, 'usage')`, hiển thị `AttrDetailBody` thay nội dung popup (giữ header/footer/X đóng của `InfoModal`, đổi title/subtitle sang attribute đang xem). Bố cục theo đúng khung mockup: "Thông tin cơ bản" (Mã/Attribute Group/Domain/Đơn vị — `ReadField` dạng ô xám chỉ-đọc), "Data Type" (dãy nút NHƯ THẬT lấy từ `dataTypes` đã fetch — 9 kiểu thật trong DB, không dùng danh sách tĩnh của prototype vì prototype có "Number"/"Date" không tồn tại trong DB — highlight đúng kiểu thật), "Ràng buộc chung" (3 `BoolBadge` Bắt buộc/Duy nhất/Nullable phản ánh đúng boolean thật + Giá trị mặc định nếu có), "Ràng buộc theo kiểu dữ liệu" (tái dùng cách render kind/rule/message giống `AttributeUsageDetailPage`), "Giá trị Enum" (nếu có). Nút "← Quay lại danh sách nhóm/Data Type" chỉ reset state drill, không đóng popup.
+
+**Verify:** `npm run build` 0 lỗi TS. `curl /api/attributes/base_rate/usage` xác nhận `unique:false, nullable:true, defaultValue:"1,5%/tháng"` đúng thật. Playwright: bấm "Lãi suất cơ sở" trong popup Pricing → hiện đúng: Data Type "Percent" highlight xanh giữa 9 nút thật, Bắt buộc=Có/Duy nhất=Không/Nullable=Có, Giá trị mặc định "1,5%/tháng", ràng buộc "Trần/Pháp lý ≤ 1,65%/tháng".
+
+### Giai đoạn 31 — Gộp page list+detail liên quan vào subfolder theo feature
+
+**Bối cảnh:** user yêu cầu "tổ chức lại cấu trúc frontend, đặt folder page rồi chia các file liên quan đến các page vào [feature folder]" — vd business intent, product intent, template. `presentation/pages/` lúc đó có 27 file phẳng; 7 cặp có cả list+detail liên quan chặt (BusinessIntentPage+BusinessIntentDetailPage, v.v.), 13 page chỉ 1 file. Đã hỏi phạm vi trước khi làm — chọn **chỉ gộp 7 cặp list+detail** vào subfolder cùng tên nav key, 13 page đơn lẻ giữ nguyên phẳng (không có gì để nhóm nếu chỉ 1 file).
+
+**Kết quả (`frontend/src/presentation/pages/`):**
+```
+pages/
+├── businessintent/{BusinessIntentPage,BusinessIntentDetailPage}.tsx
+├── intent/{ProductIntentPage,ProductIntentDetailPage}.tsx
+├── pattern/{ProductPatternPage,ProductPatternDetailPage}.tsx
+├── template/{ProductTemplatePage,ProductTemplateDetailPage}.tsx
+├── config/{ProductConfigPage,ProductConfigDetailPage}.tsx
+├── attribute/{AttributePage,AttributeUsageDetailPage}.tsx
+├── archetype/{ArchetypePage,ArchetypeDetailPage}.tsx
+└── (13 file phẳng: Dashboard/Block/Matrix/Obligation/Domain/Lifecycle/Ontology/Sysmap/ProductVariant/ProductCatalog/Release/Activity/Simulation)
+```
+Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — không phải PascalCase tên component.
+
+**Cách làm:** `mv` cơ học + `sed` sửa import (`../../infrastructure/` → `../../../infrastructure/`, `../components/` → `../../components/` do sâu thêm 1 cấp) trong 14 file đã chuyển, và sửa 14 dòng import + không cần đổi route trong `main.tsx` (chỉ đổi path import, JSX/route giữ nguyên). Xác nhận trước khi chuyển: không có import chéo giữa các page (grep `from '\./` / `from '../pages'` trong `pages/*.tsx` → rỗng) nên di chuyển an toàn, không cần sửa logic.
+
+**Verify:** `npm run build` 0 lỗi TS, **bundle hash giống hệt trước khi chuyển** (`index-B5Zxx0rS.js`) — xác nhận 100% không đổi hành vi (cùng phương pháp verify đã dùng ở Giai đoạn 28). `git add` xác nhận cả 14 file đều được Git nhận diện là **rename** (không phải xóa+tạo mới). Rebuild Docker frontend, curl smoke-test 7 route (list + detail) đều 200.
+
+### Giai đoạn 32 — Liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm
+
+**Bối cảnh:** user muốn bấm 1 sản phẩm trong Catalog (status draft/review/approved/published) sẽ chuyển sang màn Quy trình phát hành, hiển thị đúng tiến độ 8 bước khớp trạng thái sản phẩm đó; mặc định vào từ sidebar (không qua Catalog) phải hiển thị done 8 bước.
+
+**Bug thật phát hiện được:** `maker_checker_process` có FK `variant_code` (đúng ý định 1 process/1 variant) nhưng chỉ có **đúng 1 dòng seed** (`VAR-101`, `done_count=4`) — **lệch với trạng thái thật của VAR-101 là `published`** (đáng lẽ done 8/8). Đây là bằng chứng cho thấy lưu số liệu tiến độ tay theo từng variant rất dễ lệch khi status đổi mà quên sửa kèm.
+
+**Quyết định (đã hỏi user, chọn phương án bền hơn):** KHÔNG seed thêm 5 dòng `maker_checker_process` cho các variant còn lại. Dùng đúng 1 dòng hiện có làm **process template** (8 bước title/role/input/output/checklist — mô tả quy trình chuẩn, không đổi theo sản phẩm) và **tính runtime** done/current/upcoming của từng bước từ `product_variant.status` thật — luôn đồng bộ 100% với Catalog, không bao giờ lệch như tình huống VAR-101 vừa phát hiện. Ánh xạ (bước 7 = "Phê duyệt (Maker–Checker)", bước 8 = "Đóng gói & Phát hành Catalog"): `draft→5/8` (bước 6 đang làm), `review→6/8` (bước 7 đang chờ), `approved→7/8` (bước 8 đang làm), `published`/`retired`→`8/8`.
+
+**Backend:**
+- `MakerCheckerProcessRepository`: thêm `findFirstByOrderById()` lấy process template, không hardcode id.
+- `ReleaseProcessService`: xóa `list()` (không còn nơi gọi); thay `detail(Long id)` bằng `detailByVariant(String variantCode)` — join `ProductVariantRepository` lấy variant thật, tính `doneCount` qua hàm ánh xạ trạng thái, suy ra status từng bước (`stepNo<=doneCount?"done":stepNo==doneCount+1?"current":"upcoming"`), checklist mỗi bước `done = (status bước đó=="done")` — đơn giản hóa nhị phân theo bước (bỏ mức chi tiết "1/3 item" của seed gốc, có ghi rõ đây là đơn giản hóa có chủ đích).
+- `ReleaseProcessController`: đổi `GET /{id}/detail` (Long) → `GET /{variantCode}/detail` (String), xóa `GET` list.
+
+**Frontend:**
+- `ProductCatalogPage.tsx`: mỗi card thêm `onClick` → `navigate('/release/'+variantCode)` + `cursor:pointer`.
+- `main.tsx`: thêm route `/release/:variantCode` (trước `/:view`), giữ `release:<ReleasePage/>` trong `CUSTOM` cho `/release` từ sidebar.
+- `ReleasePage.tsx`: bỏ bước `getList` lấy dòng đầu; gọi thẳng `getDetail('release-processes', variantCode ?? 'VAR-101')` (VAR-101 = variant published thật, tự nhiên cho done 8/8 khi không có variantCode trên URL).
+
+**Verify:** curl 4 trạng thái xác nhận đúng số bước done/current/upcoming (`VAR-101` published→8/8 tất cả done; `VAR-104` approved→7/8, bước 8 current; `VAR-105` review→6/8, bước 7 current; `VAR-107` draft→5/8, bước 6 current); `VAR-999` không tồn tại→404. `npm run build` 0 lỗi TS. Playwright: `/release` mặc định→8/8; `/catalog` bấm từng card→điều hướng đúng `/release/{code}` với tiến độ khớp; card Catalog hiển thị đúng 6 trạng thái thật (3 published, 1 approved, 1 review, 1 draft).
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại frontend theo layer (Giai đoạn 28), đối xứng với Clean Architecture backend (Giai đoạn 27). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), sau khi gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
@@ -530,7 +614,7 @@ Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại fr
 ### A0. Thư viện nền tảng (LÀM ĐẦU, thứ tự):
 1. ✅ **block** — Block & Answer Slot (+ `data_type`), package `structure`. **XONG (Giai đoạn 6):** backend `Block`/`AnswerSlot`(+Id)/`DataType` + `/api/blocks` (list làm giàu slotCount/gov + `/{id}/detail` join slots) + `/api/data-types`; frontend `BlockPage` list pixel-perfect. `/{id}/detail` đã sẵn nguồn để gỡ fix cứng builder ở A0.7.
 2. ✅ **matrix** — constraint_matrix + matrix_cell, package `governance`. **XONG (Giai đoạn 7):** `ConstraintMatrix`/`MatrixCell`(+Id) + `/api/constraint-matrices` (list + `/{id}/detail` grid join nhãn + `/pattern-coverage` phái sinh); frontend `MatrixPage` 4-tab pixel-perfect. Logic coverage đã sẵn ở BE để dùng lại ở A0.7.
-3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8) — CHỈ MÀN LIST.** Màn "Attribute Usage" (detail/lineage) + modal tạo/sửa ghi nợ ở mục B dưới, hoãn tới khi Pipeline + fragment/selector_scope có backend.
+3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8).** Màn detail "Attribute Usage" (lineage) — **XONG (Giai đoạn 29)**, xem mục A2 dưới.
 4. ✅ **obligation** — list 3-tab (Obligation Type/Obligation Element/Element Type), backend `ontology` 3 controller chuyển sang join làm giàu. **XONG (Giai đoạn 9).**
    ✅ **archetype** — card grid + trang detail riêng (route `/archetype/:code`), backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount). **XONG (Giai đoạn 10).**
 5. ✅ **domain** + **lifecycle** — list đơn giản, backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount). **XONG (Giai đoạn 11).**
@@ -554,8 +638,8 @@ Thay `patternBuilderData.ts` (tĩnh) bằng dữ liệu THẬT từ DB. **Toàn 
 - **Mở rộng `ProductPatternController#/{code}/detail`** để join thêm: mỗi block → `{blockId,position,usage,name,bizGroup,gov,slots:[{name,code,type,required,def,rule,attrName,attrCode}]}`; `assignedOTs` thêm `archetype`; thêm `coverage:[{blockId,label,verdict,inCanvas,...}]` hoặc trả raw matrix cells để FE tự tính (FE đã có logic). Rồi **xóa nội dung tĩnh trong `patternBuilderData.ts`** (chỉ giữ COVER_COLS label nếu cần, hoặc bỏ hẳn).
 - Verify lại render builder với API thật (mock JSON = query DB), so khớp.
 
-### A2. NỢ — Attribute Usage screen + Create/Edit modal (hoãn tới khi có Pipeline + fragment/selector_scope)
-Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant) + modal tạo/sửa Attribute (form đổi field theo Data Type: Money/Percent/Integer/Range/Enum/Text/Boolean/Date/Formula). Cả hai cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend. Làm sau khi Pipeline sản phẩm (mục D) + `fragment`/`selector_scope` (Lớp II) có backend, để tránh fix cứng như từng xảy ra với Pattern builder (mục 6.A cũ).
+### A2. ✅ XONG (Giai đoạn 29) — Attribute Usage screen
+Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant). Đã dựng đủ dữ liệu thật từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` (Pipeline layer đã có backend từ Giai đoạn 14-21). Route `/attribute/:code`, backend `AttributeUsageService`/`AttributeUsageController`. Modal tạo/sửa Attribute KHÔNG làm — nút CUD toàn dự án giữ quy ước no-op (mục 7), không có ngoại lệ riêng cho Attribute.
 
 ### B. ✅ XONG (Giai đoạn 20) — Business Intent detail + KPI
 Backend `BusinessIntentKpi`(+`BusinessIntentKpiId` composite) + `findByBusinessIntentIdOrderBySortOrder` + `BusinessIntentController#/{id}/detail` `{intent, kpis}` (thêm cạnh 2 endpoint sẵn có từ `ReadOnlyController`, không cần bỏ extends). Frontend `BusinessIntentDetailPage` (mẫu `ProductIntentDetailPage`) + route `/businessintent/:id` (trước `/:view`) + `BusinessIntentPage` thêm `onRowClick`. Prototype KHÔNG có markup detail cho màn này (row click gốc chỉ mở modal tạo-mới chung) — dựng mới hoàn toàn theo quyết định nợ đã chốt, dữ liệu thật 100%. Verified: BI-01 hiện đúng 3 KPI seed (Dư nợ giải ngân mới/Số hợp đồng/NPL).

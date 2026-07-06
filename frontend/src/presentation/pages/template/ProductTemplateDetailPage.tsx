@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail } from '../../infrastructure/api/client'
-import Icon from '../components/Icon'
+import { getDetail } from '../../../infrastructure/api/client'
+import Icon from '../../components/Icon'
 
 // ---- kiểu dữ liệu từ API /product-templates/{code}/detail ----
 interface TemplateMeta {

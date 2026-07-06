@@ -1,14 +1,13 @@
 package com.f88.productfactory.application.service.release;
 
+import com.f88.productfactory.domain.model.pipeline.ProductVariant;
 import com.f88.productfactory.domain.model.release.MakerCheckerProcess;
 import com.f88.productfactory.domain.model.release.ProcessStep;
 import com.f88.productfactory.domain.model.release.ProcessStepChecklist;
+import com.f88.productfactory.domain.repository.pipeline.ProductVariantRepository;
 import com.f88.productfactory.domain.repository.release.MakerCheckerProcessRepository;
 import com.f88.productfactory.domain.repository.release.ProcessStepChecklistRepository;
 import com.f88.productfactory.domain.repository.release.ProcessStepRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -63,56 +62,73 @@ public class ReleaseProcessService {
     private final MakerCheckerProcessRepository processRepo;
     private final ProcessStepRepository stepRepo;
     private final ProcessStepChecklistRepository checklistRepo;
+    private final ProductVariantRepository variantRepo;
 
     public ReleaseProcessService(MakerCheckerProcessRepository processRepo,
                                  ProcessStepRepository stepRepo,
-                                 ProcessStepChecklistRepository checklistRepo) {
+                                 ProcessStepChecklistRepository checklistRepo,
+                                 ProductVariantRepository variantRepo) {
         this.processRepo = processRepo;
         this.stepRepo = stepRepo;
         this.checklistRepo = checklistRepo;
-    }
-
-    /** Danh sách quy trình phát hành: { id, productName, productCode, doneCount, totalSteps }. */
-    public Page<Map<String, Object>> list(Pageable pageable) {
-        Page<MakerCheckerProcess> page = processRepo.findAll(pageable);
-        List<Map<String, Object>> rows = new ArrayList<>();
-        for (MakerCheckerProcess p : page.getContent()) {
-            int totalSteps = stepRepo.findByProcessIdOrderByStepNo(p.getId()).size();
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("id", p.getId());
-            row.put("productName", p.getProductName());
-            row.put("productCode", p.getVariantCode());
-            row.put("doneCount", p.getDoneCount());
-            row.put("totalSteps", totalSteps);
-            rows.add(row);
-        }
-        return new PageImpl<>(rows, pageable, page.getTotalElements());
+        this.variantRepo = variantRepo;
     }
 
     /**
-     * Chi tiết quy trình: { process:{id,productName,productCode,doneCount,totalSteps},
-     * steps:[{stepNo,title,role,status,inputDesc,outputDesc,desc,tip,icon,nav,
-     *         checklist:[{sortOrder,item,done}]}] }.
+     * Số bước "done" ứng với trạng thái thật của variant — bước 7 = Phê duyệt (Maker–Checker),
+     * bước 8 = Đóng gói & Phát hành Catalog. Tính runtime từ product_variant.status để luôn
+     * đồng bộ với Catalog, không lưu số liệu trùng lặp dễ lệch theo từng variant.
      */
-    public Optional<Map<String, Object>> detail(Long id) {
-        return processRepo.findById(id).map(p -> {
-            List<ProcessStep> steps = stepRepo.findByProcessIdOrderByStepNo(id);
+    private int doneCountFor(String status) {
+        return switch (status) {
+            case "draft" -> 5;
+            case "review" -> 6;
+            case "approved" -> 7;
+            case "published", "retired" -> 8;
+            default -> 0;
+        };
+    }
+
+    /**
+     * Chi tiết quy trình phát hành CỦA MỘT VARIANT: { process:{id,productName,productCode,
+     * doneCount,totalSteps}, steps:[{stepNo,title,role,status,inputDesc,outputDesc,desc,tip,
+     * icon,nav,checklist:[{sortOrder,item,done}]}] }.
+     *
+     * Chỉ có 1 process template chuẩn 8 bước trong DB (title/role/input/output/checklist —
+     * mô tả quy trình chung, không đổi theo sản phẩm). Trạng thái done/current/upcoming của
+     * từng bước tính runtime từ variant.status thật, không đọc process_step.step_status/
+     * maker_checker_process.done_count của template (tránh lệch dữ liệu giữa các variant).
+     */
+    public Optional<Map<String, Object>> detailByVariant(String variantCode) {
+        Optional<ProductVariant> variantOpt = variantRepo.findById(variantCode);
+        if (variantOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        ProductVariant variant = variantOpt.get();
+
+        return processRepo.findFirstByOrderById().map(template -> {
+            List<ProcessStep> steps = stepRepo.findByProcessIdOrderByStepNo(template.getId());
+            int doneCount = doneCountFor(variant.getStatus());
 
             Map<String, Object> processMeta = new LinkedHashMap<>();
-            processMeta.put("id", p.getId());
-            processMeta.put("productName", p.getProductName());
-            processMeta.put("productCode", p.getVariantCode());
-            processMeta.put("doneCount", p.getDoneCount());
+            processMeta.put("id", template.getId());
+            processMeta.put("productName", variant.getName());
+            processMeta.put("productCode", variant.getCode());
+            processMeta.put("doneCount", doneCount);
             processMeta.put("totalSteps", steps.size());
 
             List<Map<String, Object>> stepRows = new ArrayList<>();
             for (ProcessStep s : steps) {
                 int i = s.getStepNo() - 1;
+                String status = s.getStepNo() <= doneCount ? "done"
+                        : s.getStepNo() == doneCount + 1 ? "current"
+                        : "upcoming";
+
                 Map<String, Object> sm = new LinkedHashMap<>();
                 sm.put("stepNo", s.getStepNo());
                 sm.put("title", s.getTitle());
                 sm.put("role", s.getRole());
-                sm.put("status", s.getStepStatus());
+                sm.put("status", status);
                 sm.put("inputDesc", s.getInputDesc());
                 sm.put("outputDesc", s.getOutputDesc());
                 sm.put("desc", i >= 0 && i < DESC.length ? DESC[i] : null);
@@ -121,11 +137,11 @@ public class ReleaseProcessService {
                 sm.put("nav", i >= 0 && i < NAV.length ? NAV[i] : null);
 
                 List<Map<String, Object>> checklist = new ArrayList<>();
-                for (ProcessStepChecklist c : checklistRepo.findByProcessIdAndStepNoOrderBySortOrder(id, s.getStepNo())) {
+                for (ProcessStepChecklist c : checklistRepo.findByProcessIdAndStepNoOrderBySortOrder(template.getId(), s.getStepNo())) {
                     Map<String, Object> cm = new LinkedHashMap<>();
                     cm.put("sortOrder", c.getSortOrder());
                     cm.put("item", c.getItem());
-                    cm.put("done", c.isDone());
+                    cm.put("done", "done".equals(status));
                     checklist.add(cm);
                 }
                 sm.put("checklist", checklist);

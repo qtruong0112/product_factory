@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail, getList } from '../../infrastructure/api/client'
-import Icon from '../components/Icon'
-import { STATUS_COLORS, STATUS_LABELS } from '../components/StatusChip'
-import VersionHistoryDrawer from '../components/VersionHistoryDrawer'
+import { getDetail, getList } from '../../../infrastructure/api/client'
+import Icon from '../../components/Icon'
+import { STATUS_COLORS, STATUS_LABELS } from '../../components/StatusChip'
+import VersionHistoryDrawer from '../../components/VersionHistoryDrawer'
 
 // ---- kiểu dữ liệu từ API /product-patterns/{code}/detail (đã wire DB thật, mục 2.7) ----
 interface Pattern {
