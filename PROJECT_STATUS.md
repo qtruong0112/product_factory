@@ -467,9 +467,40 @@ Verify: backend compile qua `docker compose up --build backend` (0 lỗi), `npm 
 
 ---
 
+### Giai đoạn 27 — Chia lại cấu trúc thư mục backend theo Clean Architecture (layer-first, toàn bộ 151 file)
+
+**Bối cảnh:** user yêu cầu tổ chức lại backend theo Clean Architecture. Trước đó backend tổ chức feature-first (`com.f88.productfactory.{ontology|pipeline|attribute|structure|governance|release|simulation|activity|version|common|config}`, 131 file). Đã hỏi rõ phạm vi trước khi làm (AskUserQuestion) — chọn phương án "toàn bộ backend, layer-first": gộp cả 11 feature vào 4 package layer gốc, mỗi layer chia sub-package theo feature bên trong.
+
+**Cấu trúc mới:**
+```
+com.f88.productfactory
+├── domain
+│   ├── model.<feature>        — @Entity + @IdClass (composite key) — 57 entity + 15 Id-class, co-located
+│   └── repository.<feature>   — Spring Data JpaRepository interfaces (port) — 42 file
+├── application
+│   ├── common                 — ReadOnlyService<T,ID> (mới) — bọc JpaRepository cho tài nguyên đọc-only thuần
+│   ├── dto.simulation          — SimulationRequest (input DTO ranh giới POST /run)
+│   └── service.<feature>       — business/join/enrichment logic TÁCH RA từ 19 controller cũ — 20 Service
+├── infrastructure
+│   └── config                  — WebConfig (CORS)
+└── presentation
+    ├── common                  — ReadOnlyController<T,ID> (sửa: qua ReadOnlyService thay vì JpaRepository trực tiếp), GlobalExceptionHandler
+    └── controller.<feature>    — 26 REST controller, giờ THIN — chỉ ánh xạ HTTP, gọi Service
+```
+
+**Cách thực hiện (2 bước, tách rời mechanical move khỏi tái cấu trúc logic để giảm rủi ro):**
+
+1. **Bước 1 — di chuyển cơ học 129/131 file** bằng script Node (`restructure.js`, chạy 1 lần, không commit vào repo): phân loại từng file theo nội dung thật (`@Entity`→domain.model, `extends JpaRepository`→domain.repository, `*Id.java implements Serializable`→domain.model cùng entity, `@RestController`→presentation.controller, `config`→infrastructure.config, `SimulationEngine`→application.service.simulation, `SimulationRequest`→application.dto.simulation), đổi `package` statement, rồi quét lại TOÀN BỘ cây để sửa import (cả import cũ trỏ sai lẫn tham chiếu cùng-package-cũ nay khác-package-mới cần import mới). File `ReadOnlyController.java` xử lý tay riêng (nội dung đổi thật, không chỉ đổi package).
+   - **2 lỗi phát hiện & sửa lúc chạy script:** (a) regex thay FQCN không dùng word-boundary khiến tên ngắn là tiền tố tên dài bị ăn nhầm (vd `...ontology.FinancialObligationArchetype` là tiền tố của `...FinancialObligationArchetypeRepository` → bị thay nhầm giữa chuỗi) — sửa thêm `\b` hai đầu; (b) file dùng CRLF (Windows) nhưng regex chèn import mới giả định `\n` thuần nên **không chèn được import nào cả** — sửa dùng `\r?\n`. Cả 2 lần đều revert sạch bằng `git checkout -- backend/` (chưa commit gì) rồi chạy lại từ đầu, không vá file đã hỏng.
+2. **Bước 2 — tách 19 controller có nghiệp vụ thật** (join/enrichment/tính toán — khác 7 controller "trivial" chỉ extends ReadOnlyController) thành cặp `XxxService` (giữ nguyên toàn bộ logic, method trả `Optional`/`Page`/`List` thay vì `ResponseEntity`) + `XxxController` thin (chỉ `@GetMapping`/`@PostMapping` gọi thẳng service). Controller lớn nhất: `ProductConfigController`/`SimulationController` (~250-340 dòng logic mỗi cái) tách nguyên vẹn sang Service, không rút gọn/đổi hành vi.
+
+**Verify:** build qua `docker compose up --build backend` sạch ở MỌI bước trung gian (sau bước 1, sau mỗi nhóm controller tách ở bước 2) — không dồn lỗi. Sau khi xong, curl toàn bộ ~20 endpoint đại diện (activity-logs, attributes, attribute-groups, constraint-matrices + pattern-coverage, archetypes, lifecycles, obligation-elements/-types, product-configs/-patterns/-templates/-variants/-catalogs + các `/detail`, release-processes, blocks, version-entries, simulation/default) — số liệu giống hệt trước khi tái cấu trúc (vd Simulation VAR-101 vẫn 1.166.074đ/35.196.785đ, `product-configs/CFG-0042/detail` vẫn 12/14 slot bắt buộc). `npm run build` frontend 0 lỗi (frontend không phụ thuộc cấu trúc package Java, chỉ REST path — không đổi).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành audit toàn dự án + sửa dữ liệu fix cứng (Giai đoạn 26: Dashboard viết lại hoàn toàn, sidebar count lấy thật, Simulation Engine wire trần quy định từ `attribute_constraint`). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại backend theo Clean Architecture layer-first (Giai đoạn 27) — toàn bộ REST path/response shape giữ nguyên, chỉ đổi cấu trúc package nội bộ. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 
