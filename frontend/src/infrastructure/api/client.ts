@@ -1,0 +1,38 @@
+// API client mỏng — mọi màn hình đọc dữ liệu qua đây.
+// Kiểu Page khớp với Spring Data Page<T>.
+export interface Page<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+const BASE = '/api'
+
+export async function getList<T>(resource: string, page = 0, size = 50): Promise<Page<T>> {
+  const res = await fetch(`${BASE}/${resource}?page=${page}&size=${size}`)
+  if (!res.ok) throw new Error(`GET ${resource} thất bại: ${res.status}`)
+  return res.json()
+}
+
+export async function getById<T>(resource: string, id: string | number): Promise<T> {
+  const res = await fetch(`${BASE}/${resource}/${id}`)
+  if (!res.ok) throw new Error(`GET ${resource}/${id} thất bại: ${res.status}`)
+  return res.json()
+}
+
+// Chi tiết mở rộng: GET /api/<resource>/<id>/<suffix> (mặc định 'detail').
+// Trả object gồm entity chính + dữ liệu join (vd { intent, elements, ... }).
+export async function getDetail<T>(resource: string, id: string | number, suffix = 'detail'): Promise<T> {
+  const res = await fetch(`${BASE}/${resource}/${id}/${suffix}`)
+  if (!res.ok) throw new Error(`GET ${resource}/${id}/${suffix} thất bại: ${res.status}`)
+  return res.json()
+}
+
+// Lịch sử phiên bản (nút "Phiên bản" ở Pattern/Config): GET /api/version-entries?entityType=&entityCode=
+export async function getVersionHistory<T>(entityType: string, entityCode: string): Promise<T[]> {
+  const res = await fetch(`${BASE}/version-entries?entityType=${entityType}&entityCode=${encodeURIComponent(entityCode)}`)
+  if (!res.ok) throw new Error(`GET version-entries thất bại: ${res.status}`)
+  return res.json()
+}

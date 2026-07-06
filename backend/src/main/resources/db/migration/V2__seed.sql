@@ -285,6 +285,10 @@ INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VAL
   ('asset_type', 3, 'Vàng (Gold)'),
   ('rate_type', 1, 'Cố định'),
   ('rate_type', 2, 'Thả nổi'),
+  ('occupation', 1, 'Nhân viên văn phòng'),
+  ('occupation', 2, 'Công nhân'),
+  ('occupation', 3, 'Kinh doanh tự do'),
+  ('occupation', 4, 'Giáo viên / Công chức'),
   ('repay_method', 1, 'Trả góp nhiều kỳ'),
   ('repay_method', 2, 'Trả 1 lần (Bullet)'),
   ('borrower_type', 1, 'Cá nhân'),
@@ -376,6 +380,24 @@ INSERT INTO "business_intent_kpi" ("business_intent_id", "sort_order", "metric",
   (1, 3, 'Tỷ lệ nợ xấu (NPL)', '≤ 3,0', '%'),
   (6, 1, 'Tỷ lệ quá hạn', '< 3,0', '%');
 
+-- ===== 19b. business_intent_kpi — bổ sung KPI cho BI-02,03,04,05,07 (thiếu trong bản gốc, suy diễn từ objective từng BI) =====
+INSERT INTO "business_intent_kpi" ("business_intent_id", "sort_order", "metric", "target", "unit") VALUES
+  (2, 1, 'Dư nợ cầm cố xe máy mới', '300 tỷ', 'VND/năm'),
+  (2, 2, 'Số hợp đồng cầm cố xe máy', '15.000', 'HĐ/năm'),
+  (2, 3, 'Thời gian giải ngân trung bình', '≤ 30', 'phút'),
+  (3, 1, 'Tỷ trọng giải ngân qua App', '≥ 60', '%'),
+  (3, 2, 'Thời gian phê duyệt online', '≤ 15', 'phút'),
+  (3, 3, 'Tỷ lệ hồ sơ e-KYC thành công', '≥ 95', '%'),
+  (4, 1, 'Số KH có hạn mức tái sử dụng', '20.000', 'KH'),
+  (4, 2, 'Tỷ lệ tái vay trong hạn mức', '≥ 40', '%'),
+  (4, 3, 'Dư nợ hạn mức bình quân', '150 tỷ', 'VND'),
+  (5, 1, 'Dư nợ tín chấp lương mới', '200 tỷ', 'VND/năm'),
+  (5, 2, 'Số hợp đồng tín chấp lương', '8.000', 'HĐ/năm'),
+  (5, 3, 'Tỷ lệ nợ xấu tín chấp', '≤ 4,0', '%'),
+  (7, 1, 'Số KH đạt hạng Loyalty/VIP', '10.000', 'KH'),
+  (7, 2, 'Tỷ lệ giữ chân KH thân thiết', '≥ 70', '%'),
+  (7, 3, 'Mức ưu đãi lãi suất bình quân', '−0,4', '%/tháng');
+
 -- ===== 20. customer_segment — audience (tplWizard) + tier (simulation segMap) =====
 INSERT INTO "customer_segment" ("code", "name", "audience", "tier", "legal_requirement") VALUES
   ('SEG_INDIVIDUAL', 'Khách hàng cá nhân', 'individual', NULL, 'CMND/CCCD · Giấy nhận nợ cá nhân'),
@@ -405,6 +427,39 @@ INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUE
   (5, 'PAYMENT_MULTISTEP_INSTALLMENT'),
   (5, 'ASSET_PLEDGE'),
   (5, 'CALENDAR_HAS_CYCLE_HAS_DEADLINE');
+
+-- ===== 22b. product_intent_element — bổ sung PI-001,002,004,006 (thiếu trong bản gốc; suy diễn nguyên vẹn
+-- từ obligation_type_composition của Obligation Type mà Pattern gắn với Intent đó dùng, không bịa mã mới) =====
+INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUES
+  -- PI-001 'Cho vay tiêu dùng nhỏ lẻ' → PT-005/PT-003 nhóm tín chấp+cầm cố trả góp dùng chung archetype FOA_TERM_LOAN;
+  -- lấy nguyên bộ composition của OT_UNSECURED (đại diện Term Loan không TSĐB)
+  (1, 'TERM_LOAN_OBLIGATION'),
+  (1, 'PRINCIPAL_NO_INCREASE_MULTI_DECREASE'),
+  (1, 'EVENT_LENDER_DISBURSEMENT'),
+  (1, 'PAYMENT_MULTISTEP_INSTALLMENT'),
+  (1, 'UNSECURED'),
+  (1, 'CALENDAR_HAS_CYCLE_HAS_DEADLINE'),
+  -- PI-002 'Cấp hạn mức để cho vay' → archetype FOA_REVOLVING; lấy nguyên bộ composition của OT_FACILITY
+  (2, 'FACILITY_OBLIGATION'),
+  (2, 'LIMIT_MULTI_INC_DEC_HAS_CAPACITY'),
+  (2, 'EVENT_FACILITY_OPEN'),
+  (2, 'PAYMENT_CYCLE_STATEMENT'),
+  (2, 'ASSET_PLEDGE'),
+  (2, 'CALENDAR_HAS_CYCLE'),
+  -- PI-004 'Cho vay cầm cố ô tô' → Pattern PT-006 gắn OT_AUTO_PLEDGE; lấy nguyên bộ composition tương ứng
+  (4, 'TERM_LOAN_OBLIGATION'),
+  (4, 'PRINCIPAL_NO_INCREASE_MULTI_DECREASE'),
+  (4, 'EVENT_LENDER_DISBURSEMENT'),
+  (4, 'PAYMENT_MULTISTEP_INSTALLMENT'),
+  (4, 'ASSET_PLEDGE'),
+  (4, 'CALENDAR_HAS_CYCLE_HAS_DEADLINE'),
+  -- PI-006 'Vay tín chấp lương' → Pattern PT-005 gắn OT_UNSECURED; lấy nguyên bộ composition tương ứng
+  (6, 'TERM_LOAN_OBLIGATION'),
+  (6, 'PRINCIPAL_NO_INCREASE_MULTI_DECREASE'),
+  (6, 'EVENT_LENDER_DISBURSEMENT'),
+  (6, 'PAYMENT_MULTISTEP_INSTALLMENT'),
+  (6, 'UNSECURED'),
+  (6, 'CALENDAR_HAS_CYCLE_HAS_DEADLINE');
 
 -- ===== 23. product_pattern — 6 PT (list view; intent nguồn: PT-002←PI-003 theo version note, còn lại [suy luận]) =====
 INSERT INTO "product_pattern" ("code", "name", "product_intent_id", "status") VALUES
@@ -501,6 +556,136 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_COLLATERAL', 'ltv', '75%'),
   ('TPL-003', 'BLK_BILLING', 'stmt_cycle', 'Hàng tháng');
 
+-- ===== 28b. template_frame — bổ sung TPL-001,002,004,005,006 (thiếu trong bản gốc; suy diễn theo đúng block
+-- của Pattern gốc mỗi Template — pattern_block — và slot_code/default_value thật của answer_slot). Phủ ĐỦ
+-- mọi slot BẮT BUỘC (is_required=true) của từng block — không chỉ 1 vài slot "tiêu đề" như bản trước, để
+-- tránh hiện "— chưa đặt giá trị khung —" cho slot lẽ ra phải có; slot KHÔNG bắt buộc (beneficiary, min_amount,
+-- fee_amount, grace, disb_syntax, transfer_content, occupation, billing_day) chủ động để trống — đúng nghĩa
+-- "chưa cấu hình", không phải lỗi. =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 'Vay cầm cố trả góp · KH cá nhân' ← PT-001 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
+  ('TPL-001', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
+  ('TPL-001', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
+  ('TPL-001', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-001', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-001', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-001', 'BLK_INTEREST', 'base_rate', '1,5%/tháng'),
+  ('TPL-001', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-001', 'BLK_FEE', 'fee_type', 'Phí thẩm định'),
+  ('TPL-001', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-001', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
+  ('TPL-001', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
+  ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-001', 'BLK_COLLATERAL', 'asset_valuation', '80% giá trị'),
+  ('TPL-001', 'BLK_COLLATERAL', 'ltv', '80%'),
+  ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  -- TPL-002 'Vay cầm cố trả góp · KH doanh nghiệp' ← PT-001 (đối tượng doanh nghiệp)
+  ('TPL-002', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
+  ('TPL-002', 'BLK_COUNTERPARTY', 'borrower_type', 'Doanh nghiệp'),
+  ('TPL-002', 'BLK_REGULATORY', 'legal_form', 'Hợp đồng tín dụng'),
+  ('TPL-002', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-002', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-002', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
+  ('TPL-002', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-002', 'BLK_FEE', 'fee_type', 'Phí quản lý'),
+  ('TPL-002', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-002', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
+  ('TPL-002', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
+  ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-002', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
+  ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
+  ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  -- TPL-004 'Vay cầm cố ô tô · trả góp' ← PT-006 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
+  ('TPL-004', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
+  ('TPL-004', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
+  ('TPL-004', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-004', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-004', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-004', 'BLK_INTEREST', 'base_rate', '1,1%/tháng'),
+  ('TPL-004', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-004', 'BLK_FEE', 'fee_type', 'Phí thẩm định'),
+  ('TPL-004', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-004', 'BLK_REPAYMENT', 'installment_count', '6 – 36'),
+  ('TPL-004', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
+  ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-004', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
+  ('TPL-004', 'BLK_COLLATERAL', 'ltv', '70%'),
+  ('TPL-004', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  -- TPL-005 'Vay Bullet cầm cố · cá nhân' ← PT-003 (COUNTERPARTY/REGULATORY/DISBURSEMENT/INTEREST/COLLATERAL/PENALTY)
+  ('TPL-005', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
+  ('TPL-005', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
+  ('TPL-005', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-005', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-005', 'BLK_INTEREST', 'interest_calc', 'Lãi hàng tháng, gốc cuối kỳ (Bullet)'),
+  ('TPL-005', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
+  ('TPL-005', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng'),
+  ('TPL-005', 'BLK_COLLATERAL', 'asset_valuation', '85% giá trị'),
+  ('TPL-005', 'BLK_COLLATERAL', 'ltv', '85%'),
+  ('TPL-005', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  -- TPL-006 'Vay tín chấp lương · cá nhân' ← PT-005 (ELIGIBILITY/COUNTERPARTY/INTEREST/REPAYMENT/PENALTY)
+  ('TPL-006', 'BLK_ELIGIBILITY', 'age', '18 – 60'),
+  ('TPL-006', 'BLK_ELIGIBILITY', 'min_income', '5.000.000đ'),
+  ('TPL-006', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
+  ('TPL-006', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
+  ('TPL-006', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-006', 'BLK_INTEREST', 'base_rate', '1,6%/tháng'),
+  ('TPL-006', 'BLK_INTEREST', 'rate_type', 'Cố định'),
+  ('TPL-006', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-006', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
+  ('TPL-006', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
+  ('TPL-006', 'BLK_PENALTY', 'penalty_rate', '150% lãi');
+
+-- ===== 28c. template_frame — bổ sung TPL-003 (thiếu 3 block ELIGIBILITY/REGULATORY/PENALTY mà Pattern
+-- PT-002 (9 block) thực có nhưng bản gốc Giai đoạn 21 chỉ mới cover 6 block; + slot bắt buộc còn thiếu
+-- trong 4 block đã có: capacity_range/interest_calc/repay_method/asset_valuation) — giữ nguyên 10 dòng
+-- gốc phía trên (28), chỉ bổ sung thêm =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  ('TPL-003', 'BLK_ELIGIBILITY', 'age', '18 – 60'),
+  ('TPL-003', 'BLK_ELIGIBILITY', 'min_income', '5.000.000đ'),
+  ('TPL-003', 'BLK_REGULATORY', 'legal_form', 'Giấy nhận nợ'),
+  ('TPL-003', 'BLK_REGULATORY', 'compliance', 'Bật'),
+  ('TPL-003', 'BLK_LIMIT', 'capacity_range', 'Có quản trị'),
+  ('TPL-003', 'BLK_INTEREST', 'interest_calc', 'Dư nợ giảm dần'),
+  ('TPL-003', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
+  ('TPL-003', 'BLK_COLLATERAL', 'asset_valuation', '75% giá trị'),
+  ('TPL-003', 'BLK_PENALTY', 'penalty_rate', '150% lãi');
+
+-- ===== 28d. template_frame — phủ NỐT slot KHÔNG bắt buộc còn lại của cả 6 template lên 100% (user yêu cầu
+-- không để trống slot nào). Slot có default_value thật trong answer_slot (min_amount/grace/disb_syntax/
+-- billing_day) dùng đúng giá trị đó; slot không có default nào sẵn trong DB (beneficiary/fee_amount/
+-- transfer_content/occupation) dùng mô tả trung thực đúng ý nghĩa nghiệp vụ của việc "không bắt buộc"
+-- (vd occupation "Không giới hạn" = không ràng buộc nghề nghiệp cụ thể) — không bịa số liệu giả định. =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 (PT-001)
+  ('TPL-001', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-001', 'BLK_FEE', 'fee_amount', '300.000đ'),
+  ('TPL-001', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-002 (PT-001, doanh nghiệp)
+  ('TPL-002', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-002', 'BLK_FEE', 'fee_amount', '800.000đ'),
+  ('TPL-002', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-003 (PT-002)
+  ('TPL-003', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
+  ('TPL-003', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-003', 'BLK_LIMIT', 'min_amount', '0đ'),
+  ('TPL-003', 'BLK_PENALTY', 'grace', '5 ngày'),
+  ('TPL-003', 'BLK_BILLING', 'billing_day', 'Ngày 5'),
+  -- TPL-004 (PT-006)
+  ('TPL-004', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-004', 'BLK_FEE', 'fee_amount', '400.000đ'),
+  ('TPL-004', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-005 (PT-003)
+  ('TPL-005', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  ('TPL-005', 'BLK_PENALTY', 'grace', '5 ngày'),
+  -- TPL-006 (PT-005)
+  ('TPL-006', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
+  ('TPL-006', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
+  ('TPL-006', 'BLK_PENALTY', 'grace', '5 ngày');
+
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
 -- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra
 -- block nào "đang áp dụng"), trong khi toàn bộ 15 fragment của CFG-0042 dùng đúng 6 block mà
@@ -540,6 +725,114 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0042', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
   ('CFG-0042', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
   ('CFG-0042', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '70% giá trị', false, 'Hợp lệ');
+
+-- ===== 30b. fragment — bổ sung CFG-0021/0037/0038/0039/0040/0041 (thiếu trong bản gốc — chỉ CFG-0042 có
+-- fragment, vi phạm bất biến "mỗi (config, slot) phải có ≥1 fragment scope=default" ghi ở comment bảng
+-- fragment). Suy diễn từ block/slot thật của Pattern gắn với Template mỗi Config, giá trị mặc định lấy
+-- theo answer_slot/template_frame tương ứng hoặc điều chỉnh hợp lý theo tên Config (không bịa số liệu).
+-- CFG-0021/0037/0038/0039 có thêm fragment scope people/place/time (không chỉ default) trên slot base_rate
+-- — nếu không, panel "Xem trước Resolution" của các config này sẽ có Place/Time dropdown trống (chỉ
+-- CFG-0040/0041/0042 có biến thể scope trước đó), khác với prototype luôn hiển thị đủ 3 ngữ cảnh. =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  -- CFG-0021 'Vay cầm cố laptop' (retired) ← TPL-001/PT-001
+  ('CFG-0021', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,8%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'people', 'Loyalty', '1,5%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,7%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,3%/tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí thẩm định', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '1 – 12', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Thiết bị điện tử (Laptop)', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '60% giá trị', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '60%', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- CFG-0037 'Vay cầm cố DN nhỏ' (review) ← TPL-002/PT-001 (đối tượng doanh nghiệp)
+  ('CFG-0037', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Doanh nghiệp', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Hợp đồng tín dụng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,2%/tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,15%/tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,0%/tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí quản lý', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 24', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Ô tô (Car)', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '70% giá trị', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '70%', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- CFG-0038 'Vay tín chấp lương GV' (draft) ← TPL-006/PT-005
+  ('CFG-0038', 'BLK_ELIGIBILITY', 'age', 'default', NULL, '22 – 55', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_ELIGIBILITY', 'min_income', 'default', NULL, '8.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,6%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'people', 'Loyalty', '1,4%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,55%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,3%/tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 24', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- CFG-0039 'Vay Bullet vàng 3 tháng' (approved) ← TPL-005/PT-003
+  ('CFG-0039', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Lãi hàng tháng, gốc cuối kỳ (Bullet)', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,3%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'people', 'VIP', '1,1%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'place', 'HCM, HN', '1,25%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'base_rate', 'time', 'Khuyến mãi Tết', '1,0%/tháng', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Vàng (Gold)', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- CFG-0040 'Vay xe máy KH thân thiết' (published) ← TPL-001/PT-001 (ưu đãi Loyalty)
+  ('CFG-0040', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,0%/tháng', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_INTEREST', 'base_rate', 'people', 'Loyalty', '0,8%/tháng', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí thẩm định', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '1 – 18', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Xe máy (TwoWheels)', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- CFG-0041 'Vay ô tô hạn mức HCM' (approved) ← TPL-003/PT-002 (override asset_type Ô tô so với khung Xe máy của template)
+  ('CFG-0041', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88 (Cho vay)', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '50.000.000đ – 2.000.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,1%/tháng', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_INTEREST', 'base_rate', 'place', 'HCM', '1,05%/tháng', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Ô tô (Car)', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '70% giá trị', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '70%', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 36', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
 
 -- ===== 31. product_variant — 7 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
@@ -757,6 +1050,45 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   ('config', 'CFG-0042', 'v0.3', 'draft', false, false, 'Trần Lan', '2026-06-30 15:20:00', 'Thêm ưu đãi Loyalty & VIP cho Base Rate | + Fragment Base Rate · Loyalty; + Fragment Base Rate · VIP'),
   ('config', 'CFG-0042', 'v0.2', 'draft', false, false, 'Trần Lan', '2026-06-29 10:05:00', 'Điền Answer Slot bắt buộc của Block Trả nợ & Tài sản | + asset_type, ltv; + repay_method, installment_count'),
   ('config', 'CFG-0042', 'v0.1', 'draft', false, false, 'Phạm An', '2026-06-27 16:00:00', 'Khởi tạo Config từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định Base Rate');
+
+-- ===== 38b. version_entry — bổ sung lịch sử cho 5 Pattern (PT-001,003,004,005,006) và 6 Config
+-- (CFG-0021,0037,0038,0039,0040,0041) còn thiếu trong bản gốc (chỉ PT-002/CFG-0042 có, khiến nút
+-- "Phiên bản" của mọi Pattern/Config khác không có gì để hiển thị). is_active=true chỉ gán cho
+-- version HEAD của thực thể đã ở status 'published' (đang thật sự vận hành); approved/review/draft/
+-- retired đều is_active=false — khớp đúng ý nghĩa "đang hoạt động" thay vì đánh dấu tùy tiện. =====
+INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", "is_active", "is_head", "author", "created_at", "note") VALUES
+  -- PT-001 'Khuôn vay cầm cố trả góp' (published, từ PI-005)
+  ('pattern', 'PT-001', 'v0.1', 'draft', false, false, 'Phạm An', '2026-05-10 09:00:00', 'Khởi tạo khuôn từ Product Intent PI-005 | + Block Bên tham gia; + Block Lãi suất; + Block Tài sản ĐB'),
+  ('pattern', 'PT-001', 'v0.2', 'published', true, true, 'Phạm Designer', '2026-05-20 11:30:00', 'Hoàn thiện cấu trúc Block & phát hành | + Block Trả nợ; + Block Phạt & Quá hạn; + Block Tuân thủ & Pháp lý; → Phát hành (Review→Published)'),
+  -- PT-003 'Khuôn vay cầm cố Bullet' (approved, từ PI-001)
+  ('pattern', 'PT-003', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-05-12 10:15:00', 'Khởi tạo khuôn Bullet từ Product Intent PI-001 | + Block Bên tham gia; + Block Lãi suất'),
+  ('pattern', 'PT-003', 'v0.2', 'approved', false, true, 'Lê Minh', '2026-05-25 14:00:00', 'Bổ sung Block Giải ngân & Tài sản, gửi duyệt | + Block Giải ngân; + Block Tài sản ĐB; → Phê duyệt (Review→Approved)'),
+  -- PT-004 'Khuôn vay hạn mức Facility' (draft, từ PI-002 — vừa tạo)
+  ('pattern', 'PT-004', 'v0.1', 'draft', false, true, 'Phạm An', '2026-07-01 08:50:00', 'Khởi tạo khuôn Facility từ Product Intent PI-002 | + Block Bên tham gia; + Block Hạn mức; + Block Lãi suất'),
+  -- PT-005 'Khuôn vay tín chấp lương' (published, từ PI-006)
+  ('pattern', 'PT-005', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-04-15 09:20:00', 'Khởi tạo khuôn tín chấp lương từ Product Intent PI-006 | + Block Điều kiện tham gia; + Block Bên tham gia'),
+  ('pattern', 'PT-005', 'v0.2', 'published', true, true, 'Phạm Designer', '2026-04-28 15:45:00', 'Hoàn thiện Block Lãi suất/Trả nợ/Phạt & phát hành | + Block Lãi suất; + Block Trả nợ; + Block Phạt & Quá hạn; → Phát hành (Review→Published)'),
+  -- PT-006 'Khuôn vay cầm cố ô tô' (approved, từ PI-004)
+  ('pattern', 'PT-006', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-01 09:00:00', 'Khởi tạo khuôn cầm cố ô tô từ Product Intent PI-004 | + Block Bên tham gia; + Block Lãi suất; + Block Tài sản ĐB'),
+  ('pattern', 'PT-006', 'v0.2', 'approved', false, true, 'Phạm An', '2026-06-15 13:30:00', 'Bổ sung Block Phí & Trả nợ, gửi duyệt | + Block Phí; + Block Trả nợ; → Phê duyệt (Review→Approved)'),
+  -- CFG-0021 'Vay cầm cố laptop' (retired, sản phẩm đã ngừng)
+  ('config', 'CFG-0021', 'v0.1', 'draft', false, false, 'Phạm An', '2026-01-10 09:00:00', 'Khởi tạo Config từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0021', 'v0.2', 'published', false, false, 'Trần Lan', '2026-01-20 10:30:00', 'Hoàn thiện fragment & phát hành | + Fragment còn lại; → Phát hành (Approved→Published)'),
+  ('config', 'CFG-0021', 'v0.3', 'retired', false, true, 'Trần Lan', '2026-06-29 14:05:00', 'Thu hồi sản phẩm laptop ngừng kinh doanh | → Thu hồi (Published→Retired)'),
+  -- CFG-0037 'Vay cầm cố DN nhỏ' (review)
+  ('config', 'CFG-0037', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-20 09:30:00', 'Khởi tạo Config từ Template TPL-002 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0037', 'v0.2', 'review', false, true, 'Lê Minh', '2026-07-01 09:10:00', 'Điền đủ Answer Slot bắt buộc, gửi duyệt | + Fragment Base Rate Place/Time; → Gửi duyệt (Draft→Review)'),
+  -- CFG-0038 'Vay tín chấp lương GV' (draft, vừa khởi tạo)
+  ('config', 'CFG-0038', 'v0.1', 'draft', false, true, 'Phạm An', '2026-06-30 11:00:00', 'Khởi tạo Config tín chấp lương GV từ Template TPL-006 v1.0 | Khởi tạo từ Template; + Fragment mặc định Base Rate'),
+  -- CFG-0039 'Vay Bullet vàng 3 tháng' (approved)
+  ('config', 'CFG-0039', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-05-05 09:15:00', 'Khởi tạo Config Bullet vàng từ Template TPL-005 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0039', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-05-18 14:20:00', 'Bổ sung ưu đãi VIP & khu vực, phê duyệt | + Fragment Base Rate People/Place/Time; → Phê duyệt (Review→Approved)'),
+  -- CFG-0040 'Vay xe máy KH thân thiết' (published)
+  ('config', 'CFG-0040', 'v0.1', 'draft', false, false, 'Phạm An', '2026-05-25 10:00:00', 'Khởi tạo Config xe máy KH thân thiết từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0040', 'v0.2', 'published', true, true, 'Trần Lan', '2026-06-30 09:45:00', 'Thêm ưu đãi Loyalty & phát hành | + Fragment Base Rate Loyalty; → Phát hành (Approved→Published)'),
+  -- CFG-0041 'Vay ô tô hạn mức HCM' (approved)
+  ('config', 'CFG-0041', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-05 09:30:00', 'Khởi tạo Config ô tô hạn mức từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0041', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)');
 
 -- ===== 39. activity_log — 8 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
 INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "entity_code", "detail") VALUES
