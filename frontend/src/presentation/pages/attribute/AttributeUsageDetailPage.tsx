@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail, getList, type Page } from '../../infrastructure/api/client'
-import Icon from '../components/Icon'
+import { getDetail, getList, type Page } from '../../../infrastructure/api/client'
+import Icon from '../../components/Icon'
 
 interface AttributeInfo {
   code: string

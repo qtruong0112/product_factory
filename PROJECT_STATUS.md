@@ -557,11 +557,33 @@ Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đ
 
 **Verify:** `npm run build` 0 lỗi TS. `curl /api/attributes/base_rate/usage` xác nhận `unique:false, nullable:true, defaultValue:"1,5%/tháng"` đúng thật. Playwright: bấm "Lãi suất cơ sở" trong popup Pricing → hiện đúng: Data Type "Percent" highlight xanh giữa 9 nút thật, Bắt buộc=Có/Duy nhất=Không/Nullable=Có, Giá trị mặc định "1,5%/tháng", ràng buộc "Trần/Pháp lý ≤ 1,65%/tháng".
 
+### Giai đoạn 31 — Gộp page list+detail liên quan vào subfolder theo feature
+
+**Bối cảnh:** user yêu cầu "tổ chức lại cấu trúc frontend, đặt folder page rồi chia các file liên quan đến các page vào [feature folder]" — vd business intent, product intent, template. `presentation/pages/` lúc đó có 27 file phẳng; 7 cặp có cả list+detail liên quan chặt (BusinessIntentPage+BusinessIntentDetailPage, v.v.), 13 page chỉ 1 file. Đã hỏi phạm vi trước khi làm — chọn **chỉ gộp 7 cặp list+detail** vào subfolder cùng tên nav key, 13 page đơn lẻ giữ nguyên phẳng (không có gì để nhóm nếu chỉ 1 file).
+
+**Kết quả (`frontend/src/presentation/pages/`):**
+```
+pages/
+├── businessintent/{BusinessIntentPage,BusinessIntentDetailPage}.tsx
+├── intent/{ProductIntentPage,ProductIntentDetailPage}.tsx
+├── pattern/{ProductPatternPage,ProductPatternDetailPage}.tsx
+├── template/{ProductTemplatePage,ProductTemplateDetailPage}.tsx
+├── config/{ProductConfigPage,ProductConfigDetailPage}.tsx
+├── attribute/{AttributePage,AttributeUsageDetailPage}.tsx
+├── archetype/{ArchetypePage,ArchetypeDetailPage}.tsx
+└── (13 file phẳng: Dashboard/Block/Matrix/Obligation/Domain/Lifecycle/Ontology/Sysmap/ProductVariant/ProductCatalog/Release/Activity/Simulation)
+```
+Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — không phải PascalCase tên component.
+
+**Cách làm:** `mv` cơ học + `sed` sửa import (`../../infrastructure/` → `../../../infrastructure/`, `../components/` → `../../components/` do sâu thêm 1 cấp) trong 14 file đã chuyển, và sửa 14 dòng import + không cần đổi route trong `main.tsx` (chỉ đổi path import, JSX/route giữ nguyên). Xác nhận trước khi chuyển: không có import chéo giữa các page (grep `from '\./` / `from '../pages'` trong `pages/*.tsx` → rỗng) nên di chuyển an toàn, không cần sửa logic.
+
+**Verify:** `npm run build` 0 lỗi TS, **bundle hash giống hệt trước khi chuyển** (`index-B5Zxx0rS.js`) — xác nhận 100% không đổi hành vi (cùng phương pháp verify đã dùng ở Giai đoạn 28). `git add` xác nhận cả 14 file đều được Git nhận diện là **rename** (không phải xóa+tạo mới). Rebuild Docker frontend, curl smoke-test 7 route (list + detail) đều 200.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành màn "Attribute Usage" (Giai đoạn 29) + popup xem nhanh Group/Data Type (Giai đoạn 30) — nợ 5.4 cũ đã xong trọn vẹn cả màn Attribute. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành gộp cấu trúc thư mục pages theo feature (Giai đoạn 31), sau màn "Attribute Usage" (Giai đoạn 29) + popup xem nhanh Group/Data Type (Giai đoạn 30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

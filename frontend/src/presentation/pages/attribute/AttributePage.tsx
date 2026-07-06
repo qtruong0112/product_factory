@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getDetail, getList, type Page } from '../../infrastructure/api/client'
-import ListScreen, { type ListColumn } from '../components/ListScreen'
-import Icon from '../components/Icon'
+import { getDetail, getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen, { type ListColumn } from '../../components/ListScreen'
+import Icon from '../../components/Icon'
 
 // Attribute — làm giàu: dataTypeName (join), usedInSlots (join answer_slot),
 // constraintCount/constraintSummary (join attribute_constraint).
