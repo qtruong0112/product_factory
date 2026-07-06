@@ -535,11 +535,19 @@ Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đ
 
 **Verify:** `docker compose build backend` 0 lỗi. Chạy thật, curl `/api/attributes/base_rate/usage`: đúng 2 constraint (regulatory+range), slot `BLK_INTEREST.base_rate`, 6 template (TPL-001..006), 7 config đa scope (default/people/place/time, có 1 case `isWarning:true` ở CFG-0042/HCM,HN), 7 variant. Test `/api/attributes/occupation/usage` (enum, không fragment/variant): trả `constraints:[]`, `enumValues` 4 giá trị, `usedInFragments:[]`, `usedInVariants:[]` — không lỗi, không mảng null. `curl .../does_not_exist/usage` → 404. `npm run build` 0 lỗi TS. Playwright chụp `/attribute` (xác nhận mũi tên click-through xuất hiện) + `/attribute/base_rate` + `/attribute/occupation` (trường hợp rỗng) — bố cục khớp prototype, dữ liệu 100% thật.
 
+### Giai đoạn 30 — Popup xem nhanh Attribute Group / Data Type
+
+**Bối cảnh:** sau Giai đoạn 29, user hỏi tiếp về 2 tab còn lại (Attribute Group, Data Type) trong màn Attribute — cũng so với prototype gốc. Đối chiếu markup gốc phát hiện CẢ 2 tab đều có `onClick`, nhưng là `openCreate('attribute')` — mở modal CUD "Tạo Attribute mới" dùng CHUNG với nút "+ Thêm Attribute" góc phải (không mang id riêng theo dòng click). Modal CUD này chưa từng được cài đặt cho bất kỳ nút "Tạo..." nào trong toàn bộ 18 màn (đúng luật cứng "Nút CUD: no-op"). Hỏi lại user có muốn dựng modal tạo/sửa thật không — user chọn **chỉ xem thông tin, không có tác động gì** (không phải CUD).
+
+**Giải pháp:** thêm `InfoModal` (component popup dùng chung, không có nút "Lưu", chỉ "Đóng") trong `AttributePage.tsx`. Bấm dòng ở tab Attribute Group → popup hiện tên/domain/số attribute + danh sách attribute thuộc nhóm (lọc `attrs.content` theo `groupCode`, đã fetch sẵn cho tab Attribute — KHÔNG gọi thêm API). Bấm dòng ở tab Data Type → popup tương tự lọc theo `dataTypeCode`. Đây là UI hoàn toàn mới (prototype gốc không có khái niệm "xem-chỉ-đọc" này, chỉ có modal CUD) nhưng đúng yêu cầu rõ ràng của user, dữ liệu 100% thật (không thêm bảng/cột nào mới).
+
+**Verify:** `npm run build` 0 lỗi TS. Playwright: bấm dòng "Pricing" (Attribute Group) → popup hiện đúng 3 attribute thật (Lãi suất cơ sở/Loại lãi suất/Công thức tính lãi, đúng chip Data Type); bấm dòng "Money" (Data Type) → popup hiện đúng 4 attribute thật (Hạn mức cấp/Số dư tối thiểu/Thu nhập tối thiểu/Số tiền phí, đúng chip Bắt buộc/Tùy chọn) — khớp số đếm hiển thị ở cột "SỐ ATTRIBUTE" ngoài list.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành màn "Attribute Usage" (Giai đoạn 29) — nợ 5.4 cũ đã xong. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành màn "Attribute Usage" (Giai đoạn 29) + popup xem nhanh Group/Data Type (Giai đoạn 30) — nợ 5.4 cũ đã xong trọn vẹn cả màn Attribute. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

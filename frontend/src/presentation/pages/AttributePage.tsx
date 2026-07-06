@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen, { type ListColumn } from '../components/ListScreen'
+import Icon from '../components/Icon'
 
 // Attribute — làm giàu: dataTypeName (join), usedInSlots (join answer_slot),
 // constraintCount/constraintSummary (join attribute_constraint).
 interface AttrRow {
   code: string
   name: string
+  groupCode: string
   dataTypeCode: string
   dataTypeName: string
   usedInSlots: string[]
@@ -97,6 +99,58 @@ function RequiredChip({ required }: { required: boolean }) {
   )
 }
 
+// Popup xem-chỉ-đọc (không phải modal tạo/sửa CUD) — bấm dòng Attribute Group / Data Type
+// để xem nhanh thông tin + danh sách attribute liên quan, không điều hướng, không tác động dữ liệu.
+function InfoModal({ icon, title, subtitle, onClose, children }: { icon: string; title: string; subtitle: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(10,20,15,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: '#fff', borderRadius: 16, width: 520, maxHeight: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,.25)' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '20px 22px', borderBottom: '1px solid #EEF2EF' }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: '#E5EEF9', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+              <Icon name={icon} size={18} color="#2F73C4" />
+            </div>
+            <div>
+              <div style={{ fontSize: 15.5, fontWeight: 700, color: '#122019' }}>{title}</div>
+              <div style={{ fontSize: 12, color: '#8A998F', marginTop: 2 }}>{subtitle}</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8A998F', padding: 4, display: 'flex' }}>
+            <Icon name="x" size={18} color="#8A998F" />
+          </button>
+        </div>
+        <div style={{ padding: '18px 22px', overflowY: 'auto' }}>{children}</div>
+        <div style={{ padding: '14px 22px', borderTop: '1px solid #EEF2EF', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            style={{ background: '#F1F5F2', color: '#41524A', border: 'none', borderRadius: 9, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AttrRefRow({ code, name, tag }: { code: string; name: string; tag: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '9px 12px', border: '1px solid #EEF2EF', borderRadius: 9 }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{name}</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: '#A7B5AC', marginTop: 2 }}>{code}</div>
+      </div>
+      {tag}
+    </div>
+  )
+}
+
 const TABS = ['Attribute', 'Attribute Group', 'Data Type']
 
 export default function AttributePage() {
@@ -107,6 +161,8 @@ export default function AttributePage() {
   const [tab, setTab] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [openGroup, setOpenGroup] = useState<AttrGroupRow | null>(null)
+  const [openDataType, setOpenDataType] = useState<DataTypeRow | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -229,8 +285,40 @@ export default function AttributePage() {
         rows={rows}
         searchPlaceholder={searchPlaceholder}
         actionLabel={actionLabel}
-        onRowClick={tab === 0 ? (i) => navigate(`/attribute/${(attrs?.content ?? [])[i].code}`) : undefined}
+        onRowClick={
+          tab === 0
+            ? (i) => navigate(`/attribute/${(attrs?.content ?? [])[i].code}`)
+            : tab === 1
+              ? (i) => setOpenGroup((groups?.content ?? [])[i])
+              : (i) => setOpenDataType((dataTypes?.content ?? [])[i])
+        }
       />
+
+      {openGroup && (
+        <InfoModal icon="domain" title={openGroup.name} subtitle={`${openGroup.code} · Domain ${openGroup.domainName}`} onClose={() => setOpenGroup(null)}>
+          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 12 }}>{openGroup.attributeCount} attribute thuộc nhóm này</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(attrs?.content ?? [])
+              .filter((a) => a.groupCode === openGroup.code)
+              .map((a) => (
+                <AttrRefRow key={a.code} code={a.code} name={a.name} tag={<InfoChip label={a.dataTypeName} />} />
+              ))}
+          </div>
+        </InfoModal>
+      )}
+
+      {openDataType && (
+        <InfoModal icon="block" title={openDataType.name} subtitle={openDataType.code} onClose={() => setOpenDataType(null)}>
+          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 12 }}>{openDataType.attributeCount} attribute dùng kiểu dữ liệu này</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {(attrs?.content ?? [])
+              .filter((a) => a.dataTypeCode === openDataType.code)
+              .map((a) => (
+                <AttrRefRow key={a.code} code={a.code} name={a.name} tag={<RequiredChip required={a.required} />} />
+              ))}
+          </div>
+        </InfoModal>
+      )}
     </div>
   )
 }
