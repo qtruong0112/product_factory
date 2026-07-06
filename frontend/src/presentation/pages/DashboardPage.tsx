@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icon from '../components/Icon'
-import { getList } from '../api/client'
+import { getList } from '../../infrastructure/api/client'
 
 const kc: Record<string, [string, string]> = {
   green: ['#DCF3E7', '#0B7349'],

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getList, type Page } from '../api/client'
+import { getList, type Page } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 
 // Card do backend làm giàu: typeCount (obligation_type theo archetype),

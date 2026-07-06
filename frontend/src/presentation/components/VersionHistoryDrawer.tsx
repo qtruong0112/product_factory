@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getVersionHistory } from '../api/client'
+import { getVersionHistory } from '../../infrastructure/api/client'
 import { STATUS_COLORS, STATUS_LABELS } from './StatusChip'
 import Icon from './Icon'
 

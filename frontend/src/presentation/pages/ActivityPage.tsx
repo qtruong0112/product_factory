@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../api/client'
+import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen from '../components/ListScreen'
 
 // Backend làm giàu: actionLabel dịch từ action code, channel suy ra từ hậu tố "· kênh X" thật

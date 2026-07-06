@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail, getList } from '../api/client'
+import { getDetail, getList } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 import { STATUS_COLORS, STATUS_LABELS } from '../components/StatusChip'
 import VersionHistoryDrawer from '../components/VersionHistoryDrawer'

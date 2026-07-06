@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../api/client'
+import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen, { type ListColumn } from '../components/ListScreen'
 
 // Attribute — làm giàu: dataTypeName (join), usedInSlots (join answer_slot),

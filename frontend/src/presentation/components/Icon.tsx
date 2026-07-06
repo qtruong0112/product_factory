@@ -1,4 +1,4 @@
-import { ICONS, type IconPart } from '../icons'
+import { ICONS, type IconPart } from '../../infrastructure/icons'
 
 interface Props {
   name: string

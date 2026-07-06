@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getDetail } from '../api/client'
+import { getDetail } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 import { StatusChip } from '../components/StatusChip'
 

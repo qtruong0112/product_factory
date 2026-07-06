@@ -496,11 +496,30 @@ com.f88.productfactory
 
 **Verify:** build qua `docker compose up --build backend` sạch ở MỌI bước trung gian (sau bước 1, sau mỗi nhóm controller tách ở bước 2) — không dồn lỗi. Sau khi xong, curl toàn bộ ~20 endpoint đại diện (activity-logs, attributes, attribute-groups, constraint-matrices + pattern-coverage, archetypes, lifecycles, obligation-elements/-types, product-configs/-patterns/-templates/-variants/-catalogs + các `/detail`, release-processes, blocks, version-entries, simulation/default) — số liệu giống hệt trước khi tái cấu trúc (vd Simulation VAR-101 vẫn 1.166.074đ/35.196.785đ, `product-configs/CFG-0042/detail` vẫn 12/14 slot bắt buộc). `npm run build` frontend 0 lỗi (frontend không phụ thuộc cấu trúc package Java, chỉ REST path — không đổi).
 
+### Giai đoạn 28 — Chia lại cấu trúc thư mục frontend theo layer (infrastructure/presentation)
+
+**Bối cảnh:** user yêu cầu kiến trúc lại frontend, đối xứng với backend (Giai đoạn 27). Đã hỏi rõ phạm vi trước khi làm — chọn phương án **chỉ dọn cấu trúc thư mục** (không tách logic fetch API ra khỏi từng trong số 26 page thành custom hook riêng — rủi ro cao hơn nhiều, cần verify lại từng màn bằng Playwright, không cần thiết cho mục tiêu "kiến trúc lại").
+
+**Cấu trúc mới** (`frontend/src/`):
+```
+├── main.tsx                      — entry + router (giữ ở gốc)
+├── infrastructure/
+│   ├── api/{client.ts,types.ts}  — REST client mỏng
+│   ├── icons.ts                  — ICONS map (35 icon)
+│   ├── nav.ts                    — menu sidebar + tiêu đề view
+│   └── tables.ts                 — cấu hình DataTable generic
+└── presentation/
+    ├── components/                — 6 component dùng chung (Layout, ListScreen, Icon, StatusChip, DataTable, VersionHistoryDrawer)
+    └── pages/                     — 26 page (list + detail)
+```
+
+Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đổi 1 dòng logic nào trong bất kỳ page/component nào) — verify bằng cách so **hash bundle JS sau build giống hệt trước khi di chuyển** (`index-DQ8YBQ3i.js`), xác nhận 100% không đổi hành vi. `npm run build` 0 lỗi TS, Playwright chụp `/dashboard` sau khi rebuild Docker render y hệt.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại backend theo Clean Architecture layer-first (Giai đoạn 27) — toàn bộ REST path/response shape giữ nguyên, chỉ đổi cấu trúc package nội bộ. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại frontend theo layer (Giai đoạn 28), đối xứng với Clean Architecture backend (Giai đoạn 27). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
 
 ---
 

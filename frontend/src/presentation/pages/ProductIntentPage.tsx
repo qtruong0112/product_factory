@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getList, type Page } from '../api/client'
+import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen from '../components/ListScreen'
 import { StatusChip } from '../components/StatusChip'
 

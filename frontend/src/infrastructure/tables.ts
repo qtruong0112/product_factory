@@ -1,4 +1,4 @@
-import type { Column } from './components/DataTable'
+import type { Column } from '../presentation/components/DataTable'
 
 export interface TableDef {
   key: string // route path segment

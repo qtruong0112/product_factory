@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getDetail, getList } from '../api/client'
+import { getDetail, getList } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 
 // ---- kiểu dữ liệu từ API /release-processes, /release-processes/{id}/detail ----

@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import Icon from './Icon'
-import { NAV, VIEW_TITLES } from '../nav'
-import { getList } from '../api/client'
+import { NAV, VIEW_TITLES } from '../../infrastructure/nav'
+import { getList } from '../../infrastructure/api/client'
 
 // Mỗi nav key → 1 hoặc nhiều resource thật cần cộng totalElements để ra số đếm hiển thị.
 const NAV_COUNT_RESOURCES: Record<string, string[]> = {
