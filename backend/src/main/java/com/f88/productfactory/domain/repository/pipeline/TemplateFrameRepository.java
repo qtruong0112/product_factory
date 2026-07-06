@@ -10,4 +10,7 @@ public interface TemplateFrameRepository extends JpaRepository<TemplateFrame, Te
 
     /** Toàn bộ giá trị khung của một template (mọi block/slot đã được đặt giá trị). */
     List<TemplateFrame> findByTemplateCode(String templateCode);
+
+    /** Các template đã đặt giá trị khung cho một slot cụ thể — dùng cho lineage Attribute Usage. */
+    List<TemplateFrame> findByBlockIdAndSlotCode(String blockId, String slotCode);
 }

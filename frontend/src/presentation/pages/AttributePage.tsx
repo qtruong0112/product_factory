@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen, { type ListColumn } from '../components/ListScreen'
 
@@ -99,6 +100,7 @@ function RequiredChip({ required }: { required: boolean }) {
 const TABS = ['Attribute', 'Attribute Group', 'Data Type']
 
 export default function AttributePage() {
+  const navigate = useNavigate()
   const [attrs, setAttrs] = useState<Page<AttrRow> | null>(null)
   const [groups, setGroups] = useState<Page<AttrGroupRow> | null>(null)
   const [dataTypes, setDataTypes] = useState<Page<DataTypeRow> | null>(null)
@@ -227,6 +229,7 @@ export default function AttributePage() {
         rows={rows}
         searchPlaceholder={searchPlaceholder}
         actionLabel={actionLabel}
+        onRowClick={tab === 0 ? (i) => navigate(`/attribute/${(attrs?.content ?? [])[i].code}`) : undefined}
       />
     </div>
   )

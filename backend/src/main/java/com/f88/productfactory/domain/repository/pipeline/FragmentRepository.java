@@ -12,4 +12,7 @@ public interface FragmentRepository extends JpaRepository<Fragment, Long> {
 
     /** Đếm fragment của một config — cho cột "FRAGMENT" ở màn danh sách. */
     long countByConfigCode(String configCode);
+
+    /** Các fragment (mọi config/scope) đã gán giá trị cho một slot cụ thể — dùng cho lineage Attribute Usage. */
+    List<Fragment> findByBlockIdAndSlotCode(String blockId, String slotCode);
 }

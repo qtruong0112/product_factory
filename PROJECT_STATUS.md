@@ -515,11 +515,31 @@ com.f88.productfactory
 
 Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đổi 1 dòng logic nào trong bất kỳ page/component nào) — verify bằng cách so **hash bundle JS sau build giống hệt trước khi di chuyển** (`index-DQ8YBQ3i.js`), xác nhận 100% không đổi hành vi. `npm run build` 0 lỗi TS, Playwright chụp `/dashboard` sau khi rebuild Docker render y hệt.
 
+### Giai đoạn 29 — Hoàn thiện click-through list→detail + màn Attribute Usage
+
+**Bối cảnh:** user yêu cầu rà toàn bộ 20 nav key xem bấm vào 1 dòng list có sang detail không, và so với `docs/Product Factory 5.1.html` (prototype gốc) để biết đang thiếu detail nào — tránh tự vẽ thêm detail cho những màn mà bản gốc chưa từng thiết kế.
+
+**Khảo sát (2 Explore agent chạy song song):**
+- Code hiện tại trước khi làm: 6/20 nav key đã có `onRowClick` + route detail thật, dữ liệu DB thật (`businessintent`, `intent`, `pattern`, `template`, `config`, `archetype`).
+- Prototype gốc: đọc `this.state.view`, mảng `isList` (13 nav chỉ là list thuần), và các setter mang theo id thật (`openArchDetail(code)=>setState({view:'archetypeDetail',archCode:code})`, `openAttrUsage(code)=>setState({view:'attrUsage',attrSel:code})`) — xác nhận **chỉ đúng 2 khu vực** có detail phân theo bản ghi trong bản gốc: `archetype→archetypeDetail` (đã có) và `attribute→attrUsage` (chưa có — chính là nợ 5.4 cũ). `pattern`/`template` có "builder", `config` có "configForm" nhưng `onClick` giống hệt nhau cho MỌI dòng (không truyền id qua state) → không phải detail thật theo định nghĩa của bản gốc. 13 nav còn lại (variant/catalog/obligation/block/matrix/lifecycle/domain/activity/dashboard/ontology/sysmap/release/simulation) không có bất kỳ khái niệm detail nào trong bản gốc.
+- User chọn phạm vi (AskUserQuestion): **chỉ làm Attribute Usage**, giữ nguyên 13 list còn lại — đúng nguyên tắc "pixel-perfect từ prototype, không bịa thêm màn bản gốc không có".
+
+**Backend (package `attribute`):**
+- Entity mới `AttributeEnumValue`(+`AttributeEnumValueId` composite `attribute_code+sort_order`) + repo `findByAttributeCodeOrderBySortOrder`.
+- Thêm method vào repo có sẵn: `TemplateFrameRepository.findByBlockIdAndSlotCode`, `FragmentRepository.findByBlockIdAndSlotCode`, `ProductVariantRepository.findByFromConfigCodeIn` — không có FK trực tiếp attribute→fragment/template_frame, phải bắc cầu qua `answer_slot(block_id,code)`.
+- `AttributeUsageService` mới: join attribute→group→domain, constraint, enum values, và với mỗi answer_slot của attribute → template_frame (giá trị khung ở Template) + fragment (giá trị theo Selector Scope ở Config, kèm cờ `isWarning`) → suy ra `usedInVariants` từ tập config_code đã dùng. `AttributeUsageController` mới: `GET /api/attributes/{code}/usage` (404 nếu code không tồn tại).
+
+**Frontend:**
+- `AttributePage.tsx`: tab Attribute (tab 0) thêm `onRowClick` → `/attribute/{code}` (2 tab Attribute Group/Data Type giữ nguyên không click, đúng theo prototype).
+- `AttributeUsageDetailPage.tsx` mới: trích đúng markup `attrUsageModel()`/`ATTR_USAGE()` từ prototype (mục 8.5, tìm marker `isAttrUsage`/`attrUsage`/`ATTR_USAGE`, unescape thủ công) — rail "CHỌN ATTRIBUTE" (điều hướng nhanh giữa các attribute, dùng danh sách thật từ `/api/attributes`), header định nghĩa, 5-stage lineage (Attribute→Answer Slot→Template→Config→Variant, đếm thật), khối Ràng buộc + khối Giá trị theo Selector Scope (2 cột), bảng Where-used. Bỏ phần `desc` (mô tả) của prototype vì bảng `attribute` không có cột description — không bịa. Route `/attribute/:code` đặt trước `/:view` trong `main.tsx`.
+
+**Verify:** `docker compose build backend` 0 lỗi. Chạy thật, curl `/api/attributes/base_rate/usage`: đúng 2 constraint (regulatory+range), slot `BLK_INTEREST.base_rate`, 6 template (TPL-001..006), 7 config đa scope (default/people/place/time, có 1 case `isWarning:true` ở CFG-0042/HCM,HN), 7 variant. Test `/api/attributes/occupation/usage` (enum, không fragment/variant): trả `constraints:[]`, `enumValues` 4 giá trị, `usedInFragments:[]`, `usedInVariants:[]` — không lỗi, không mảng null. `curl .../does_not_exist/usage` → 404. `npm run build` 0 lỗi TS. Playwright chụp `/attribute` (xác nhận mũi tên click-through xuất hiện) + `/attribute/base_rate` + `/attribute/occupation` (trường hợp rỗng) — bố cục khớp prototype, dữ liệu 100% thật.
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại frontend theo layer (Giai đoạn 28), đối xứng với Clean Architecture backend (Giai đoạn 27). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện) — mục 5.4 (Attribute Usage) vẫn hoãn theo quyết định gốc.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành màn "Attribute Usage" (Giai đoạn 29) — nợ 5.4 cũ đã xong. Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
@@ -530,7 +550,7 @@ Không có màn nào đang dở giữa chừng. Vừa hoàn thành chia lại fr
 ### A0. Thư viện nền tảng (LÀM ĐẦU, thứ tự):
 1. ✅ **block** — Block & Answer Slot (+ `data_type`), package `structure`. **XONG (Giai đoạn 6):** backend `Block`/`AnswerSlot`(+Id)/`DataType` + `/api/blocks` (list làm giàu slotCount/gov + `/{id}/detail` join slots) + `/api/data-types`; frontend `BlockPage` list pixel-perfect. `/{id}/detail` đã sẵn nguồn để gỡ fix cứng builder ở A0.7.
 2. ✅ **matrix** — constraint_matrix + matrix_cell, package `governance`. **XONG (Giai đoạn 7):** `ConstraintMatrix`/`MatrixCell`(+Id) + `/api/constraint-matrices` (list + `/{id}/detail` grid join nhãn + `/pattern-coverage` phái sinh); frontend `MatrixPage` 4-tab pixel-perfect. Logic coverage đã sẵn ở BE để dùng lại ở A0.7.
-3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8) — CHỈ MÀN LIST.** Màn "Attribute Usage" (detail/lineage) + modal tạo/sửa ghi nợ ở mục B dưới, hoãn tới khi Pipeline + fragment/selector_scope có backend.
+3. ✅ **attribute** — list 3-tab (Attribute/Attribute Group/Data Type), package `attribute` (`Domain`/`AttributeGroup`/`AttributeConstraint` mới). **XONG (Giai đoạn 8).** Màn detail "Attribute Usage" (lineage) — **XONG (Giai đoạn 29)**, xem mục A2 dưới.
 4. ✅ **obligation** — list 3-tab (Obligation Type/Obligation Element/Element Type), backend `ontology` 3 controller chuyển sang join làm giàu. **XONG (Giai đoạn 9).**
    ✅ **archetype** — card grid + trang detail riêng (route `/archetype/:code`), backend `FinancialObligationArchetypeController` join làm giàu (typeCount/elementCount/productCount). **XONG (Giai đoạn 10).**
 5. ✅ **domain** + **lifecycle** — list đơn giản, backend `DomainController` (read-only thuần) + `LifecycleController` (join stateCount). **XONG (Giai đoạn 11).**
@@ -554,8 +574,8 @@ Thay `patternBuilderData.ts` (tĩnh) bằng dữ liệu THẬT từ DB. **Toàn 
 - **Mở rộng `ProductPatternController#/{code}/detail`** để join thêm: mỗi block → `{blockId,position,usage,name,bizGroup,gov,slots:[{name,code,type,required,def,rule,attrName,attrCode}]}`; `assignedOTs` thêm `archetype`; thêm `coverage:[{blockId,label,verdict,inCanvas,...}]` hoặc trả raw matrix cells để FE tự tính (FE đã có logic). Rồi **xóa nội dung tĩnh trong `patternBuilderData.ts`** (chỉ giữ COVER_COLS label nếu cần, hoặc bỏ hẳn).
 - Verify lại render builder với API thật (mock JSON = query DB), so khớp.
 
-### A2. NỢ — Attribute Usage screen + Create/Edit modal (hoãn tới khi có Pipeline + fragment/selector_scope)
-Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant) + modal tạo/sửa Attribute (form đổi field theo Data Type: Money/Percent/Integer/Range/Enum/Text/Boolean/Date/Formula). Cả hai cần dữ liệu từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` — chưa có backend. Làm sau khi Pipeline sản phẩm (mục D) + `fragment`/`selector_scope` (Lớp II) có backend, để tránh fix cứng như từng xảy ra với Pattern builder (mục 6.A cũ).
+### A2. ✅ XONG (Giai đoạn 29) — Attribute Usage screen
+Prototype có màn chi tiết "Attribute Usage" (lineage Attribute→Answer Slot→Template→Config→Variant, Selector Scope values theo People/Place/Time, bảng where-used với số Template/Config/Variant). Đã dựng đủ dữ liệu thật từ `product_template`/`product_config`/`product_variant`/`fragment`/`selector_scope` (Pipeline layer đã có backend từ Giai đoạn 14-21). Route `/attribute/:code`, backend `AttributeUsageService`/`AttributeUsageController`. Modal tạo/sửa Attribute KHÔNG làm — nút CUD toàn dự án giữ quy ước no-op (mục 7), không có ngoại lệ riêng cho Attribute.
 
 ### B. ✅ XONG (Giai đoạn 20) — Business Intent detail + KPI
 Backend `BusinessIntentKpi`(+`BusinessIntentKpiId` composite) + `findByBusinessIntentIdOrderBySortOrder` + `BusinessIntentController#/{id}/detail` `{intent, kpis}` (thêm cạnh 2 endpoint sẵn có từ `ReadOnlyController`, không cần bỏ extends). Frontend `BusinessIntentDetailPage` (mẫu `ProductIntentDetailPage`) + route `/businessintent/:id` (trước `/:view`) + `BusinessIntentPage` thêm `onRowClick`. Prototype KHÔNG có markup detail cho màn này (row click gốc chỉ mở modal tạo-mới chung) — dựng mới hoàn toàn theo quyết định nợ đã chốt, dữ liệu thật 100%. Verified: BI-01 hiện đúng 3 KPI seed (Dư nợ giải ngân mới/Số hợp đồng/NPL).

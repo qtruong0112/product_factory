@@ -12,6 +12,7 @@ import ProductPatternDetailPage from './presentation/pages/ProductPatternDetailP
 import BlockPage from './presentation/pages/BlockPage'
 import MatrixPage from './presentation/pages/MatrixPage'
 import AttributePage from './presentation/pages/AttributePage'
+import AttributeUsageDetailPage from './presentation/pages/AttributeUsageDetailPage'
 import ObligationPage from './presentation/pages/ObligationPage'
 import ArchetypePage from './presentation/pages/ArchetypePage'
 import ArchetypeDetailPage from './presentation/pages/ArchetypeDetailPage'
@@ -86,6 +87,7 @@ function App() {
           <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/config/:code" element={<ProductConfigDetailPage />} />
+          <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
       </Layout>
