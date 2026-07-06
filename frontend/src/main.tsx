@@ -88,6 +88,7 @@ function App() {
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/config/:code" element={<ProductConfigDetailPage />} />
           <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
+          <Route path="/release/:variantCode" element={<ReleasePage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
       </Layout>

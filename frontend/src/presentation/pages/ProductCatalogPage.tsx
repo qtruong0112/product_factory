@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
 import { StatusChip } from '../components/StatusChip'
@@ -16,6 +17,7 @@ interface CatalogRow {
 }
 
 export default function ProductCatalogPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<CatalogRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +50,11 @@ export default function ProductCatalogPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 18 }}>
         {list.map((c) => (
-          <div key={c.variantCode} style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 14, overflow: 'hidden' }}>
+          <div
+            key={c.variantCode}
+            onClick={() => navigate(`/release/${c.variantCode}`)}
+            style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
+          >
             <div style={{ background: 'linear-gradient(135deg,#0E8C5A,#0B6B45)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                 <Icon name="catalog" size={19} color="#fff" />

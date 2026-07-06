@@ -579,11 +579,31 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 **Verify:** `npm run build` 0 lỗi TS, **bundle hash giống hệt trước khi chuyển** (`index-B5Zxx0rS.js`) — xác nhận 100% không đổi hành vi (cùng phương pháp verify đã dùng ở Giai đoạn 28). `git add` xác nhận cả 14 file đều được Git nhận diện là **rename** (không phải xóa+tạo mới). Rebuild Docker frontend, curl smoke-test 7 route (list + detail) đều 200.
 
+### Giai đoạn 32 — Liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm
+
+**Bối cảnh:** user muốn bấm 1 sản phẩm trong Catalog (status draft/review/approved/published) sẽ chuyển sang màn Quy trình phát hành, hiển thị đúng tiến độ 8 bước khớp trạng thái sản phẩm đó; mặc định vào từ sidebar (không qua Catalog) phải hiển thị done 8 bước.
+
+**Bug thật phát hiện được:** `maker_checker_process` có FK `variant_code` (đúng ý định 1 process/1 variant) nhưng chỉ có **đúng 1 dòng seed** (`VAR-101`, `done_count=4`) — **lệch với trạng thái thật của VAR-101 là `published`** (đáng lẽ done 8/8). Đây là bằng chứng cho thấy lưu số liệu tiến độ tay theo từng variant rất dễ lệch khi status đổi mà quên sửa kèm.
+
+**Quyết định (đã hỏi user, chọn phương án bền hơn):** KHÔNG seed thêm 5 dòng `maker_checker_process` cho các variant còn lại. Dùng đúng 1 dòng hiện có làm **process template** (8 bước title/role/input/output/checklist — mô tả quy trình chuẩn, không đổi theo sản phẩm) và **tính runtime** done/current/upcoming của từng bước từ `product_variant.status` thật — luôn đồng bộ 100% với Catalog, không bao giờ lệch như tình huống VAR-101 vừa phát hiện. Ánh xạ (bước 7 = "Phê duyệt (Maker–Checker)", bước 8 = "Đóng gói & Phát hành Catalog"): `draft→5/8` (bước 6 đang làm), `review→6/8` (bước 7 đang chờ), `approved→7/8` (bước 8 đang làm), `published`/`retired`→`8/8`.
+
+**Backend:**
+- `MakerCheckerProcessRepository`: thêm `findFirstByOrderById()` lấy process template, không hardcode id.
+- `ReleaseProcessService`: xóa `list()` (không còn nơi gọi); thay `detail(Long id)` bằng `detailByVariant(String variantCode)` — join `ProductVariantRepository` lấy variant thật, tính `doneCount` qua hàm ánh xạ trạng thái, suy ra status từng bước (`stepNo<=doneCount?"done":stepNo==doneCount+1?"current":"upcoming"`), checklist mỗi bước `done = (status bước đó=="done")` — đơn giản hóa nhị phân theo bước (bỏ mức chi tiết "1/3 item" của seed gốc, có ghi rõ đây là đơn giản hóa có chủ đích).
+- `ReleaseProcessController`: đổi `GET /{id}/detail` (Long) → `GET /{variantCode}/detail` (String), xóa `GET` list.
+
+**Frontend:**
+- `ProductCatalogPage.tsx`: mỗi card thêm `onClick` → `navigate('/release/'+variantCode)` + `cursor:pointer`.
+- `main.tsx`: thêm route `/release/:variantCode` (trước `/:view`), giữ `release:<ReleasePage/>` trong `CUSTOM` cho `/release` từ sidebar.
+- `ReleasePage.tsx`: bỏ bước `getList` lấy dòng đầu; gọi thẳng `getDetail('release-processes', variantCode ?? 'VAR-101')` (VAR-101 = variant published thật, tự nhiên cho done 8/8 khi không có variantCode trên URL).
+
+**Verify:** curl 4 trạng thái xác nhận đúng số bước done/current/upcoming (`VAR-101` published→8/8 tất cả done; `VAR-104` approved→7/8, bước 8 current; `VAR-105` review→6/8, bước 7 current; `VAR-107` draft→5/8, bước 6 current); `VAR-999` không tồn tại→404. `npm run build` 0 lỗi TS. Playwright: `/release` mặc định→8/8; `/catalog` bấm từng card→điều hướng đúng `/release/{code}` với tiến độ khớp; card Catalog hiển thị đúng 6 trạng thái thật (3 published, 1 approved, 1 review, 1 draft).
+
 ---
 
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành gộp cấu trúc thư mục pages theo feature (Giai đoạn 31), sau màn "Attribute Usage" (Giai đoạn 29) + popup xem nhanh Group/Data Type (Giai đoạn 30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thành liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), sau khi gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
