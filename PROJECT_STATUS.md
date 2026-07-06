@@ -543,6 +543,20 @@ Di chuyển thuần cơ học bằng `mv` + sửa import bằng `sed` (không đ
 
 **Verify:** `npm run build` 0 lỗi TS. Playwright: bấm dòng "Pricing" (Attribute Group) → popup hiện đúng 3 attribute thật (Lãi suất cơ sở/Loại lãi suất/Công thức tính lãi, đúng chip Data Type); bấm dòng "Money" (Data Type) → popup hiện đúng 4 attribute thật (Hạn mức cấp/Số dư tối thiểu/Thu nhập tối thiểu/Số tiền phí, đúng chip Bắt buộc/Tùy chọn) — khớp số đếm hiển thị ở cột "SỐ ATTRIBUTE" ngoài list.
 
+### Giai đoạn 30b — Drill-down xem chi tiết 1 attribute từ popup Group/Data Type
+
+**Bối cảnh:** user muốn khi bấm 1 dòng attribute NGAY TRONG popup Group/Data Type (Giai đoạn 30) thì xem được thông tin chi tiết đầy đủ của attribute đó, không chỉ tên+chip. User cung cấp ảnh chụp trực tiếp từ file prototype gốc (modal "Tạo Attribute mới" — Thông tin cơ bản/Data Type buttons/Ràng buộc chung/Ràng buộc theo kiểu dữ liệu/Tuân thủ & Selector Scope) và đề nghị dùng ĐÚNG bố cục đó làm màn xem-chỉ-đọc.
+
+**2 quyết định đã hỏi user:**
+1. Drill-down thay nội dung popup hiện tại (có nút "← Quay lại"), KHÔNG mở popup thứ 2 chồng lên.
+2. Bỏ HẲN các trường mockup không có cột DB thật (Số chữ số thập phân, Cho phép giá trị âm, Căn cứ pháp lý dạng text, Scope ưu tiên override riêng theo attribute) — đúng tiền lệ "không bịa dữ liệu" đã áp dụng cho Group/Data Type trước đây.
+
+**Backend:** bổ sung 3 field còn thiếu vào `AttributeUsageService.usage()` (đã có endpoint `/api/attributes/{code}/usage` từ Giai đoạn 29, không tạo endpoint mới): `unique` (is_unique), `nullable` (is_nullable), `defaultValue` (default_value) — cả 3 cột đã có sẵn trong entity `Attribute`, chỉ chưa được đưa vào response trước đó.
+
+**Frontend (`AttributePage.tsx`):** `AttrRefRow` trong popup Group/Data Type giờ có `onClick` gọi `openDrill(code)` — fetch `getDetail('attributes', code, 'usage')`, hiển thị `AttrDetailBody` thay nội dung popup (giữ header/footer/X đóng của `InfoModal`, đổi title/subtitle sang attribute đang xem). Bố cục theo đúng khung mockup: "Thông tin cơ bản" (Mã/Attribute Group/Domain/Đơn vị — `ReadField` dạng ô xám chỉ-đọc), "Data Type" (dãy nút NHƯ THẬT lấy từ `dataTypes` đã fetch — 9 kiểu thật trong DB, không dùng danh sách tĩnh của prototype vì prototype có "Number"/"Date" không tồn tại trong DB — highlight đúng kiểu thật), "Ràng buộc chung" (3 `BoolBadge` Bắt buộc/Duy nhất/Nullable phản ánh đúng boolean thật + Giá trị mặc định nếu có), "Ràng buộc theo kiểu dữ liệu" (tái dùng cách render kind/rule/message giống `AttributeUsageDetailPage`), "Giá trị Enum" (nếu có). Nút "← Quay lại danh sách nhóm/Data Type" chỉ reset state drill, không đóng popup.
+
+**Verify:** `npm run build` 0 lỗi TS. `curl /api/attributes/base_rate/usage` xác nhận `unique:false, nullable:true, defaultValue:"1,5%/tháng"` đúng thật. Playwright: bấm "Lãi suất cơ sở" trong popup Pricing → hiện đúng: Data Type "Percent" highlight xanh giữa 9 nút thật, Bắt buộc=Có/Duy nhất=Không/Nullable=Có, Giá trị mặc định "1,5%/tháng", ràng buộc "Trần/Pháp lý ≤ 1,65%/tháng".
+
 ---
 
 ## 5. ĐANG LÀM DỞ

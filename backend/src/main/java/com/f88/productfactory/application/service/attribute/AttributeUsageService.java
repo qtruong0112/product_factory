@@ -93,6 +93,9 @@ public class AttributeUsageService {
         attrInfo.put("name", attribute.getName());
         attrInfo.put("dataTypeCode", attribute.getDataTypeCode());
         attrInfo.put("required", attribute.isRequired());
+        attrInfo.put("unique", attribute.isUnique());
+        attrInfo.put("nullable", attribute.isNullable());
+        attrInfo.put("defaultValue", attribute.getDefaultValue());
         attrInfo.put("unit", attribute.getUnit());
         attrInfo.put("groupCode", attribute.getGroupCode());
         Optional<AttributeGroup> group = groupRepo.findById(attribute.getGroupCode());
