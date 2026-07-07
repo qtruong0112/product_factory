@@ -678,9 +678,26 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 37 — Chia detail Product Variant thành 3 tab con
+
+**Bối cảnh:** user phân vân nên xem "chi tiết" (toàn bộ FOA/Block/Attribute/giá trị) ở Catalog hay Variant. Được recommend (và đồng ý): Catalog giữ nguyên trỏ sang Release (đúng ý nghĩa của nó — tiến độ phát hành, chốt từ Giai đoạn 32); nhu cầu "xem toàn bộ" đào sâu ngay trong `ProductVariantDetailPage` vì Variant mới là entity gốc nắm `fromConfigCode`. Do nội dung quá dài nếu nhồi hết vào 1 trang, user chọn chia tab thay vì cuộn dài.
+
+**Không thêm backend mới** — cả 2 tab mới đều gọi thẳng 2 API đã có sẵn từ trước, chỉ khác consumer:
+- Tab **"Giá trị cấu hình"**: gọi `GET /api/product-configs/{configCode}/detail` (đã có từ Giai đoạn 21) — hiển thị completeness bar + từng block/slot kèm badge giá trị fragment đã resolve theo scope (vàng nếu `is_warning`), hoặc "Kế thừa Template: X" / "Chưa cấu hình giá trị" khi slot rỗng.
+- Tab **"Nghĩa vụ tài chính"**: gọi `GET /api/product-patterns/{patternCode}/detail` (đã có từ Giai đoạn 13) — hiển thị danh sách Obligation Type gán cho Pattern nguồn, kèm tên archetype + vai trò.
+- `configCode`/`patternCode` lấy từ chính response `/api/product-variants/{code}/detail` (field `config.code`/`pattern.code` đã có từ Giai đoạn 36) — không cần sửa `ProductVariantService`.
+
+**Frontend:** `ProductVariantDetailPage.tsx` thêm tab bar (style giống toggle "Hướng dẫn từng bước/Swimlane" ở `ReleasePage`); nội dung Giai đoạn 36 giữ nguyên dưới tab "Tổng quan"; 2 component mới `ConfigValuesTab`/`ObligationsTab` tự fetch lazy khi tab được chọn lần đầu (không fetch trước khi cần).
+
+**Lỗi phát hiện lúc verify:** đoán `role` là `primary`/`secondary` (thường gặp) nhưng DB thật lưu `Primary`/`Support` (viết hoa, khác chữ thứ 2) — sửa lại `ROLE_LABEL` map khớp đúng giá trị thật, không đoán mà không kiểm tra.
+
+**Verify:** Playwright cả 3 tab với VAR-101 — "Giá trị cấu hình" hiện đúng 12/14 slot bắt buộc, đúng giá trị theo từng block (Bên tham gia/Hạn mức/Lãi suất...); "Nghĩa vụ tài chính" hiện đúng 2 Obligation Type (Facility/Primary→Chính, Pledge Installment/Support→Phụ) kèm archetype thật.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa thêm detail đầy đủ cho Product Variant (Giai đoạn 36 — lineage + catalog + activity, mức đầu tư cao theo yêu cầu rõ của user), sau khi thêm detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa chia detail Product Variant thành 3 tab con (Giai đoạn 37 — tái dùng 2 API đã có sẵn, không thêm backend), sau khi thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

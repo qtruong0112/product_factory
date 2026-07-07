@@ -108,16 +108,32 @@ function LineageBox({
 
 const CHANNEL_ICON: Record<string, string> = { Web: 'network' }
 
+const tabBtnStyle = (active: boolean): React.CSSProperties => ({
+  fontSize: 12.5,
+  fontWeight: active ? 700 : 500,
+  color: active ? '#fff' : '#41524A',
+  background: active ? '#0E8C5A' : '#fff',
+  border: active ? 'none' : '1px solid #E6ECE8',
+  padding: '8px 15px',
+  borderRadius: 9,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+})
+
+type Tab = 'overview' | 'config' | 'obligations'
+
 export default function ProductVariantDetailPage() {
   const { code } = useParams()
   const navigate = useNavigate()
   const [data, setData] = useState<Detail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<Tab>('overview')
 
   useEffect(() => {
     if (!code) return
     setLoading(true)
+    setTab('overview')
     getDetail<Detail>('product-variants', code)
       .then(setData)
       .catch((e) => setError(e.message))
@@ -188,6 +204,23 @@ export default function ProductVariantDetailPage() {
       </div>
 
       <div style={{ padding: '22px 26px', maxWidth: 1180 }}>
+        <div style={{ display: 'flex', gap: 9, marginBottom: 20 }}>
+          <button style={tabBtnStyle(tab === 'overview')} onClick={() => setTab('overview')}>
+            Tổng quan
+          </button>
+          <button style={tabBtnStyle(tab === 'config')} onClick={() => setTab('config')} disabled={!config}>
+            Giá trị cấu hình
+          </button>
+          <button style={tabBtnStyle(tab === 'obligations')} onClick={() => setTab('obligations')} disabled={!pattern}>
+            Nghĩa vụ tài chính
+          </button>
+        </div>
+
+        {tab === 'config' && config && <ConfigValuesTab configCode={config.code} />}
+        {tab === 'obligations' && pattern && <ObligationsTab patternCode={pattern.code} />}
+
+        {tab === 'overview' && (
+        <>
         {/* Lineage chain */}
         <Card style={{ marginBottom: 20 }}>
           <CardTitle>Nguồn gốc sản phẩm</CardTitle>
@@ -345,7 +378,222 @@ export default function ProductVariantDetailPage() {
             </div>
           </Card>
         </div>
+        </>
+        )}
       </div>
     </div>
+  )
+}
+
+// ---- Tab "Giá trị cấu hình" — tái dùng GET /api/product-configs/{code}/detail đã có sẵn ----
+interface FragmentRow {
+  scopeCode: string
+  scopeName: string
+  scopeValue: string | null
+  value: string
+  isWarning: boolean
+}
+interface SlotDetail {
+  code: string
+  name: string
+  blockName: string
+  required: boolean
+  attributeName: string | null
+  dataTypeName: string | null
+  inheritedFrameValue: string | null
+  fragments: FragmentRow[]
+}
+interface SlotSummary {
+  code: string
+  required: boolean
+  filled: boolean
+}
+interface BlockGroup {
+  blockId: string
+  blockName: string
+  reqFilled: number
+  reqTotal: number
+  slots: SlotSummary[]
+}
+interface Completeness {
+  reqFilled: number
+  totalReq: number
+  pct: number
+}
+interface ConfigDetail {
+  completeness: Completeness
+  sidebar: BlockGroup[]
+  slots: Record<string, SlotDetail>
+}
+
+function ConfigValuesTab({ configCode }: { configCode: string }) {
+  const [data, setData] = useState<ConfigDetail | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    getDetail<ConfigDetail>('product-configs', configCode)
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [configCode])
+
+  if (loading) return <div style={{ color: '#5E6F66', fontSize: 12.5 }}>Đang tải dữ liệu…</div>
+  if (error || !data) return <div style={{ color: '#B23B3B', fontSize: 12.5 }}>Lỗi: {error ?? 'Không tìm thấy'}.</div>
+
+  const { completeness: c, sidebar } = data
+
+  return (
+    <div style={{ animation: 'fadeUp .3s ease' }}>
+      <Card style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <CardTitle>Độ hoàn thiện cấu hình</CardTitle>
+          <span style={{ fontSize: 13, fontWeight: 800, color: '#122019' }}>
+            {c.reqFilled}/{c.totalReq} slot bắt buộc
+          </span>
+        </div>
+        <div style={{ height: 10, borderRadius: 99, background: '#F1F5F2', overflow: 'hidden' }}>
+          <div style={{ height: '100%', borderRadius: 99, width: c.pct + '%', background: 'linear-gradient(90deg,#19C079,#0E8C5A)', transition: 'width .5s ease' }} />
+        </div>
+      </Card>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {sidebar.map((b, bi) => (
+          <Card key={b.blockId} style={{ animation: `fadeUp .4s ease ${bi * 0.06}s both` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: '#122019' }}>{b.blockName}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>
+                {b.reqFilled}/{b.reqTotal} bắt buộc
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {b.slots.map((s) => {
+                const detail = data.slots[s.code]
+                return (
+                  <div key={s.code} style={{ border: '1px solid #EEF2EF', borderRadius: 10, padding: '11px 13px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{detail?.name ?? s.code}</div>
+                        <div style={{ fontSize: 11, color: '#8A998F', marginTop: 2 }}>
+                          {detail?.attributeName} {detail?.dataTypeName ? `(${detail.dataTypeName})` : ''}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          color: s.required ? '#0B7349' : '#8A998F',
+                          background: s.required ? '#DCF3E7' : '#F1F5F2',
+                          padding: '3px 9px',
+                          borderRadius: 99,
+                          flex: 'none',
+                        }}
+                      >
+                        {s.required ? 'Bắt buộc' : 'Tùy chọn'}
+                      </span>
+                    </div>
+                    {detail && detail.fragments.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {detail.fragments.map((f, fi) => (
+                          <span
+                            key={fi}
+                            title={f.scopeValue ? `${f.scopeName} = ${f.scopeValue}` : f.scopeName}
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: f.isWarning ? '#9A6B00' : '#0B7349',
+                              background: f.isWarning ? '#FBEFC7' : '#DCF3E7',
+                              padding: '3px 9px',
+                              borderRadius: 99,
+                            }}
+                          >
+                            {f.value}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 11.5, color: '#A7B5AC', marginTop: 4 }}>
+                        {detail?.inheritedFrameValue ? `Kế thừa Template: ${detail.inheritedFrameValue}` : 'Chưa cấu hình giá trị'}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---- Tab "Nghĩa vụ tài chính" — tái dùng GET /api/product-patterns/{code}/detail đã có sẵn ----
+interface AssignedOT {
+  code: string
+  name: string
+  role: string
+  archetype: string | null
+}
+interface PatternDetail {
+  assignedOTs: AssignedOT[]
+}
+
+const ROLE_LABEL: Record<string, string> = { Primary: 'Chính', Support: 'Phụ' }
+
+function ObligationsTab({ patternCode }: { patternCode: string }) {
+  const [data, setData] = useState<PatternDetail | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    getDetail<PatternDetail>('product-patterns', patternCode)
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [patternCode])
+
+  if (loading) return <div style={{ color: '#5E6F66', fontSize: 12.5 }}>Đang tải dữ liệu…</div>
+  if (error || !data) return <div style={{ color: '#B23B3B', fontSize: 12.5 }}>Lỗi: {error ?? 'Không tìm thấy'}.</div>
+
+  const ots = data.assignedOTs ?? []
+
+  return (
+    <Card style={{ animation: 'fadeUp .3s ease' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <CardTitle>Obligation Type gán cho Pattern nguồn</CardTitle>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>{ots.length}</span>
+      </div>
+      {ots.length === 0 && <div style={{ color: '#A7B5AC', fontSize: 12.5 }}>Pattern nguồn chưa gán Obligation Type nào.</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {ots.map((o, i) => (
+          <div
+            key={o.code}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              border: '1px solid #EEF2EF',
+              borderRadius: 10,
+              padding: '12px 14px',
+              animation: `fadeUp .4s ease ${i * 0.06}s both`,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#243A30' }}>{o.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, color: '#A7B5AC' }}>{o.code}</span>
+                <span style={{ fontSize: 11, color: '#8A998F' }}>{ROLE_LABEL[o.role] ?? o.role}</span>
+              </div>
+            </div>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: '#9A6B00', background: '#FBEFC7', padding: '3px 9px', borderRadius: 99, flex: 'none' }}>
+              Archetype: {o.archetype ?? '—'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Card>
   )
 }
