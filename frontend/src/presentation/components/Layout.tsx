@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import Icon from './Icon'
+import GlobalSearch from './GlobalSearch'
 import { NAV, VIEW_TITLES } from '../../infrastructure/nav'
 import { getList } from '../../infrastructure/api/client'
 
@@ -255,38 +256,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               {title}
             </div>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: '#F4F7F5',
-              border: '1px solid #E6ECE8',
-              borderRadius: 9,
-              padding: '8px 12px',
-              width: 300,
-            }}
-          >
-            <span style={{ display: 'flex', color: '#8A998F' }}>
-              <Icon name="search" size={16} />
-            </span>
-            <input
-              placeholder="Tìm mã, sản phẩm, obligation…"
-              style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#122019', width: '100%', fontFamily: 'inherit' }}
-            />
-            <span
-              style={{
-                fontSize: 10.5,
-                color: '#A7B5AC',
-                border: '1px solid #DCE5DF',
-                borderRadius: 5,
-                padding: '1px 5px',
-                fontWeight: 600,
-              }}
-            >
-              ⌘K
-            </span>
-          </div>
+          <GlobalSearch />
           <div
             style={{
               display: 'flex',

@@ -695,9 +695,30 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 38 — Hoàn thiện thanh tìm kiếm toàn cục (topbar)
+
+**Bối cảnh:** user yêu cầu "trang nào có thanh tìm kiếm thì hoàn thiện nó". Rà soát toàn bộ frontend phát hiện 2 loại search khác nhau:
+1. Search trong từng màn list (`ListScreen.tsx`) — **đã thật từ Giai đoạn 20**, chạy client-side (search + filter dropdown), không cần sửa gì.
+2. Thanh search ở **topbar** (`Layout.tsx`) — input placeholder "Tìm mã, sản phẩm, obligation…" + chip "⌘K" — **hoàn toàn trang trí**: không `onChange`, không state, không logic, y nguyên từ lúc trích prototype. Đây là phần thật sự cần hoàn thiện, xuất hiện ở MỌI trang vì nằm trong `Layout`.
+
+**Backend (mới hoàn toàn):**
+- `GlobalSearchService` (`application.service.search`): quét trực tiếp 12 repo lõi đã có sẵn — `BusinessIntentRepository`, `ProductIntentRepository`, `ProductPatternRepository`, `ProductTemplateRepository`, `ProductConfigRepository`, `ProductVariantRepository`, `ObligationTypeRepository`, `FinancialObligationArchetypeRepository`, `BlockRepository`, `AttributeRepository`, `DomainRepository`, `LifecycleRepository`. Không thêm query method nào — vì mỗi bảng chỉ vài chục dòng seed, `findAll()` rồi lọc substring không phân biệt hoa/thường trên tên+mã trong Java là đủ hiệu năng, tránh phải viết 12 derived-query lặp lại.
+- Guard: query rỗng/< 2 ký tự → trả rỗng ngay (tránh tính toán thừa mỗi phím gõ).
+- Mỗi loại giới hạn tối đa 5 kết quả (constant `PER_TYPE_LIMIT`) để không loại nào át hết danh sách.
+- `path` trong kết quả trỏ thẳng route chi tiết đã có sẵn của từng loại. Riêng **Obligation Type chưa có trang chi tiết riêng** (chỉ có list 3-tab) — trỏ qua trang Archetype cha (`archetype_code`, cột NOT NULL nên luôn có giá trị) vì đó là nơi thật gần nhất chứa thông tin obligation type, không bịa route giả.
+- `GlobalSearchController`: `GET /api/search?q=`.
+
+**Frontend:** `GlobalSearch.tsx` (component mới, thay thế input tĩnh trong `Layout.tsx`): debounce 250ms qua `setTimeout`, dropdown kết quả (icon theo loại tra từ `nav.ts`, tên, mã, `StatusChip`), bấm kết quả → `navigate(path)` + tự đóng + tự xóa query. Phím tắt `⌘K`/`Ctrl+K` focus ô search (khớp chip gợi ý đã có sẵn trong prototype nhưng trước đây không có tác dụng); `Escape` đóng dropdown + blur; click ra ngoài đóng dropdown (event listener `mousedown` trên `document`).
+
+**Sự cố lúc verify (không phải bug code):** test qua `curl` trong Git Bash trên Windows với tiếng Việt có dấu ("xe may"/"lãi suất") trả về rỗng dù dữ liệu có thật — nghi ngờ do Git Bash không encode UTF-8 đúng khi truyền tham số qua shell. Xác nhận bằng cách percent-encode thủ công (`%78%65%20m%C3%A1y`) → trả đúng 6 kết quả — chứng minh backend đúng, lỗi nằm ở công cụ test (`curl`/shell), không phải code. Verify cuối cùng dùng Playwright gõ trực tiếp (encode UTF-8 chuẩn qua trình duyệt).
+
+**Verify:** Playwright gõ "xe máy" ở `/dashboard` → đúng 6 kết quả thật, đa loại (Business Intent BI-02, Product Intent PI-005, 2 Product Config, 2 Product Variant), đều kèm `StatusChip` đúng trạng thái. Bấm kết quả đầu → điều hướng đúng `/businessintent/2`, hiển thị đúng dữ liệu KPI thật.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa chia detail Product Variant thành 3 tab con (Giai đoạn 37 — tái dùng 2 API đã có sẵn, không thêm backend), sau khi thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38 — trước đây là input trang trí, nay thật, quét 12 loại thực thể), sau khi chia detail Product Variant thành 3 tab con (Giai đoạn 37 — tái dùng 2 API đã có sẵn, không thêm backend), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
