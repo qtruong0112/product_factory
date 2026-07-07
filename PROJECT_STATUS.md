@@ -716,9 +716,30 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 39 — Làm thật nút "Xem trước" ở builder Product Pattern
+
+**Bối cảnh:** nút "Xem trước" trong builder Product Pattern trước đây no-op (`title=READONLY`) như mọi nút CUD khác trong dự án. User hỏi ý tưởng cho nút này trước khi làm. Nhận định: "Xem trước" bản chất là hành động **XEM**, không phải Create/Update/Delete — nên không bắt buộc phải no-op theo luật "Nút CUD: no-op"; đúng tiền lệ nút "Phiên bản" (cũng là hành động xem) đã được làm thật từ trước. Đã lên plan rồi hỏi user 2 quyết định UI qua `AskUserQuestion`:
+1. Overlay toàn màn hình (chọn, thay vì drawer trượt) — vì nội dung Pattern có thể dài (nhiều block/slot).
+2. KHÔNG thêm nút "In/Xuất PDF" (chọn) — tránh thêm 1 nút no-op mới gây hiểu lầm là làm được.
+
+**Không cần API mới** — toàn bộ dữ liệu Preview cần (`blocks[]` kèm `slots[]` đầy đủ, `assignedOTs[]`, `coverage`) đã có sẵn trong state của trang builder từ `GET /api/product-patterns/{code}/detail` (và `coverage` đã được tính sẵn client-side ở `ProductPatternDetailPage` từ Giai đoạn 13). Preview chỉ là 1 cách trình bày khác của đúng dữ liệu đó — component `PatternPreviewModal.tsx` (mới) thuần render prop, không tự fetch gì.
+
+**Nội dung Preview:**
+- Header gradient: tên/mã/status Pattern + nguồn Product Intent.
+- 3 stat card: số Block, tổng Answer Slot, số Obligation Type đã gán.
+- Khối "Nghĩa vụ tài chính": danh sách Obligation Type (tên, vai trò Chính/Phụ, archetype).
+- Khối "Độ phủ theo ma trận": badge theo verdict đã tính sẵn (`coverage.rows`).
+- Khối chính "Cấu trúc theo thứ tự lắp ráp": từng Block theo đúng `position`, liệt kê toàn bộ Answer Slot (tên, attribute, kiểu dữ liệu, bắt buộc/tùy chọn, giá trị mặc định).
+
+**Frontend:** `ProductPatternDetailPage.tsx` thêm state `previewOpen`, nút "Xem trước" đổi từ no-op sang `onClick={() => setPreviewOpen(true)}`; render `<PatternPreviewModal>` (overlay `position:fixed; inset:0`) khi `previewOpen`, truyền thẳng `pt`/`data.assignedOTs`/`canvas`/`coverage.rows` đã có sẵn trong component cha — không tính toán lại.
+
+**Verify:** Playwright bấm "Xem trước" ở PT-002 → đúng 9 Block/24 Answer Slot/2 Obligation Type, đúng 6 badge độ phủ (5 "Bắt buộc · đã có" xanh + 1 "Tùy chọn · đã có" lam cho Phạt & Quá hạn), đúng cấu trúc từng block (Điều kiện tham gia: age/Range/Bắt buộc, min_income/Money/Bắt buộc, occupation/Enum/Tùy chọn...).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38 — trước đây là input trang trí, nay thật, quét 12 loại thực thể), sau khi chia detail Product Variant thành 3 tab con (Giai đoạn 37 — tái dùng 2 API đã có sẵn, không thêm backend), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39 — overlay toàn màn hình, không cần API mới), sau khi hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
