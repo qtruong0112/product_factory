@@ -1,7 +1,5 @@
 package com.f88.productfactory.application.service.simulation;
 
-import com.f88.productfactory.application.dto.simulation.SimulationRequest;
-import com.f88.productfactory.presentation.controller.simulation.SimulationController;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -10,6 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.f88.productfactory.application.dto.simulation.SimulationRequest;
 
 /**
  * Công cụ tính annuity dư nợ giảm dần cho Simulation Engine — cổng Java của `simData()`/

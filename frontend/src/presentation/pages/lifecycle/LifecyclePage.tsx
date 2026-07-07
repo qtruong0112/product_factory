@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen from '../components/ListScreen'
-import { StatusChip } from '../components/StatusChip'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen from '../../components/ListScreen'
+import { StatusChip } from '../../components/StatusChip'
 
 // Lifecycle — làm giàu: stateCount (đếm lifecycle_state theo lifecycle_code).
 interface LifecycleRow {
@@ -13,6 +14,7 @@ interface LifecycleRow {
 }
 
 export default function LifecyclePage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<LifecycleRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,6 +63,7 @@ export default function LifecyclePage() {
       searchPlaceholder="Tìm Lifecycle…"
       filters={['Đối tượng']}
       actionLabel="Tạo Lifecycle"
+      onRowClick={(i) => navigate(`/lifecycle/${list[i].code}`)}
     />
   )
 }

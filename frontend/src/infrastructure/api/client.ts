@@ -36,3 +36,10 @@ export async function getVersionHistory<T>(entityType: string, entityCode: strin
   if (!res.ok) throw new Error(`GET version-entries thất bại: ${res.status}`)
   return res.json()
 }
+
+// Tìm kiếm toàn hệ thống (thanh tìm kiếm ở topbar): GET /api/search?q=
+export async function searchGlobal<T>(q: string): Promise<T[]> {
+  const res = await fetch(`${BASE}/search?q=${encodeURIComponent(q)}`)
+  if (!res.ok) throw new Error(`GET search thất bại: ${res.status}`)
+  return res.json()
+}

@@ -9,22 +9,26 @@ import ProductIntentPage from './presentation/pages/intent/ProductIntentPage'
 import ProductIntentDetailPage from './presentation/pages/intent/ProductIntentDetailPage'
 import ProductPatternPage from './presentation/pages/pattern/ProductPatternPage'
 import ProductPatternDetailPage from './presentation/pages/pattern/ProductPatternDetailPage'
-import BlockPage from './presentation/pages/BlockPage'
+import BlockPage from './presentation/pages/block/BlockPage'
+import BlockDetailPage from './presentation/pages/block/BlockDetailPage'
 import MatrixPage from './presentation/pages/MatrixPage'
 import AttributePage from './presentation/pages/attribute/AttributePage'
 import AttributeUsageDetailPage from './presentation/pages/attribute/AttributeUsageDetailPage'
 import ObligationPage from './presentation/pages/ObligationPage'
 import ArchetypePage from './presentation/pages/archetype/ArchetypePage'
 import ArchetypeDetailPage from './presentation/pages/archetype/ArchetypeDetailPage'
-import DomainPage from './presentation/pages/DomainPage'
-import LifecyclePage from './presentation/pages/LifecyclePage'
+import DomainPage from './presentation/pages/domain/DomainPage'
+import DomainDetailPage from './presentation/pages/domain/DomainDetailPage'
+import LifecyclePage from './presentation/pages/lifecycle/LifecyclePage'
+import LifecycleDetailPage from './presentation/pages/lifecycle/LifecycleDetailPage'
 import OntologyPage from './presentation/pages/OntologyPage'
 import SysmapPage from './presentation/pages/SysmapPage'
 import ProductTemplatePage from './presentation/pages/template/ProductTemplatePage'
 import ProductTemplateDetailPage from './presentation/pages/template/ProductTemplateDetailPage'
 import ProductConfigPage from './presentation/pages/config/ProductConfigPage'
 import ProductConfigDetailPage from './presentation/pages/config/ProductConfigDetailPage'
-import ProductVariantPage from './presentation/pages/ProductVariantPage'
+import ProductVariantPage from './presentation/pages/variant/ProductVariantPage'
+import ProductVariantDetailPage from './presentation/pages/variant/ProductVariantDetailPage'
 import ProductCatalogPage from './presentation/pages/ProductCatalogPage'
 import ReleasePage from './presentation/pages/ReleasePage'
 import ActivityPage from './presentation/pages/ActivityPage'
@@ -88,6 +92,10 @@ function App() {
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/config/:code" element={<ProductConfigDetailPage />} />
           <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
+          <Route path="/block/:id" element={<BlockDetailPage />} />
+          <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
+          <Route path="/domain/:code" element={<DomainDetailPage />} />
+          <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
           <Route path="/release/:variantCode" element={<ReleasePage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>

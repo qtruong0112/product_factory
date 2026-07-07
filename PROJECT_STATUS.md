@@ -611,9 +611,135 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 34 — Detail cho Lifecycle & State và Domain (UI mới ngoài prototype)
+
+**Bối cảnh:** Giai đoạn 29 đã xác nhận prototype gốc KHÔNG có khái niệm detail cho `lifecycle`/`domain` (chỉ list). User hỏi có ý tưởng gì cho 2 màn này không; sau khi trao đổi ý tưởng (Lifecycle → stepper chuỗi state theo `sort_order`; Domain → danh sách Attribute Group thuộc domain kèm số attribute), user chốt làm cả 2 với yêu cầu rõ: "giao diện phải mượt mà và đẹp mắt".
+
+**Backend:**
+- `LifecycleStateRepository`: thêm `findByLifecycleCodeOrderBySortOrder(String)`.
+- `LifecycleService`: thêm `detail(String code)` → `{lifecycle:{code,name,governs,status}, states:[{sortOrder,name}], stateCount}`.
+- `LifecycleController`: thêm `GET /api/lifecycles/{code}/detail`.
+- `AttributeGroupRepository`: thêm `findByDomainCodeOrderByName(String)`.
+- `DomainService` (mới, `application.service.attribute`): `detail(String code)` join `AttributeGroup` theo `domain_code` + đếm attribute mỗi group qua `AttributeRepository.countByGroupCode` có sẵn → `{domain:{...}, groups:[{code,name,attributeCount}], groupCount, totalAttributeCount}`.
+- `DomainController`: giữ nguyên `list`/`byId` (read-only thuần, kế thừa `ReadOnlyController`), thêm `GET /api/domains/{code}/detail` gọi `DomainService`.
+
+**Frontend:**
+- Chuyển `LifecyclePage.tsx` → `pages/lifecycle/`, `DomainPage.tsx` → `pages/domain/` (đúng convention Giai đoạn 31 — cặp list+detail có subfolder riêng); cả 2 thêm `onRowClick` điều hướng sang trang chi tiết.
+- `LifecycleDetailPage.tsx` (mới): banner gradient giống `ArchetypeDetailPage`/`ReleasePage`, stat card (số state, "áp dụng cho"), và khối chính là **chuỗi state machine** — vòng tròn đánh số nối bằng mũi tên `Icon name="arrow"`, tô gradient xanh nhạt→đậm theo vị trí (`NODE_TONES`) để phân biệt thứ tự trực quan — **không mang nghĩa done/undone** vì đây là định nghĩa state machine dùng chung, không phải tiến độ của 1 thực thể cụ thể (khác hẳn stepper ở `ReleasePage` vốn tính runtime theo trạng thái 1 variant). Có animation `fadeUp` so le theo index (stagger) + hover scale nhẹ trên từng node cho mượt.
+- `DomainDetailPage.tsx` (mới): banner tương tự, 3 stat card (Attribute Group, Tổng Attribute, Thực thể liên quan), khối mô tả, và danh sách Attribute Group dạng card có progress-bar theo tỉ lệ số attribute (so với group nhiều nhất trong domain) + `fadeUp` stagger + hover elevate.
+- `main.tsx`: thêm route `/lifecycle/:code` và `/domain/:code` (đặt trước `/:view`), sửa import 4 file theo path mới.
+
+**Verify:** `docker compose up -d --build backend frontend` (build sạch cả Java lẫn TS). Curl: `GET /api/lifecycles/LIFE_CYCLE_TERM_LOAN/detail` → 7 state Draft→Approved→Disbursed→Active→Overdue→Restructured→Closed đúng thứ tự thật; `GET /api/domains/DOM_PRICING/detail` → 2 group (Fee 2 attribute, Pricing 3 attribute) = 5 tổng, đúng thật; mã không tồn tại → 404 cho cả 2 endpoint. Playwright chụp cả 4 màn (2 list + 2 detail) xác nhận giao diện mượt, dữ liệu đúng thật, không bịa gì.
+
+---
+
+### Giai đoạn 35 — Detail cho Block & Answer Slot
+
+**Bối cảnh:** sau Giai đoạn 34, user chỉ ra màn Block & Answer Slot cũng chưa có detail.
+
+**Khác biệt so với Giai đoạn 34:** backend đã sẵn từ Giai đoạn 6 — `BlockService.detail(id)` + `BlockController GET /api/blocks/{id}/detail` được xây trước với chủ đích dự phòng (comment gốc: "cấp nguồn THẬT cho... việc gỡ fix cứng builder Product Pattern"), trả đúng `{block:{id,code,name,bizGroup,gov,status}, slots:[{code,name,required,def,rule,attrCode,attrName,type}]}` join `answer_slot`+`attribute`+`data_type`. **Không cần sửa backend** — chỉ thiếu frontend.
+
+**Frontend:**
+- Chuyển `BlockPage.tsx` → `pages/block/` (đúng convention Giai đoạn 31), thêm `onRowClick` điều hướng theo `id` (PK thật của bảng `block`, khác `code`).
+- `BlockDetailPage.tsx` (mới): banner gradient giống các detail khác, chip nhóm nghiệp vụ (`bizGroup`) + `StatusChip`; 2 stat card (số Answer Slot, "chi phối bởi" = `gov`); danh sách Answer Slot dạng card — mỗi card có badge `type` (Range/Money/Enum...) + badge Bắt buộc/Tùy chọn, dòng mặc định/ràng buộc nếu có. `fadeUp` stagger theo index + hover elevate, đồng bộ phong cách với `LifecycleDetailPage`/`DomainDetailPage`.
+- `main.tsx`: thêm route `/block/:id` trước `/:view`.
+
+**Verify:** curl `GET /api/blocks/BLK_ELIGIBILITY/detail` → 3 slot (age: Range/Bắt buộc/"18–60"/"MIN 18"; min_income: Money/Bắt buộc; occupation: Enum/Tùy chọn) đúng thật. `npm run build` 0 lỗi TS. Docker rebuild frontend only (backend không đổi). Playwright chụp list + detail xác nhận giao diện đẹp, đúng dữ liệu.
+
+---
+
+### Giai đoạn 36 — Detail "thật chi tiết, đẹp, mượt, đầy đủ thông tin" cho Product Variant
+
+**Bối cảnh:** sau Giai đoạn 34-35, user yêu cầu tiếp màn Product Variant, nhấn mạnh rõ mức đầu tư: "thật chi tiết và đẹp và mượt và đầy đủ thông tin" — cao hơn hẳn 2 giai đoạn trước.
+
+**Khác Block (Giai đoạn 35):** backend chưa có sẵn detail nào — phải viết mới hoàn toàn, join nhiều bảng hơn để đạt độ "đầy đủ".
+
+**Backend:**
+- `ActivityLogRepository`: thêm `findByEntityTypeAndEntityCodeOrderByOccurredAtDesc(String,String)`.
+- `ActivityLogService`: tách phần map 1 dòng `ActivityLog`→`Map` thành `toRow()` private dùng chung; thêm `forEntity(String entityType, String entityCode)` public — tái dùng đúng logic dịch nhãn hành động + suy kênh đã có ở Giai đoạn 33, không viết trùng.
+- `ProductVariantService`: inject thêm `ProductTemplateRepository`, `ProductPatternRepository`, `ActivityLogService`. Thêm `detail(String code)`:
+  - Lineage ngược: `config = configRepo.findById(fromConfigCode)` → `template = templateRepo.findById(config.fromTemplateCode)` → `pattern = patternRepo.findById(template.fromPatternCode)` (mỗi bước `Optional`, null-safe nếu đứt gãy dữ liệu).
+  - `listings`: join `CatalogListingRepository.findByVariantCode` + `ProductCatalogRepository` → `{catalogId, catalogName, channel, publishedDate, status}`.
+  - `activity`: `activityLogService.forEntity("ProductVariant", code)` — nhật ký riêng của đúng variant này.
+- `ProductVariantController`: thêm `GET /api/product-variants/{code}/detail`.
+
+**Frontend:**
+- Chuyển `ProductVariantPage.tsx` → `pages/variant/`, thêm `onRowClick`.
+- `ProductVariantDetailPage.tsx` (mới, giàu thông tin nhất từ trước đến nay):
+  - Banner + chip family + `StatusChip`.
+  - **"Nguồn gốc sản phẩm"**: 4 ô Pattern→Template→Config→Variant nối mũi tên (`LineageBox`); 3 ô đầu bấm được, điều hướng sang `/pattern/:code`, `/template/:code`, `/config/:code` đã có sẵn (tái dùng route, không xây lại màn); ô Variant hiện tại viền xanh highlight.
+  - **"Thông tin sản phẩm"**: hạn mức, lãi suất niêm yết, nội dung marketing (ẩn nếu null — variant nào cũng có thể chưa có).
+  - **"Quy trình phát hành"**: card CTA điều hướng `/release/{code}` — không lặp lại logic 8 bước, tái dùng thẳng màn Giai đoạn 32.
+  - **"Niêm yết Catalog"** + **"Hoạt động gần đây"** (2 cột): card theo từng catalog (icon kênh, ngày niêm yết hoặc "Chưa có ngày niêm yết", `StatusChip`) và timeline chấm tròn (actor, hành động, chi tiết, thời gian, kênh).
+  - `fadeUp` stagger theo index trên mọi card con, đồng bộ phong cách Giai đoạn 34-35.
+- `main.tsx`: thêm route `/variant/:code` trước `/:view`.
+
+**Verify:** curl `GET /api/product-variants/VAR-101/detail` (published — đủ lineage Pattern PT-002/Template TPL-003/Config CFG-0042, 3 catalog listing published, 1 activity "Xuất bản") và `VAR-107/detail` (draft — lineage khác, 2 catalog `status:draft` với `publishedDate:null`, 1 activity "Tạo"); 404 cho mã không tồn tại. `npm run build` 0 lỗi TS, Docker rebuild backend+frontend sạch. Playwright chụp cả 2 trạng thái xác nhận giao diện đẹp, mượt, đầy đủ, mọi trường đều thật.
+
+---
+
+### Giai đoạn 37 — Chia detail Product Variant thành 3 tab con
+
+**Bối cảnh:** user phân vân nên xem "chi tiết" (toàn bộ FOA/Block/Attribute/giá trị) ở Catalog hay Variant. Được recommend (và đồng ý): Catalog giữ nguyên trỏ sang Release (đúng ý nghĩa của nó — tiến độ phát hành, chốt từ Giai đoạn 32); nhu cầu "xem toàn bộ" đào sâu ngay trong `ProductVariantDetailPage` vì Variant mới là entity gốc nắm `fromConfigCode`. Do nội dung quá dài nếu nhồi hết vào 1 trang, user chọn chia tab thay vì cuộn dài.
+
+**Không thêm backend mới** — cả 2 tab mới đều gọi thẳng 2 API đã có sẵn từ trước, chỉ khác consumer:
+- Tab **"Giá trị cấu hình"**: gọi `GET /api/product-configs/{configCode}/detail` (đã có từ Giai đoạn 21) — hiển thị completeness bar + từng block/slot kèm badge giá trị fragment đã resolve theo scope (vàng nếu `is_warning`), hoặc "Kế thừa Template: X" / "Chưa cấu hình giá trị" khi slot rỗng.
+- Tab **"Nghĩa vụ tài chính"**: gọi `GET /api/product-patterns/{patternCode}/detail` (đã có từ Giai đoạn 13) — hiển thị danh sách Obligation Type gán cho Pattern nguồn, kèm tên archetype + vai trò.
+- `configCode`/`patternCode` lấy từ chính response `/api/product-variants/{code}/detail` (field `config.code`/`pattern.code` đã có từ Giai đoạn 36) — không cần sửa `ProductVariantService`.
+
+**Frontend:** `ProductVariantDetailPage.tsx` thêm tab bar (style giống toggle "Hướng dẫn từng bước/Swimlane" ở `ReleasePage`); nội dung Giai đoạn 36 giữ nguyên dưới tab "Tổng quan"; 2 component mới `ConfigValuesTab`/`ObligationsTab` tự fetch lazy khi tab được chọn lần đầu (không fetch trước khi cần).
+
+**Lỗi phát hiện lúc verify:** đoán `role` là `primary`/`secondary` (thường gặp) nhưng DB thật lưu `Primary`/`Support` (viết hoa, khác chữ thứ 2) — sửa lại `ROLE_LABEL` map khớp đúng giá trị thật, không đoán mà không kiểm tra.
+
+**Verify:** Playwright cả 3 tab với VAR-101 — "Giá trị cấu hình" hiện đúng 12/14 slot bắt buộc, đúng giá trị theo từng block (Bên tham gia/Hạn mức/Lãi suất...); "Nghĩa vụ tài chính" hiện đúng 2 Obligation Type (Facility/Primary→Chính, Pledge Installment/Support→Phụ) kèm archetype thật.
+
+---
+
+### Giai đoạn 38 — Hoàn thiện thanh tìm kiếm toàn cục (topbar)
+
+**Bối cảnh:** user yêu cầu "trang nào có thanh tìm kiếm thì hoàn thiện nó". Rà soát toàn bộ frontend phát hiện 2 loại search khác nhau:
+1. Search trong từng màn list (`ListScreen.tsx`) — **đã thật từ Giai đoạn 20**, chạy client-side (search + filter dropdown), không cần sửa gì.
+2. Thanh search ở **topbar** (`Layout.tsx`) — input placeholder "Tìm mã, sản phẩm, obligation…" + chip "⌘K" — **hoàn toàn trang trí**: không `onChange`, không state, không logic, y nguyên từ lúc trích prototype. Đây là phần thật sự cần hoàn thiện, xuất hiện ở MỌI trang vì nằm trong `Layout`.
+
+**Backend (mới hoàn toàn):**
+- `GlobalSearchService` (`application.service.search`): quét trực tiếp 12 repo lõi đã có sẵn — `BusinessIntentRepository`, `ProductIntentRepository`, `ProductPatternRepository`, `ProductTemplateRepository`, `ProductConfigRepository`, `ProductVariantRepository`, `ObligationTypeRepository`, `FinancialObligationArchetypeRepository`, `BlockRepository`, `AttributeRepository`, `DomainRepository`, `LifecycleRepository`. Không thêm query method nào — vì mỗi bảng chỉ vài chục dòng seed, `findAll()` rồi lọc substring không phân biệt hoa/thường trên tên+mã trong Java là đủ hiệu năng, tránh phải viết 12 derived-query lặp lại.
+- Guard: query rỗng/< 2 ký tự → trả rỗng ngay (tránh tính toán thừa mỗi phím gõ).
+- Mỗi loại giới hạn tối đa 5 kết quả (constant `PER_TYPE_LIMIT`) để không loại nào át hết danh sách.
+- `path` trong kết quả trỏ thẳng route chi tiết đã có sẵn của từng loại. Riêng **Obligation Type chưa có trang chi tiết riêng** (chỉ có list 3-tab) — trỏ qua trang Archetype cha (`archetype_code`, cột NOT NULL nên luôn có giá trị) vì đó là nơi thật gần nhất chứa thông tin obligation type, không bịa route giả.
+- `GlobalSearchController`: `GET /api/search?q=`.
+
+**Frontend:** `GlobalSearch.tsx` (component mới, thay thế input tĩnh trong `Layout.tsx`): debounce 250ms qua `setTimeout`, dropdown kết quả (icon theo loại tra từ `nav.ts`, tên, mã, `StatusChip`), bấm kết quả → `navigate(path)` + tự đóng + tự xóa query. Phím tắt `⌘K`/`Ctrl+K` focus ô search (khớp chip gợi ý đã có sẵn trong prototype nhưng trước đây không có tác dụng); `Escape` đóng dropdown + blur; click ra ngoài đóng dropdown (event listener `mousedown` trên `document`).
+
+**Sự cố lúc verify (không phải bug code):** test qua `curl` trong Git Bash trên Windows với tiếng Việt có dấu ("xe may"/"lãi suất") trả về rỗng dù dữ liệu có thật — nghi ngờ do Git Bash không encode UTF-8 đúng khi truyền tham số qua shell. Xác nhận bằng cách percent-encode thủ công (`%78%65%20m%C3%A1y`) → trả đúng 6 kết quả — chứng minh backend đúng, lỗi nằm ở công cụ test (`curl`/shell), không phải code. Verify cuối cùng dùng Playwright gõ trực tiếp (encode UTF-8 chuẩn qua trình duyệt).
+
+**Verify:** Playwright gõ "xe máy" ở `/dashboard` → đúng 6 kết quả thật, đa loại (Business Intent BI-02, Product Intent PI-005, 2 Product Config, 2 Product Variant), đều kèm `StatusChip` đúng trạng thái. Bấm kết quả đầu → điều hướng đúng `/businessintent/2`, hiển thị đúng dữ liệu KPI thật.
+
+---
+
+### Giai đoạn 39 — Làm thật nút "Xem trước" ở builder Product Pattern
+
+**Bối cảnh:** nút "Xem trước" trong builder Product Pattern trước đây no-op (`title=READONLY`) như mọi nút CUD khác trong dự án. User hỏi ý tưởng cho nút này trước khi làm. Nhận định: "Xem trước" bản chất là hành động **XEM**, không phải Create/Update/Delete — nên không bắt buộc phải no-op theo luật "Nút CUD: no-op"; đúng tiền lệ nút "Phiên bản" (cũng là hành động xem) đã được làm thật từ trước. Đã lên plan rồi hỏi user 2 quyết định UI qua `AskUserQuestion`:
+1. Overlay toàn màn hình (chọn, thay vì drawer trượt) — vì nội dung Pattern có thể dài (nhiều block/slot).
+2. KHÔNG thêm nút "In/Xuất PDF" (chọn) — tránh thêm 1 nút no-op mới gây hiểu lầm là làm được.
+
+**Không cần API mới** — toàn bộ dữ liệu Preview cần (`blocks[]` kèm `slots[]` đầy đủ, `assignedOTs[]`, `coverage`) đã có sẵn trong state của trang builder từ `GET /api/product-patterns/{code}/detail` (và `coverage` đã được tính sẵn client-side ở `ProductPatternDetailPage` từ Giai đoạn 13). Preview chỉ là 1 cách trình bày khác của đúng dữ liệu đó — component `PatternPreviewModal.tsx` (mới) thuần render prop, không tự fetch gì.
+
+**Nội dung Preview:**
+- Header gradient: tên/mã/status Pattern + nguồn Product Intent.
+- 3 stat card: số Block, tổng Answer Slot, số Obligation Type đã gán.
+- Khối "Nghĩa vụ tài chính": danh sách Obligation Type (tên, vai trò Chính/Phụ, archetype).
+- Khối "Độ phủ theo ma trận": badge theo verdict đã tính sẵn (`coverage.rows`).
+- Khối chính "Cấu trúc theo thứ tự lắp ráp": từng Block theo đúng `position`, liệt kê toàn bộ Answer Slot (tên, attribute, kiểu dữ liệu, bắt buộc/tùy chọn, giá trị mặc định).
+
+**Frontend:** `ProductPatternDetailPage.tsx` thêm state `previewOpen`, nút "Xem trước" đổi từ no-op sang `onClick={() => setPreviewOpen(true)}`; render `<PatternPreviewModal>` (overlay `position:fixed; inset:0`) khi `previewOpen`, truyền thẳng `pt`/`data.assignedOTs`/`canvas`/`coverage.rows` đã có sẵn trong component cha — không tính toán lại.
+
+**Verify:** Playwright bấm "Xem trước" ở PT-002 → đúng 9 Block/24 Answer Slot/2 Obligation Type, đúng 6 badge độ phủ (5 "Bắt buộc · đã có" xanh + 1 "Tùy chọn · đã có" lam cho Phạt & Quá hạn), đúng cấu trúc từng block (Điều kiện tham gia: age/Range/Bắt buộc, min_income/Money/Bắt buộc, occupation/Enum/Tùy chọn...).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa bổ sung seed `activity_log` (Giai đoạn 33), sau khi liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39 — overlay toàn màn hình, không cần API mới), sau khi hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

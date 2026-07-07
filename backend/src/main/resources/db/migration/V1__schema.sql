@@ -87,18 +87,43 @@ CREATE TYPE "customer_tier_enum" AS ENUM (
   'vip'
 );
 
+CREATE TYPE "data_sensitivity_enum" AS ENUM (
+  'public',
+  'internal',
+  'confidential',
+  'pii'
+);
+
 CREATE TABLE "obligation_element_type" (
   "code" varchar(30) PRIMARY KEY NOT NULL,
   "name" varchar(80) NOT NULL,
   "short_name" varchar(40),
   "description" text,
-  "is_identify" boolean NOT NULL DEFAULT false
+  "is_identify" boolean NOT NULL DEFAULT false,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "obligation_element" (
   "code" varchar(60) PRIMARY KEY NOT NULL,
   "name" varchar(160) NOT NULL,
-  "element_type_code" varchar(30) NOT NULL
+  "element_type_code" varchar(30) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "financial_obligation_archetype" (
@@ -107,20 +132,47 @@ CREATE TABLE "financial_obligation_archetype" (
   "nature" varchar(160),
   "nature_desc" text,
   "value_structure" varchar(160),
-  "value_desc" text
+  "value_desc" text,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "foa_element" (
   "archetype_code" varchar(30) NOT NULL,
   "element_code" varchar(60) NOT NULL,
   "requirement" foa_requirement_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("archetype_code", "element_code")
 );
 
 CREATE TABLE "obligation_family" (
   "code" varchar(30) PRIMARY KEY NOT NULL,
   "name" varchar(80) NOT NULL,
-  "identified_by_nature_code" varchar(60) UNIQUE NOT NULL
+  "identified_by_nature_code" varchar(60) UNIQUE NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "obligation_type" (
@@ -128,13 +180,31 @@ CREATE TABLE "obligation_type" (
   "name" varchar(160) NOT NULL,
   "family_code" varchar(30) NOT NULL,
   "archetype_code" varchar(30) NOT NULL,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "obligation_type_composition" (
   "obligation_type_code" varchar(60) NOT NULL,
   "element_type_code" varchar(30) NOT NULL,
   "element_code" varchar(60) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("obligation_type_code", "element_type_code")
 );
 
@@ -142,13 +212,31 @@ CREATE TABLE "lifecycle" (
   "code" varchar(40) PRIMARY KEY NOT NULL,
   "name" varchar(160) NOT NULL,
   "governs" varchar(80) NOT NULL,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "lifecycle_state" (
   "lifecycle_code" varchar(40) NOT NULL,
   "sort_order" smallint NOT NULL,
   "name" varchar(60) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("lifecycle_code", "sort_order")
 );
 
@@ -157,18 +245,45 @@ CREATE TABLE "domain" (
   "name" varchar(120) NOT NULL,
   "description" text,
   "entity_count" integer,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "data_type" (
   "code" varchar(20) PRIMARY KEY NOT NULL,
-  "name" varchar(60) NOT NULL
+  "name" varchar(60) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "attribute_group" (
   "code" varchar(40) PRIMARY KEY NOT NULL,
   "name" varchar(120) NOT NULL,
-  "domain_code" varchar(40) NOT NULL
+  "domain_code" varchar(40) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "attribute" (
@@ -180,7 +295,16 @@ CREATE TABLE "attribute" (
   "is_unique" boolean NOT NULL DEFAULT false,
   "is_nullable" boolean NOT NULL DEFAULT true,
   "default_value" varchar(255),
-  "unit" varchar(40)
+  "unit" varchar(40),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "attribute_constraint" (
@@ -192,13 +316,31 @@ CREATE TABLE "attribute_constraint" (
   "step_value" decimal(18,4),
   "expression" varchar(255),
   "depends_on_attribute_code" varchar(60),
-  "message" varchar(255)
+  "message" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "attribute_enum_value" (
   "attribute_code" varchar(60) NOT NULL,
   "sort_order" smallint NOT NULL,
   "value" varchar(160) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("attribute_code", "sort_order")
 );
 
@@ -209,7 +351,16 @@ CREATE TABLE "block" (
   "biz_group" biz_group_enum NOT NULL,
   "governed_by_element_code" varchar(60),
   "governed_by_aspect" varchar(80),
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "answer_slot" (
@@ -220,13 +371,31 @@ CREATE TABLE "answer_slot" (
   "is_required" boolean NOT NULL DEFAULT false,
   "default_value" varchar(255),
   "rule_text" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("block_id", "code")
 );
 
 CREATE TABLE "selector_scope" (
   "code" varchar(10) PRIMARY KEY NOT NULL,
   "name" varchar(60) NOT NULL,
-  "priority" smallint NOT NULL
+  "priority" smallint NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "fragment" (
@@ -238,7 +407,16 @@ CREATE TABLE "fragment" (
   "scope_value" varchar(120),
   "value" varchar(255) NOT NULL,
   "is_warning" boolean NOT NULL DEFAULT false,
-  "validation_msg" varchar(255)
+  "validation_msg" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "business_intent" (
@@ -247,7 +425,20 @@ CREATE TABLE "business_intent" (
   "owner" varchar(120) NOT NULL,
   "period" varchar(60) NOT NULL,
   "objective" text,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "business_intent_kpi" (
@@ -256,6 +447,15 @@ CREATE TABLE "business_intent_kpi" (
   "metric" varchar(160) NOT NULL,
   "target" varchar(80) NOT NULL,
   "unit" varchar(40),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("business_intent_id", "sort_order")
 );
 
@@ -264,7 +464,21 @@ CREATE TABLE "customer_segment" (
   "name" varchar(160) NOT NULL,
   "audience" audience_enum NOT NULL,
   "tier" customer_tier_enum,
-  "legal_requirement" varchar(255)
+  "legal_requirement" varchar(255),
+  "status" entity_status_enum NOT NULL DEFAULT 'draft',
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "product_intent" (
@@ -274,12 +488,34 @@ CREATE TABLE "product_intent" (
   "business_intent_id" bigint NOT NULL,
   "nature_element_code" varchar(60) NOT NULL,
   "archetype_code" varchar(30) NOT NULL,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "product_intent_element" (
   "product_intent_id" bigint NOT NULL,
   "element_code" varchar(60) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("product_intent_id", "element_code")
 );
 
@@ -287,7 +523,20 @@ CREATE TABLE "product_pattern" (
   "code" varchar(20) PRIMARY KEY NOT NULL,
   "name" varchar(200) NOT NULL,
   "product_intent_id" bigint,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "pattern_block" (
@@ -295,6 +544,15 @@ CREATE TABLE "pattern_block" (
   "block_id" varchar(40) NOT NULL,
   "position" smallint NOT NULL,
   "usage" block_usage_enum NOT NULL DEFAULT 'active',
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("pattern_code", "block_id")
 );
 
@@ -302,6 +560,15 @@ CREATE TABLE "pattern_obligation_type" (
   "pattern_code" varchar(20) NOT NULL,
   "obligation_type_code" varchar(60) NOT NULL,
   "role" ot_role_enum NOT NULL DEFAULT 'Primary',
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("pattern_code", "obligation_type_code")
 );
 
@@ -309,12 +576,34 @@ CREATE TABLE "product_template" (
   "code" varchar(20) PRIMARY KEY NOT NULL,
   "name" varchar(200) NOT NULL,
   "from_pattern_code" varchar(20) NOT NULL,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "template_segment" (
   "template_code" varchar(20) NOT NULL,
   "segment_code" varchar(40) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("template_code", "segment_code")
 );
 
@@ -323,6 +612,15 @@ CREATE TABLE "template_frame" (
   "block_id" varchar(40) NOT NULL,
   "slot_code" varchar(60) NOT NULL,
   "frame_value" varchar(255) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("template_code", "block_id", "slot_code")
 );
 
@@ -330,7 +628,20 @@ CREATE TABLE "product_config" (
   "code" varchar(20) PRIMARY KEY NOT NULL,
   "name" varchar(200) NOT NULL,
   "from_template_code" varchar(20) NOT NULL,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "product_variant" (
@@ -341,13 +652,40 @@ CREATE TABLE "product_variant" (
   "limit_range" varchar(60),
   "display_rate" varchar(40),
   "marketing_content" text,
-  "status" entity_status_enum NOT NULL
+  "status" entity_status_enum NOT NULL,
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "product_catalog" (
   "id" BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
   "name" varchar(120) NOT NULL,
-  "channel" channel_enum NOT NULL
+  "channel" channel_enum NOT NULL,
+  "status" entity_status_enum NOT NULL DEFAULT 'draft',
+  "data_owner" varchar(120),
+  "data_steward" varchar(120),
+  "sensitivity" data_sensitivity_enum NOT NULL DEFAULT 'internal',
+  "retention_policy" varchar(255),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "catalog_listing" (
@@ -355,6 +693,15 @@ CREATE TABLE "catalog_listing" (
   "variant_code" varchar(20) NOT NULL,
   "published_date" date,
   "status" entity_status_enum NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("catalog_id", "variant_code")
 );
 
@@ -362,7 +709,16 @@ CREATE TABLE "constraint_matrix" (
   "id" BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
   "kind" matrix_kind_enum NOT NULL,
   "title" varchar(200) NOT NULL,
-  "description" text
+  "description" text,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "matrix_cell" (
@@ -371,6 +727,15 @@ CREATE TABLE "matrix_cell" (
   "col_code" varchar(60) NOT NULL,
   "verdict" matrix_verdict_enum NOT NULL,
   "is_override" boolean NOT NULL DEFAULT false,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("matrix_id", "row_code", "col_code")
 );
 
@@ -378,7 +743,16 @@ CREATE TABLE "maker_checker_process" (
   "id" BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY NOT NULL,
   "variant_code" varchar(20),
   "product_name" varchar(200) NOT NULL,
-  "done_count" smallint NOT NULL DEFAULT 0
+  "done_count" smallint NOT NULL DEFAULT 0,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "process_step" (
@@ -389,6 +763,15 @@ CREATE TABLE "process_step" (
   "step_status" release_step_status_enum NOT NULL,
   "input_desc" varchar(200),
   "output_desc" varchar(200),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("process_id", "step_no")
 );
 
@@ -398,6 +781,15 @@ CREATE TABLE "process_step_checklist" (
   "sort_order" smallint NOT NULL,
   "item" varchar(255) NOT NULL,
   "is_done" boolean NOT NULL DEFAULT false,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("process_id", "step_no", "sort_order")
 );
 
@@ -419,7 +811,16 @@ CREATE TABLE "simulation_scenario" (
   "monthly_payment" decimal(18,0),
   "total_interest" decimal(18,0),
   "total_payment" decimal(18,0),
-  "ltv_pct" decimal(6,2)
+  "ltv_pct" decimal(6,2),
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "simulation_schedule_row" (
@@ -433,6 +834,15 @@ CREATE TABLE "simulation_schedule_row" (
   "penalty" decimal(18,0),
   "payment" decimal(18,0) NOT NULL,
   "closing_balance" decimal(18,0) NOT NULL,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
   PRIMARY KEY ("scenario_id", "period_no")
 );
 
@@ -446,7 +856,16 @@ CREATE TABLE "version_entry" (
   "is_head" boolean NOT NULL DEFAULT false,
   "author" varchar(120) NOT NULL,
   "created_at" timestamp NOT NULL,
-  "note" text
+  "note" text,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "activity_log" (
@@ -456,7 +875,16 @@ CREATE TABLE "activity_log" (
   "action" varchar(40) NOT NULL,
   "entity_type" varchar(60) NOT NULL,
   "entity_code" varchar(60),
-  "detail" text
+  "detail" text,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE UNIQUE INDEX ON "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value");

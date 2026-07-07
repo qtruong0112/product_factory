@@ -4,6 +4,7 @@ import { getDetail, getList } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
 import { STATUS_COLORS, STATUS_LABELS } from '../../components/StatusChip'
 import VersionHistoryDrawer from '../../components/VersionHistoryDrawer'
+import PatternPreviewModal from './PatternPreviewModal'
 
 // ---- kiểu dữ liệu từ API /product-patterns/{code}/detail (đã wire DB thật, mục 2.7) ----
 interface Pattern {
@@ -83,6 +84,7 @@ export default function ProductPatternDetailPage() {
   const [paletteTab, setPaletteTab] = useState<'block' | 'ot'>('block')
   const [paletteQuery, setPaletteQuery] = useState('')
   const [versionOpen, setVersionOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     if (!code) return
@@ -234,7 +236,7 @@ export default function ProductPatternDetailPage() {
         <button style={{ ...hdrBtn, cursor: 'pointer' }} onClick={() => setVersionOpen(true)}>
           <Icon name="activity" size={15} color="#41524A" /> Phiên bản
         </button>
-        <button style={hdrBtn} title={READONLY}>
+        <button style={{ ...hdrBtn, cursor: 'pointer' }} onClick={() => setPreviewOpen(true)}>
           <Icon name="eye" size={15} color="#41524A" /> Xem trước
         </button>
         <button style={{ ...hdrBtn, padding: '9px 15px' }} title={READONLY}>
@@ -497,6 +499,16 @@ export default function ProductPatternDetailPage() {
         entityCode={pt.code}
         entityName={pt.name}
       />
+      {previewOpen && (
+        <PatternPreviewModal
+          pattern={pt}
+          productIntentLabel={piCode ? `${piCode}${data.productIntentName ? ' · ' + data.productIntentName : ''}` : null}
+          assignedOTs={data.assignedOTs}
+          canvas={canvas}
+          coverageRows={coverage.rows}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   )
 }

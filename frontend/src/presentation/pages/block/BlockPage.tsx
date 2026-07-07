@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen from '../components/ListScreen'
-import { StatusChip } from '../components/StatusChip'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen from '../../components/ListScreen'
+import { StatusChip } from '../../components/StatusChip'
 
 // Phần tử list do backend làm giàu: slotCount (đếm answer_slot) + gov (governed_by element/aspect).
 interface BlockRow {
@@ -36,6 +37,7 @@ function GroupChip({ label }: { label: string }) {
 }
 
 export default function BlockPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<BlockRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -86,6 +88,7 @@ export default function BlockPage() {
       searchPlaceholder="Tìm Block…"
       filters={['Nhóm nghiệp vụ', 'Trạng thái']}
       actionLabel="Tạo Block"
+      onRowClick={(i) => navigate(`/block/${list[i].id}`)}
     />
   )
 }

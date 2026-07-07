@@ -177,6 +177,70 @@ export default function SimulationPage() {
 
   const currentVariant = useMemo(() => variants.find((v) => v.code === form?.variantCode) ?? null, [variants, form])
 
+  const csvCell = (v: string | number) => {
+    const s = String(v)
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
+  }
+
+  const handleExportCsv = () => {
+    if (!form || !result) return
+    const rows: (string | number)[][] = []
+    rows.push(['Lịch trả nợ (Amortization Schedule) — Product Factory'])
+    rows.push(['Sản phẩm', currentVariant?.name ?? form.variantCode])
+    rows.push(['Mã sản phẩm (Variant)', form.variantCode])
+    rows.push(['Mã cấu hình (Config)', form.configCode])
+    rows.push(['Số tiền vay (đ)', Math.round(form.amount)])
+    rows.push(['Kỳ hạn (tháng)', form.months])
+    rows.push(['Ngày bắt đầu kỳ đầu tiên', form.startDate])
+    rows.push(['Lãi suất Base Rate (%/tháng)', fmt2(form.baseRatePct)])
+    rows.push(['Lãi suất hiệu dụng (%/tháng)', fmt2(result.effectiveRatePct)])
+    rows.push(['Giá trị tài sản đảm bảo (đ)', Math.round(form.assetValue)])
+    rows.push(['Phân khúc khách hàng', SEGMENTS.find((s) => s.code === form.segmentCode)?.label ?? form.segmentCode])
+    rows.push(['Phí thẩm định (1 lần, đ)', Math.round(form.appraisalFee)])
+    rows.push(['Phí quản lý theo kỳ (%/kỳ)', fmt2(form.periodicFeePct)])
+    rows.push(['Tình huống phạt trễ hạn', form.penaltyOn ? `Kỳ ${form.penaltyPeriod}, trễ ${form.penaltyDays} ngày` : 'Không có'])
+    rows.push(['Tình huống trả bớt gốc', form.prepayOn ? `Kỳ ${form.prepayPeriod}, trả thêm ${Math.round(form.prepayAmount)}đ` : 'Không có'])
+    rows.push(['Tình huống ân hạn', form.graceOn ? `${form.graceMonths} kỳ chỉ trả lãi` : 'Không có'])
+    rows.push(['Tình huống đóng sớm (tất toán)', form.earlyOn ? `Kỳ ${form.earlyPeriod}, phạt ${fmt2(form.earlyPenaltyPct)}% dư nợ` : 'Không có'])
+    rows.push(['Kỳ trả định kỳ (đ)', Math.round(result.monthlyPayment)])
+    rows.push(['Tổng gốc (đ)', Math.round(result.totalPrincipal)])
+    rows.push(['Tổng lãi (đ)', Math.round(result.totalInterest)])
+    rows.push(['Tổng phí (đ)', Math.round(result.totalFee)])
+    rows.push(['Tổng phạt trễ hạn + tất toán sớm (đ)', Math.round(result.totalPenalty + result.totalEarlyPenalty)])
+    rows.push(['Tổng phải trả (đ)', Math.round(result.totalPayment)])
+    rows.push(['Số kỳ thực trả', `${result.periodsUsed}/${form.months}`])
+    rows.push(['Tỷ lệ LTV (%)', result.ltvPct != null ? fmt1(result.ltvPct) : '—'])
+    rows.push(['Điểm hòa vốn', result.breakevenPeriod != null ? `Kỳ ${result.breakevenPeriod}` : '—'])
+    rows.push(['Trạng thái ràng buộc', result.valid ? 'Hợp lệ' : 'Có cảnh báo'])
+    rows.push([])
+    rows.push(['Kỳ', 'Từ ngày', 'Đến ngày', 'Dư đầu kỳ', 'Gốc', 'Lãi', 'Phí', 'Phạt', 'Kỳ trả', 'Dư cuối kỳ', 'Ghi chú'])
+    result.schedule.forEach((row) => {
+      rows.push([
+        row.periodNo,
+        row.periodStart,
+        row.periodEnd,
+        Math.round(row.openingBalance),
+        Math.round(row.principal),
+        Math.round(row.interest),
+        Math.round(row.fee),
+        Math.round(row.penalty),
+        Math.round(row.payment),
+        Math.round(row.closingBalance),
+        row.hasTag ? row.tagText ?? '' : '',
+      ])
+    })
+    const csv = '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lich-tra-no_${form.variantCode}_${form.startDate}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading || !form) return <div style={{ padding: '22px 26px', color: '#5E6F66' }}>Đang tải dữ liệu…</div>
   if (error && !result)
     return <div style={{ padding: '22px 26px', color: '#B23B3B' }}>Lỗi: {error}. Kiểm tra backend đã chạy chưa.</div>
@@ -363,7 +427,12 @@ export default function SimulationPage() {
             <Icon name="target" size={14} color="#fff" /> Ghim phương án ({pinned.length}/3)
           </button>
           <div style={{ display: 'flex', gap: 9 }}>
-            <button title="read-only" style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: '#41524A', background: '#fff', cursor: 'not-allowed', fontFamily: 'inherit' }}>Xuất CSV</button>
+            <button
+              onClick={handleExportCsv}
+              disabled={!result}
+              title={result ? 'Xuất lịch trả nợ ra file CSV (mở được bằng Excel)' : undefined}
+              style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: result ? '#0B7349' : '#41524A', background: '#fff', cursor: result ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
+            >Xuất CSV</button>
             <button title="read-only" style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: '#41524A', background: '#fff', cursor: 'not-allowed', fontFamily: 'inherit' }}>Xuất PDF</button>
           </div>
 
