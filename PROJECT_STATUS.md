@@ -601,9 +601,19 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 33 — Bổ sung seed `activity_log` cho đủ dày
+
+**Bối cảnh:** user hỏi màn Nhật ký hoạt động có đang fix cứng data không. Audit đầy đủ (frontend `ActivityPage.tsx`, backend `ActivityLogController`/`ActivityLogService`, DDL, seed) xác nhận **không có gì fix cứng**: mọi field lấy từ `activity_log` thật; `channel` không có cột riêng nhưng suy ra bằng regex trên `detail` text thật (không bịa); nhãn hành động dịch từ `action` code thật qua map có fallback về code gốc nếu chưa map; tổng số dòng dùng `page.getTotalElements()` thật, số "1.284" giả của prototype đã bỏ từ Giai đoạn 18. Vấn đề duy nhất: seed gốc chỉ có **8 dòng** — list trông thưa.
+
+**Giải pháp (user chọn):** bổ sung 20 dòng `activity_log` thật vào `V2__seed.sql` (tổng 28), KHÔNG đổi code. Mỗi dòng mới là 1 sự kiện tạo/gửi duyệt/phê duyệt/xuất bản/thu hồi gắn với **đúng entity + đúng trạng thái thật đã có sẵn trong DB** (vd `BI-04` đang `approved` → dòng log "Phê duyệt Business Intent — ... "; `CFG-0021` đang `retired` → dòng log "Thu hồi Config — ..."), trải trên business_intent/product_intent/product_pattern/product_template/product_config/product_variant — không tạo entity/trạng thái mới, không bịa số liệu.
+
+**Verify:** `docker compose down -v && up --build` (bắt buộc vì sửa `V2__seed.sql` sau khi Flyway đã chạy — đúng lưu ý đã ghi từ Giai đoạn 21). `GET /api/activity-logs` trả `totalElements:28` (từ 8). Playwright chụp màn Nhật ký hoạt động xác nhận 28 dòng đa dạng actor (Trần Lan/Lê Minh/Phạm An/Hệ thống)/hành động/loại đối tượng/kênh (Web/API), tất cả đọc được từ DB thật.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa hoàn thành liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), sau khi gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa bổ sung seed `activity_log` (Giai đoạn 33), sau khi liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
