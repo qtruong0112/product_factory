@@ -1,7 +1,5 @@
 package com.f88.productfactory.application.dto.simulation;
 
-import com.f88.productfactory.application.service.simulation.SimulationEngine;
-import com.f88.productfactory.presentation.controller.simulation.SimulationController;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
