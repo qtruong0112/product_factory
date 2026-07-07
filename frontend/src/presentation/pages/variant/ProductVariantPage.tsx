@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen from '../components/ListScreen'
-import { StatusChip } from '../components/StatusChip'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen from '../../components/ListScreen'
+import { StatusChip } from '../../components/StatusChip'
 
 // Phần tử list do backend làm giàu (tên Config nguồn + kênh phân phối thật qua catalog_listing).
 interface VariantRow {
@@ -16,6 +17,7 @@ interface VariantRow {
 }
 
 export default function ProductVariantPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<VariantRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -66,6 +68,7 @@ export default function ProductVariantPage() {
       searchPlaceholder="Tìm Product Variant…"
       filters={['Family', 'Kênh', 'Trạng thái']}
       actionLabel="Đóng gói Variant"
+      onRowClick={(i) => navigate(`/variant/${list[i].code}`)}
     />
   )
 }

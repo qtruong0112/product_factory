@@ -648,9 +648,39 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 36 — Detail "thật chi tiết, đẹp, mượt, đầy đủ thông tin" cho Product Variant
+
+**Bối cảnh:** sau Giai đoạn 34-35, user yêu cầu tiếp màn Product Variant, nhấn mạnh rõ mức đầu tư: "thật chi tiết và đẹp và mượt và đầy đủ thông tin" — cao hơn hẳn 2 giai đoạn trước.
+
+**Khác Block (Giai đoạn 35):** backend chưa có sẵn detail nào — phải viết mới hoàn toàn, join nhiều bảng hơn để đạt độ "đầy đủ".
+
+**Backend:**
+- `ActivityLogRepository`: thêm `findByEntityTypeAndEntityCodeOrderByOccurredAtDesc(String,String)`.
+- `ActivityLogService`: tách phần map 1 dòng `ActivityLog`→`Map` thành `toRow()` private dùng chung; thêm `forEntity(String entityType, String entityCode)` public — tái dùng đúng logic dịch nhãn hành động + suy kênh đã có ở Giai đoạn 33, không viết trùng.
+- `ProductVariantService`: inject thêm `ProductTemplateRepository`, `ProductPatternRepository`, `ActivityLogService`. Thêm `detail(String code)`:
+  - Lineage ngược: `config = configRepo.findById(fromConfigCode)` → `template = templateRepo.findById(config.fromTemplateCode)` → `pattern = patternRepo.findById(template.fromPatternCode)` (mỗi bước `Optional`, null-safe nếu đứt gãy dữ liệu).
+  - `listings`: join `CatalogListingRepository.findByVariantCode` + `ProductCatalogRepository` → `{catalogId, catalogName, channel, publishedDate, status}`.
+  - `activity`: `activityLogService.forEntity("ProductVariant", code)` — nhật ký riêng của đúng variant này.
+- `ProductVariantController`: thêm `GET /api/product-variants/{code}/detail`.
+
+**Frontend:**
+- Chuyển `ProductVariantPage.tsx` → `pages/variant/`, thêm `onRowClick`.
+- `ProductVariantDetailPage.tsx` (mới, giàu thông tin nhất từ trước đến nay):
+  - Banner + chip family + `StatusChip`.
+  - **"Nguồn gốc sản phẩm"**: 4 ô Pattern→Template→Config→Variant nối mũi tên (`LineageBox`); 3 ô đầu bấm được, điều hướng sang `/pattern/:code`, `/template/:code`, `/config/:code` đã có sẵn (tái dùng route, không xây lại màn); ô Variant hiện tại viền xanh highlight.
+  - **"Thông tin sản phẩm"**: hạn mức, lãi suất niêm yết, nội dung marketing (ẩn nếu null — variant nào cũng có thể chưa có).
+  - **"Quy trình phát hành"**: card CTA điều hướng `/release/{code}` — không lặp lại logic 8 bước, tái dùng thẳng màn Giai đoạn 32.
+  - **"Niêm yết Catalog"** + **"Hoạt động gần đây"** (2 cột): card theo từng catalog (icon kênh, ngày niêm yết hoặc "Chưa có ngày niêm yết", `StatusChip`) và timeline chấm tròn (actor, hành động, chi tiết, thời gian, kênh).
+  - `fadeUp` stagger theo index trên mọi card con, đồng bộ phong cách Giai đoạn 34-35.
+- `main.tsx`: thêm route `/variant/:code` trước `/:view`.
+
+**Verify:** curl `GET /api/product-variants/VAR-101/detail` (published — đủ lineage Pattern PT-002/Template TPL-003/Config CFG-0042, 3 catalog listing published, 1 activity "Xuất bản") và `VAR-107/detail` (draft — lineage khác, 2 catalog `status:draft` với `publishedDate:null`, 1 activity "Tạo"); 404 cho mã không tồn tại. `npm run build` 0 lỗi TS, Docker rebuild backend+frontend sạch. Playwright chụp cả 2 trạng thái xác nhận giao diện đẹp, mượt, đầy đủ, mọi trường đều thật.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa thêm detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6, chỉ làm frontend), sau khi thêm detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype, theo yêu cầu user), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa thêm detail đầy đủ cho Product Variant (Giai đoạn 36 — lineage + catalog + activity, mức đầu tư cao theo yêu cầu rõ của user), sau khi thêm detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6), detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

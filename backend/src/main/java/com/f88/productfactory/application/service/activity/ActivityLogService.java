@@ -56,19 +56,32 @@ public class ActivityLogService {
         Page<ActivityLog> page = repo.findAllByOrderByOccurredAtDesc(pageable);
         List<Map<String, Object>> rows = new ArrayList<>();
         for (ActivityLog a : page.getContent()) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("occurredAt", a.getOccurredAt().toString());
-            row.put("occurredAtLabel", a.getOccurredAt().format(TIME_FMT));
-            row.put("actor", a.getActor());
-            row.put("action", a.getAction());
-            row.put("actionLabel", ACTION_LABEL.getOrDefault(a.getAction(), a.getAction()));
-            row.put("entityType", a.getEntityType());
-            row.put("entityCode", a.getEntityCode());
-            row.put("channel", extractChannel(a.getDetail()));
-            row.put("detail", a.getDetail());
-            rows.add(row);
+            rows.add(toRow(a));
         }
         return new PageImpl<>(rows, pageable, page.getTotalElements());
+    }
+
+    /** Nhật ký của riêng 1 entity (vd 1 Product Variant) — cho phần "Hoạt động gần đây" ở màn chi tiết. */
+    public List<Map<String, Object>> forEntity(String entityType, String entityCode) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (ActivityLog a : repo.findByEntityTypeAndEntityCodeOrderByOccurredAtDesc(entityType, entityCode)) {
+            rows.add(toRow(a));
+        }
+        return rows;
+    }
+
+    private static Map<String, Object> toRow(ActivityLog a) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("occurredAt", a.getOccurredAt().toString());
+        row.put("occurredAtLabel", a.getOccurredAt().format(TIME_FMT));
+        row.put("actor", a.getActor());
+        row.put("action", a.getAction());
+        row.put("actionLabel", ACTION_LABEL.getOrDefault(a.getAction(), a.getAction()));
+        row.put("entityType", a.getEntityType());
+        row.put("entityCode", a.getEntityCode());
+        row.put("channel", extractChannel(a.getDetail()));
+        row.put("detail", a.getDetail());
+        return row;
     }
 
     private static String extractChannel(String detail) {

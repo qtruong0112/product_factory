@@ -27,7 +27,8 @@ import ProductTemplatePage from './presentation/pages/template/ProductTemplatePa
 import ProductTemplateDetailPage from './presentation/pages/template/ProductTemplateDetailPage'
 import ProductConfigPage from './presentation/pages/config/ProductConfigPage'
 import ProductConfigDetailPage from './presentation/pages/config/ProductConfigDetailPage'
-import ProductVariantPage from './presentation/pages/ProductVariantPage'
+import ProductVariantPage from './presentation/pages/variant/ProductVariantPage'
+import ProductVariantDetailPage from './presentation/pages/variant/ProductVariantDetailPage'
 import ProductCatalogPage from './presentation/pages/ProductCatalogPage'
 import ReleasePage from './presentation/pages/ReleasePage'
 import ActivityPage from './presentation/pages/ActivityPage'
@@ -94,6 +95,7 @@ function App() {
           <Route path="/block/:id" element={<BlockDetailPage />} />
           <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
           <Route path="/domain/:code" element={<DomainDetailPage />} />
+          <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
           <Route path="/release/:variantCode" element={<ReleasePage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>
