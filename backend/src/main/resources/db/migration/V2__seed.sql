@@ -691,12 +691,17 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
 -- block nào "đang áp dụng"), trong khi toàn bộ 15 fragment của CFG-0042 dùng đúng 6 block mà
 -- TPL-003 có template_frame (BLK_COUNTERPARTY/LIMIT/INTEREST/COLLATERAL/REPAYMENT/PENALTY) và
 -- version_entry lịch sử ghi rõ "Khởi tạo Config từ Template TPL-003 v1.2" — TPL-001 là lỗi seed.
+-- Sửa Giai đoạn 40: CFG-0042/0041/0038 trước đây có status THẤP hơn Variant đóng gói từ nó
+-- (VAR-101 published ← CFG-0042 review; VAR-102 published ← CFG-0041 approved; VAR-105 review
+-- ← CFG-0038 draft) — vi phạm thứ tự lifecycle Config→Variant (Variant không thể tiến xa hơn
+-- Config nguồn). Nâng status Config khớp/vượt Variant, bổ sung version_entry + activity_log
+-- tương ứng (approve/publish) để có dấu vết lịch sử đầy đủ, không đổi trơ 1 cột.
 INSERT INTO "product_config" ("code", "name", "from_template_code", "status") VALUES
-  ('CFG-0042', 'Vay nhanh Xe máy 18 tháng', 'TPL-003', 'review'),
-  ('CFG-0041', 'Vay ô tô hạn mức HCM', 'TPL-003', 'approved'),
+  ('CFG-0042', 'Vay nhanh Xe máy 18 tháng', 'TPL-003', 'published'),
+  ('CFG-0041', 'Vay ô tô hạn mức HCM', 'TPL-003', 'published'),
   ('CFG-0040', 'Vay xe máy KH thân thiết', 'TPL-001', 'published'),
   ('CFG-0039', 'Vay Bullet vàng 3 tháng', 'TPL-005', 'approved'),
-  ('CFG-0038', 'Vay tín chấp lương GV', 'TPL-006', 'draft'),
+  ('CFG-0038', 'Vay tín chấp lương GV', 'TPL-006', 'review'),
   ('CFG-0037', 'Vay cầm cố DN nhỏ', 'TPL-002', 'review'),
   ('CFG-0021', 'Vay cầm cố laptop', 'TPL-001', 'retired');
 
@@ -1046,7 +1051,15 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   ('template', 'TPL-003', 'v1.2', 'published', true, true, 'Lê Minh', '2026-06-30 08:30:00', 'Khóa Block Phạt cho KH cá nhân, cập nhật giá trị khung LTV | ~ Khóa Block Phạt; ~ LTV khung 75%'),
   ('template', 'TPL-003', 'v1.1', 'approved', false, false, 'Lê Minh', '2026-06-24 11:00:00', 'Điều chỉnh đối tượng KH & khung số kỳ | ~ Số kỳ khung 1–18; ~ Đối tượng: Cá nhân'),
   ('template', 'TPL-003', 'v1.0', 'retired', false, false, 'Phạm Designer', '2026-06-10 09:00:00', 'Phiên bản phát hành đầu tiên từ Pattern PT-002 v0.x | Phát hành lần đầu'),
-  ('config', 'CFG-0042', 'v0.4', 'review', false, true, 'Trần Lan', '2026-07-01 09:42:00', 'Thêm Fragment Base Rate cho Place HCM/HN, gửi duyệt | + Fragment Base Rate · Place HCM,HN; + Fragment LTV · Place; → Gửi duyệt (Draft→Review)'),
+  -- Sửa Giai đoạn 40: v0.4 trước là head (review) — nhưng Variant VAR-101 đóng gói từ CFG-0042 đã
+  -- published, Config nguồn phải hoàn tất duyệt+phát hành. Thêm v0.5/v0.6 SAU v0.4 theo đúng thời
+  -- gian, chuyển head sang v0.6. (Lưu ý: bản thân lịch sử CFG-0042 v0.1–v0.4 đã có sẵn từ trước vẫn
+  -- đang được ghi muộn hơn ngày VAR-101 publish 2026-06-18 trong activity_log — đây là nghịch lý
+  -- thời gian CÓ SẴN từ trước, không sửa ở đây vì phạm vi yêu cầu chỉ là khớp status, không phải
+  -- viết lại toàn bộ mốc thời gian của VAR-101/hoạt động liên quan.)
+  ('config', 'CFG-0042', 'v0.6', 'published', true, true, 'Hệ thống', '2026-07-03 14:00:00', 'Xuất bản Config, sẵn sàng đóng gói Variant | → Phát hành (Approved→Published)'),
+  ('config', 'CFG-0042', 'v0.5', 'approved', false, false, 'Lê Minh', '2026-07-02 10:00:00', 'Phê duyệt Config sau khi rà soát Fragment Base Rate | → Phê duyệt (Review→Approved)'),
+  ('config', 'CFG-0042', 'v0.4', 'review', false, false, 'Trần Lan', '2026-07-01 09:42:00', 'Thêm Fragment Base Rate cho Place HCM/HN, gửi duyệt | + Fragment Base Rate · Place HCM,HN; + Fragment LTV · Place; → Gửi duyệt (Draft→Review)'),
   ('config', 'CFG-0042', 'v0.3', 'draft', false, false, 'Trần Lan', '2026-06-30 15:20:00', 'Thêm ưu đãi Loyalty & VIP cho Base Rate | + Fragment Base Rate · Loyalty; + Fragment Base Rate · VIP'),
   ('config', 'CFG-0042', 'v0.2', 'draft', false, false, 'Trần Lan', '2026-06-29 10:05:00', 'Điền Answer Slot bắt buộc của Block Trả nợ & Tài sản | + asset_type, ltv; + repay_method, installment_count'),
   ('config', 'CFG-0042', 'v0.1', 'draft', false, false, 'Phạm An', '2026-06-27 16:00:00', 'Khởi tạo Config từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định Base Rate');
@@ -1078,25 +1091,34 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   -- CFG-0037 'Vay cầm cố DN nhỏ' (review)
   ('config', 'CFG-0037', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-20 09:30:00', 'Khởi tạo Config từ Template TPL-002 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
   ('config', 'CFG-0037', 'v0.2', 'review', false, true, 'Lê Minh', '2026-07-01 09:10:00', 'Điền đủ Answer Slot bắt buộc, gửi duyệt | + Fragment Base Rate Place/Time; → Gửi duyệt (Draft→Review)'),
-  -- CFG-0038 'Vay tín chấp lương GV' (draft, vừa khởi tạo)
-  ('config', 'CFG-0038', 'v0.1', 'draft', false, true, 'Phạm An', '2026-06-30 11:00:00', 'Khởi tạo Config tín chấp lương GV từ Template TPL-006 v1.0 | Khởi tạo từ Template; + Fragment mặc định Base Rate'),
+  -- CFG-0038 'Vay tín chấp lương GV' (review — Giai đoạn 40: nâng từ draft vì Variant VAR-105 đóng
+  -- gói từ nó đã ở review, Config nguồn không thể ở sau Variant trong lifecycle)
+  ('config', 'CFG-0038', 'v0.1', 'draft', false, false, 'Phạm An', '2026-06-30 11:00:00', 'Khởi tạo Config tín chấp lương GV từ Template TPL-006 v1.0 | Khởi tạo từ Template; + Fragment mặc định Base Rate'),
+  ('config', 'CFG-0038', 'v0.2', 'review', false, true, 'Phạm An', '2026-07-01 09:00:00', 'Điền đủ Answer Slot bắt buộc, gửi duyệt | + Fragment Base Rate People/Place/Time; → Gửi duyệt (Draft→Review)'),
   -- CFG-0039 'Vay Bullet vàng 3 tháng' (approved)
   ('config', 'CFG-0039', 'v0.1', 'draft', false, false, 'Trần Lan', '2026-05-05 09:15:00', 'Khởi tạo Config Bullet vàng từ Template TPL-005 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
   ('config', 'CFG-0039', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-05-18 14:20:00', 'Bổ sung ưu đãi VIP & khu vực, phê duyệt | + Fragment Base Rate People/Place/Time; → Phê duyệt (Review→Approved)'),
   -- CFG-0040 'Vay xe máy KH thân thiết' (published)
   ('config', 'CFG-0040', 'v0.1', 'draft', false, false, 'Phạm An', '2026-05-25 10:00:00', 'Khởi tạo Config xe máy KH thân thiết từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
   ('config', 'CFG-0040', 'v0.2', 'published', true, true, 'Trần Lan', '2026-06-30 09:45:00', 'Thêm ưu đãi Loyalty & phát hành | + Fragment Base Rate Loyalty; → Phát hành (Approved→Published)'),
-  -- CFG-0041 'Vay ô tô hạn mức HCM' (approved)
+  -- CFG-0041 'Vay ô tô hạn mức HCM' (published — Giai đoạn 40: nâng từ approved vì Variant VAR-102
+  -- đóng gói từ nó đã published, Config nguồn không thể ở sau Variant trong lifecycle)
   ('config', 'CFG-0041', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-05 09:30:00', 'Khởi tạo Config ô tô hạn mức từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định'),
-  ('config', 'CFG-0041', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)');
+  ('config', 'CFG-0041', 'v0.2', 'approved', false, false, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)'),
+  ('config', 'CFG-0041', 'v0.3', 'published', true, true, 'Hệ thống', '2026-06-22 17:00:00', 'Xuất bản Config, sẵn sàng đóng gói Variant | → Phát hành (Approved→Published)');
 
--- ===== 39. activity_log — 28 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
+-- ===== 39. activity_log — 32 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
 -- 8 dòng đầu (01/07 → 28/06) là seed gốc. 20 dòng bổ sung (27/06 → 18/06) phản ánh đúng các
 -- sự kiện tạo/gửi duyệt/phê duyệt/xuất bản/thu hồi đã THẬT SỰ xảy ra với entity đang ở đúng
 -- trạng thái đó trong DB (business_intent/product_intent/product_pattern/product_template/
 -- product_config/product_variant) — không bịa entity/trạng thái mới, chỉ ghi lại lịch sử khớp
--- với status hiện có để list đủ dày cho màn Nhật ký hoạt động.
+-- với status hiện có để list đủ dày cho màn Nhật ký hoạt động. 3 dòng cuối (Giai đoạn 40) bổ
+-- sung approve/publish CFG-0042/0041 + submit_review CFG-0038 khi sửa lệch lifecycle Config↔Variant.
 INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "entity_code", "detail") VALUES
+  -- 3 dòng bổ sung Giai đoạn 40, khớp version_entry approve/publish CFG-0042/0041 và submit_review
+  -- CFG-0038 vừa thêm (sửa vi phạm lifecycle Config phải ≥ Variant đóng gói từ nó).
+  ('2026-07-03 14:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0042', 'Xuất bản Config — Vay nhanh Xe máy 18 tháng · kênh API'),
+  ('2026-07-02 10:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0042', 'Phê duyệt Config — Vay nhanh Xe máy 18 tháng · kênh Web'),
   ('2026-07-01 09:42:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0042', 'Gửi duyệt Config — Vay nhanh Xe máy · kênh Web'),
   ('2026-07-01 09:15:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-002', 'Phê duyệt Template — Vay cầm cố · DN · kênh Web'),
   ('2026-07-01 08:50:00', 'Phạm An', 'create', 'ProductPattern', 'PT-004', 'Tạo Pattern — Khuôn vay hạn mức · kênh Web'),
@@ -1115,10 +1137,12 @@ INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "en
   ('2026-06-24 09:00:00', 'Hệ thống', 'publish', 'ProductPattern', 'PT-005', 'Xuất bản Pattern — Khuôn vay tín chấp lương · kênh API'),
   ('2026-06-23 13:45:00', 'Phạm An', 'submit_review', 'ProductTemplate', 'TPL-003', 'Gửi duyệt Template — Vay hạn mức cầm cố · KH cá nhân · kênh Web'),
   ('2026-06-23 09:30:00', 'Hệ thống', 'publish', 'ProductTemplate', 'TPL-004', 'Xuất bản Template — Vay cầm cố ô tô · trả góp · kênh API'),
+  ('2026-06-22 17:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0041', 'Xuất bản Config — Vay ô tô hạn mức HCM · kênh API'),
   ('2026-06-22 16:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0041', 'Phê duyệt Config — Vay ô tô hạn mức HCM · kênh Web'),
   ('2026-06-22 10:00:00', 'Trần Lan', 'create', 'ProductTemplate', 'TPL-005', 'Tạo Template — Vay Bullet cầm cố · cá nhân · kênh Web'),
   ('2026-06-21 09:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0040', 'Xuất bản Config — Vay xe máy KH thân thiết · kênh API'),
   ('2026-06-21 08:20:00', 'Trần Lan', 'create', 'ProductConfig', 'CFG-0038', 'Tạo Config — Vay tín chấp lương GV · kênh Web'),
+  ('2026-07-01 09:00:00', 'Phạm An', 'submit_review', 'ProductConfig', 'CFG-0038', 'Gửi duyệt Config — Vay tín chấp lương GV · kênh Web'),
   ('2026-06-20 14:30:00', 'Phạm An', 'retire', 'ProductConfig', 'CFG-0021', 'Thu hồi Config — Vay cầm cố laptop · kênh Web'),
   ('2026-06-20 11:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-104', 'Phê duyệt Variant — Vay Bullet vàng 3 tháng · kênh Web'),
   ('2026-06-19 15:20:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-105', 'Gửi duyệt Variant — Vay tín chấp lương GV · kênh Web'),
