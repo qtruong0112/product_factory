@@ -16,8 +16,10 @@ import AttributeUsageDetailPage from './presentation/pages/attribute/AttributeUs
 import ObligationPage from './presentation/pages/ObligationPage'
 import ArchetypePage from './presentation/pages/archetype/ArchetypePage'
 import ArchetypeDetailPage from './presentation/pages/archetype/ArchetypeDetailPage'
-import DomainPage from './presentation/pages/DomainPage'
-import LifecyclePage from './presentation/pages/LifecyclePage'
+import DomainPage from './presentation/pages/domain/DomainPage'
+import DomainDetailPage from './presentation/pages/domain/DomainDetailPage'
+import LifecyclePage from './presentation/pages/lifecycle/LifecyclePage'
+import LifecycleDetailPage from './presentation/pages/lifecycle/LifecycleDetailPage'
 import OntologyPage from './presentation/pages/OntologyPage'
 import SysmapPage from './presentation/pages/SysmapPage'
 import ProductTemplatePage from './presentation/pages/template/ProductTemplatePage'
@@ -88,6 +90,8 @@ function App() {
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/config/:code" element={<ProductConfigDetailPage />} />
           <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
+          <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
+          <Route path="/domain/:code" element={<DomainDetailPage />} />
           <Route path="/release/:variantCode" element={<ReleasePage />} />
           <Route path="/:view" element={<GenericView />} />
         </Routes>

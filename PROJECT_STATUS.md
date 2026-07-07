@@ -611,9 +611,31 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 34 — Detail cho Lifecycle & State và Domain (UI mới ngoài prototype)
+
+**Bối cảnh:** Giai đoạn 29 đã xác nhận prototype gốc KHÔNG có khái niệm detail cho `lifecycle`/`domain` (chỉ list). User hỏi có ý tưởng gì cho 2 màn này không; sau khi trao đổi ý tưởng (Lifecycle → stepper chuỗi state theo `sort_order`; Domain → danh sách Attribute Group thuộc domain kèm số attribute), user chốt làm cả 2 với yêu cầu rõ: "giao diện phải mượt mà và đẹp mắt".
+
+**Backend:**
+- `LifecycleStateRepository`: thêm `findByLifecycleCodeOrderBySortOrder(String)`.
+- `LifecycleService`: thêm `detail(String code)` → `{lifecycle:{code,name,governs,status}, states:[{sortOrder,name}], stateCount}`.
+- `LifecycleController`: thêm `GET /api/lifecycles/{code}/detail`.
+- `AttributeGroupRepository`: thêm `findByDomainCodeOrderByName(String)`.
+- `DomainService` (mới, `application.service.attribute`): `detail(String code)` join `AttributeGroup` theo `domain_code` + đếm attribute mỗi group qua `AttributeRepository.countByGroupCode` có sẵn → `{domain:{...}, groups:[{code,name,attributeCount}], groupCount, totalAttributeCount}`.
+- `DomainController`: giữ nguyên `list`/`byId` (read-only thuần, kế thừa `ReadOnlyController`), thêm `GET /api/domains/{code}/detail` gọi `DomainService`.
+
+**Frontend:**
+- Chuyển `LifecyclePage.tsx` → `pages/lifecycle/`, `DomainPage.tsx` → `pages/domain/` (đúng convention Giai đoạn 31 — cặp list+detail có subfolder riêng); cả 2 thêm `onRowClick` điều hướng sang trang chi tiết.
+- `LifecycleDetailPage.tsx` (mới): banner gradient giống `ArchetypeDetailPage`/`ReleasePage`, stat card (số state, "áp dụng cho"), và khối chính là **chuỗi state machine** — vòng tròn đánh số nối bằng mũi tên `Icon name="arrow"`, tô gradient xanh nhạt→đậm theo vị trí (`NODE_TONES`) để phân biệt thứ tự trực quan — **không mang nghĩa done/undone** vì đây là định nghĩa state machine dùng chung, không phải tiến độ của 1 thực thể cụ thể (khác hẳn stepper ở `ReleasePage` vốn tính runtime theo trạng thái 1 variant). Có animation `fadeUp` so le theo index (stagger) + hover scale nhẹ trên từng node cho mượt.
+- `DomainDetailPage.tsx` (mới): banner tương tự, 3 stat card (Attribute Group, Tổng Attribute, Thực thể liên quan), khối mô tả, và danh sách Attribute Group dạng card có progress-bar theo tỉ lệ số attribute (so với group nhiều nhất trong domain) + `fadeUp` stagger + hover elevate.
+- `main.tsx`: thêm route `/lifecycle/:code` và `/domain/:code` (đặt trước `/:view`), sửa import 4 file theo path mới.
+
+**Verify:** `docker compose up -d --build backend frontend` (build sạch cả Java lẫn TS). Curl: `GET /api/lifecycles/LIFE_CYCLE_TERM_LOAN/detail` → 7 state Draft→Approved→Disbursed→Active→Overdue→Restructured→Closed đúng thứ tự thật; `GET /api/domains/DOM_PRICING/detail` → 2 group (Fee 2 attribute, Pricing 3 attribute) = 5 tổng, đúng thật; mã không tồn tại → 404 cho cả 2 endpoint. Playwright chụp cả 4 màn (2 list + 2 detail) xác nhận giao diện mượt, dữ liệu đúng thật, không bịa gì.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa bổ sung seed `activity_log` (Giai đoạn 33), sau khi liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa thêm detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype, theo yêu cầu user), sau khi bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

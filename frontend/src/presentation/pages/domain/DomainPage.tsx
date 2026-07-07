@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen from '../components/ListScreen'
-import { StatusChip } from '../components/StatusChip'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen from '../../components/ListScreen'
+import { StatusChip } from '../../components/StatusChip'
 
 interface DomainRow {
   code: string
@@ -12,6 +13,7 @@ interface DomainRow {
 }
 
 export default function DomainPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<DomainRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -59,6 +61,7 @@ export default function DomainPage() {
       rows={rows}
       searchPlaceholder="Tìm Domain…"
       actionLabel="Tạo Domain"
+      onRowClick={(i) => navigate(`/domain/${list[i].code}`)}
     />
   )
 }

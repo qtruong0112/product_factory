@@ -34,4 +34,11 @@ public class LifecycleController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/{code}/detail")
+    public ResponseEntity<Map<String, Object>> detail(@PathVariable String code) {
+        return service.detail(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

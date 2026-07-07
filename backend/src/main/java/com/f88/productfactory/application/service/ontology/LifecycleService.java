@@ -1,6 +1,7 @@
 package com.f88.productfactory.application.service.ontology;
 
 import com.f88.productfactory.domain.model.ontology.Lifecycle;
+import com.f88.productfactory.domain.model.ontology.LifecycleState;
 import com.f88.productfactory.domain.repository.ontology.LifecycleRepository;
 import com.f88.productfactory.domain.repository.ontology.LifecycleStateRepository;
 import org.springframework.data.domain.Page;
@@ -50,5 +51,29 @@ public class LifecycleService {
     /** Chi tiết entity theo PK (code). */
     public Optional<Lifecycle> byId(String code) {
         return repo.findById(code);
+    }
+
+    /** Chi tiết Lifecycle làm giàu: entity + danh sách state theo đúng thứ tự (cho stepper). */
+    public Optional<Map<String, Object>> detail(String code) {
+        return repo.findById(code).map(l -> {
+            List<LifecycleState> states = stateRepo.findByLifecycleCodeOrderBySortOrder(code);
+            List<Map<String, Object>> stateRows = new ArrayList<>();
+            for (LifecycleState s : states) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("sortOrder", s.getSortOrder());
+                row.put("name", s.getName());
+                stateRows.add(row);
+            }
+            Map<String, Object> result = new LinkedHashMap<>();
+            Map<String, Object> lifecycle = new LinkedHashMap<>();
+            lifecycle.put("code", l.getCode());
+            lifecycle.put("name", l.getName());
+            lifecycle.put("governs", l.getGoverns());
+            lifecycle.put("status", l.getStatus());
+            result.put("lifecycle", lifecycle);
+            result.put("states", stateRows);
+            result.put("stateCount", stateRows.size());
+            return result;
+        });
     }
 }
