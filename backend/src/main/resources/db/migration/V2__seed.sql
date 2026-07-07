@@ -703,7 +703,11 @@ INSERT INTO "product_config" ("code", "name", "from_template_code", "status") VA
   ('CFG-0039', 'Vay Bullet vàng 3 tháng', 'TPL-005', 'approved'),
   ('CFG-0038', 'Vay tín chấp lương GV', 'TPL-006', 'review'),
   ('CFG-0037', 'Vay cầm cố DN nhỏ', 'TPL-002', 'review'),
-  ('CFG-0021', 'Vay cầm cố laptop', 'TPL-001', 'retired');
+  ('CFG-0021', 'Vay cầm cố laptop', 'TPL-001', 'retired'),
+  -- Giai đoạn 41: sản phẩm mới "Vay xe máy mùa tựu trường" — đóng gói từ Template TPL-001 published
+  -- (cùng khuôn PT-001/TPL-001 mà CFG-0040/VAR-103 đang dùng, chỉ khác Fragment ưu đãi thời vụ) —
+  -- đã đi đủ draft→review→approved→published (xem version_entry + activity_log bên dưới).
+  ('CFG-0043', 'Vay xe máy mùa tựu trường', 'TPL-001', 'published');
 
 -- ===== 30. fragment — 18 fragment của CFG-0042 (configBase; base_rate Place HCM,HN warn 'Gần trần') =====
 -- 3 dòng cuối (interest_calc/capacity_range/asset_valuation) BỔ SUNG so với configBase() gốc
@@ -839,7 +843,30 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0041', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 36', false, 'Hợp lệ'),
   ('CFG-0041', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
 
--- ===== 31. product_variant — 7 VAR (list view + catalog) =====
+-- ===== 30c. fragment — CFG-0043 'Vay xe máy mùa tựu trường' (Giai đoạn 41) ← TPL-001/PT-001,
+-- cùng khuôn Block với CFG-0040 (xe máy KH thân thiết) — khác ở 2 Fragment ưu đãi thời vụ:
+-- base_rate scope people 'Học sinh, sinh viên' + scope time 'Mùa tựu trường' (01/08–30/09).
+-- installment_count ngắn hơn (3–12) vì đây là khoản vay theo mùa, không phải trả góp dài hạn. =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  ('CFG-0043', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_INTEREST', 'interest_calc', 'default', NULL, 'Dư nợ giảm dần', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_INTEREST', 'base_rate', 'default', NULL, '1,3%/tháng', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_INTEREST', 'base_rate', 'people', 'Học sinh, sinh viên', '0,99%/tháng', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_INTEREST', 'base_rate', 'time', 'Mùa tựu trường (01/08–30/09)', '0,89%/tháng', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_FEE', 'fee_type', 'default', NULL, 'Phí thẩm định', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_REPAYMENT', 'repay_method', 'default', NULL, 'Trả góp nhiều kỳ', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '3 – 12', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Xe máy (TwoWheels)', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
+
+-- ===== 31. product_variant — 8 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
   ('VAR-101', 'Vay nhanh Xe máy 18 tháng', 'CFG-0042', 'Cầm cố', '3tr – 50tr', '1,5%/tháng', NULL, 'published'),
   ('VAR-102', 'Vay ô tô hạn mức', 'CFG-0041', 'Hạn mức', '50tr – 2 tỷ', '1,1%/tháng', NULL, 'published'),
@@ -847,7 +874,10 @@ INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "li
   ('VAR-104', 'Vay Bullet vàng 3 tháng', 'CFG-0039', 'Cầm cố', '5tr – 500tr', '1,3%/tháng', NULL, 'approved'),
   ('VAR-105', 'Vay tín chấp lương GV', 'CFG-0038', 'Tín chấp', '10tr – 100tr', '1,6%/tháng', NULL, 'review'),
   ('VAR-106', 'Vay cầm cố laptop', 'CFG-0021', 'Cầm cố', '2tr – 30tr', '1,8%/tháng', NULL, 'retired'),
-  ('VAR-107', 'Vay cầm cố DN nhỏ', 'CFG-0037', 'Cầm cố', '100tr – 2 tỷ', '1,2%/tháng', NULL, 'draft');
+  ('VAR-107', 'Vay cầm cố DN nhỏ', 'CFG-0037', 'Cầm cố', '100tr – 2 tỷ', '1,2%/tháng', NULL, 'draft'),
+  -- Giai đoạn 41: đóng gói từ CFG-0043 (published) — đã đi đủ draft→review→approved→published,
+  -- niêm yết Catalog App+Web (xem catalog_listing + activity_log bên dưới).
+  ('VAR-108', 'Vay xe máy mùa tựu trường', 'CFG-0043', 'Cầm cố', '3tr – 40tr', '1,3%/tháng', 'Ưu đãi mùa tựu trường: lãi suất chỉ từ 0,99%/tháng cho học sinh, sinh viên (01/08–30/09), hồ sơ đơn giản, giải ngân trong ngày.', 'published');
 
 -- ===== 32. product_catalog — 3 kệ theo kênh =====
 INSERT INTO "product_catalog" ("id", "name", "channel") VALUES
@@ -869,7 +899,9 @@ INSERT INTO "catalog_listing" ("catalog_id", "variant_code", "published_date", "
   (3, 'VAR-104', NULL, 'approved'),
   (1, 'VAR-105', NULL, 'review'),
   (3, 'VAR-107', NULL, 'draft'),
-  (2, 'VAR-107', NULL, 'draft');
+  (2, 'VAR-107', NULL, 'draft'),
+  (1, 'VAR-108', '2026-07-07', 'published'),
+  (2, 'VAR-108', '2026-07-07', 'published');
 
 -- ===== 34. constraint_matrix — 3 ma trận (matrixDefs; Ma trận 4 Pattern×Block ngoài phạm vi v3) =====
 INSERT INTO "constraint_matrix" ("id", "kind", "title", "description") VALUES
@@ -1105,18 +1137,33 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   -- đóng gói từ nó đã published, Config nguồn không thể ở sau Variant trong lifecycle)
   ('config', 'CFG-0041', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-05 09:30:00', 'Khởi tạo Config ô tô hạn mức từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định'),
   ('config', 'CFG-0041', 'v0.2', 'approved', false, false, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)'),
-  ('config', 'CFG-0041', 'v0.3', 'published', true, true, 'Hệ thống', '2026-06-22 17:00:00', 'Xuất bản Config, sẵn sàng đóng gói Variant | → Phát hành (Approved→Published)');
+  ('config', 'CFG-0041', 'v0.3', 'published', true, true, 'Hệ thống', '2026-06-22 17:00:00', 'Xuất bản Config, sẵn sàng đóng gói Variant | → Phát hành (Approved→Published)'),
+  -- CFG-0043 'Vay xe máy mùa tựu trường' (Giai đoạn 41 — published, đi đủ 4 bước duyệt)
+  ('config', 'CFG-0043', 'v0.1', 'draft', false, false, 'Phạm An', '2026-07-04 09:00:00', 'Khởi tạo Config mùa tựu trường từ Template TPL-001 v1.0 | Khởi tạo từ Template; + Fragment mặc định'),
+  ('config', 'CFG-0043', 'v0.2', 'draft', false, false, 'Phạm An', '2026-07-04 14:30:00', 'Thêm ưu đãi lãi suất Học sinh/sinh viên & thời vụ | + Fragment Base Rate People Học sinh sinh viên; + Fragment Base Rate Time Mùa tựu trường'),
+  ('config', 'CFG-0043', 'v0.3', 'review', false, false, 'Trần Lan', '2026-07-05 09:15:00', 'Điền đủ Answer Slot bắt buộc (Tài sản/Trả nợ/Phạt), gửi duyệt | + Fragment còn lại; → Gửi duyệt (Draft→Review)'),
+  ('config', 'CFG-0043', 'v0.4', 'approved', false, false, 'Lê Minh', '2026-07-05 16:00:00', 'Phê duyệt Config chương trình mùa tựu trường | → Phê duyệt (Review→Approved)'),
+  ('config', 'CFG-0043', 'v0.5', 'published', true, true, 'Hệ thống', '2026-07-06 09:00:00', 'Xuất bản Config, sẵn sàng đóng gói Variant | → Phát hành (Approved→Published)');
 
--- ===== 39. activity_log — 32 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
+-- ===== 39. activity_log — 40 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
 -- 8 dòng đầu (01/07 → 28/06) là seed gốc. 20 dòng bổ sung (27/06 → 18/06) phản ánh đúng các
 -- sự kiện tạo/gửi duyệt/phê duyệt/xuất bản/thu hồi đã THẬT SỰ xảy ra với entity đang ở đúng
 -- trạng thái đó trong DB (business_intent/product_intent/product_pattern/product_template/
 -- product_config/product_variant) — không bịa entity/trạng thái mới, chỉ ghi lại lịch sử khớp
--- với status hiện có để list đủ dày cho màn Nhật ký hoạt động. 3 dòng cuối (Giai đoạn 40) bổ
--- sung approve/publish CFG-0042/0041 + submit_review CFG-0038 khi sửa lệch lifecycle Config↔Variant.
+-- với status hiện có để list đủ dày cho màn Nhật ký hoạt động. 3 dòng (Giai đoạn 40) bổ sung
+-- approve/publish CFG-0042/0041 + submit_review CFG-0038 khi sửa lệch lifecycle Config↔Variant.
+-- 8 dòng cuối (Giai đoạn 41) là dấu vết đủ 4 bước duyệt (create→submit_review→approve→publish)
+-- của CFG-0043/VAR-108 "Vay xe máy mùa tựu trường" — sản phẩm mới đóng gói từ khuôn PT-001/TPL-001
+-- có sẵn (published), khớp đúng version_entry CFG-0043 vừa thêm ở trên.
 INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "entity_code", "detail") VALUES
-  -- 3 dòng bổ sung Giai đoạn 40, khớp version_entry approve/publish CFG-0042/0041 và submit_review
-  -- CFG-0038 vừa thêm (sửa vi phạm lifecycle Config phải ≥ Variant đóng gói từ nó).
+  ('2026-07-07 11:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-108', 'Xuất bản Variant — Vay xe máy mùa tựu trường · kênh API'),
+  ('2026-07-07 09:30:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-108', 'Phê duyệt Variant — Vay xe máy mùa tựu trường · kênh Web'),
+  ('2026-07-06 15:00:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-108', 'Gửi duyệt Variant — Vay xe máy mùa tựu trường · kênh Web'),
+  ('2026-07-06 10:00:00', 'Phạm An', 'create', 'ProductVariant', 'VAR-108', 'Tạo Variant — Vay xe máy mùa tựu trường · kênh Web'),
+  ('2026-07-06 09:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0043', 'Xuất bản Config — Vay xe máy mùa tựu trường · kênh API'),
+  ('2026-07-05 16:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0043', 'Phê duyệt Config — Vay xe máy mùa tựu trường · kênh Web'),
+  ('2026-07-05 09:15:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0043', 'Gửi duyệt Config — Vay xe máy mùa tựu trường · kênh Web'),
+  ('2026-07-04 09:00:00', 'Phạm An', 'create', 'ProductConfig', 'CFG-0043', 'Tạo Config — Vay xe máy mùa tựu trường · kênh Web'),
   ('2026-07-03 14:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0042', 'Xuất bản Config — Vay nhanh Xe máy 18 tháng · kênh API'),
   ('2026-07-02 10:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0042', 'Phê duyệt Config — Vay nhanh Xe máy 18 tháng · kênh Web'),
   ('2026-07-01 09:42:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0042', 'Gửi duyệt Config — Vay nhanh Xe máy · kênh Web'),
