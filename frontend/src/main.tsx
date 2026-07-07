@@ -9,7 +9,8 @@ import ProductIntentPage from './presentation/pages/intent/ProductIntentPage'
 import ProductIntentDetailPage from './presentation/pages/intent/ProductIntentDetailPage'
 import ProductPatternPage from './presentation/pages/pattern/ProductPatternPage'
 import ProductPatternDetailPage from './presentation/pages/pattern/ProductPatternDetailPage'
-import BlockPage from './presentation/pages/BlockPage'
+import BlockPage from './presentation/pages/block/BlockPage'
+import BlockDetailPage from './presentation/pages/block/BlockDetailPage'
 import MatrixPage from './presentation/pages/MatrixPage'
 import AttributePage from './presentation/pages/attribute/AttributePage'
 import AttributeUsageDetailPage from './presentation/pages/attribute/AttributeUsageDetailPage'
@@ -90,6 +91,7 @@ function App() {
           <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
           <Route path="/config/:code" element={<ProductConfigDetailPage />} />
           <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
+          <Route path="/block/:id" element={<BlockDetailPage />} />
           <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
           <Route path="/domain/:code" element={<DomainDetailPage />} />
           <Route path="/release/:variantCode" element={<ReleasePage />} />

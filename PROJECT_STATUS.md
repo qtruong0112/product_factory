@@ -633,9 +633,24 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 35 — Detail cho Block & Answer Slot
+
+**Bối cảnh:** sau Giai đoạn 34, user chỉ ra màn Block & Answer Slot cũng chưa có detail.
+
+**Khác biệt so với Giai đoạn 34:** backend đã sẵn từ Giai đoạn 6 — `BlockService.detail(id)` + `BlockController GET /api/blocks/{id}/detail` được xây trước với chủ đích dự phòng (comment gốc: "cấp nguồn THẬT cho... việc gỡ fix cứng builder Product Pattern"), trả đúng `{block:{id,code,name,bizGroup,gov,status}, slots:[{code,name,required,def,rule,attrCode,attrName,type}]}` join `answer_slot`+`attribute`+`data_type`. **Không cần sửa backend** — chỉ thiếu frontend.
+
+**Frontend:**
+- Chuyển `BlockPage.tsx` → `pages/block/` (đúng convention Giai đoạn 31), thêm `onRowClick` điều hướng theo `id` (PK thật của bảng `block`, khác `code`).
+- `BlockDetailPage.tsx` (mới): banner gradient giống các detail khác, chip nhóm nghiệp vụ (`bizGroup`) + `StatusChip`; 2 stat card (số Answer Slot, "chi phối bởi" = `gov`); danh sách Answer Slot dạng card — mỗi card có badge `type` (Range/Money/Enum...) + badge Bắt buộc/Tùy chọn, dòng mặc định/ràng buộc nếu có. `fadeUp` stagger theo index + hover elevate, đồng bộ phong cách với `LifecycleDetailPage`/`DomainDetailPage`.
+- `main.tsx`: thêm route `/block/:id` trước `/:view`.
+
+**Verify:** curl `GET /api/blocks/BLK_ELIGIBILITY/detail` → 3 slot (age: Range/Bắt buộc/"18–60"/"MIN 18"; min_income: Money/Bắt buộc; occupation: Enum/Tùy chọn) đúng thật. `npm run build` 0 lỗi TS. Docker rebuild frontend only (backend không đổi). Playwright chụp list + detail xác nhận giao diện đẹp, đúng dữ liệu.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa thêm detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype, theo yêu cầu user), sau khi bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa thêm detail cho Block & Answer Slot (Giai đoạn 35 — tái dùng backend đã có sẵn từ Giai đoạn 6, chỉ làm frontend), sau khi thêm detail cho Lifecycle & State và Domain (Giai đoạn 34 — UI mới ngoài prototype, theo yêu cầu user), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
