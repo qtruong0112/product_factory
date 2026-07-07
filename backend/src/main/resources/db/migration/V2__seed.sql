@@ -1090,7 +1090,12 @@ INSERT INTO "version_entry" ("entity_type", "entity_code", "version", "status", 
   ('config', 'CFG-0041', 'v0.1', 'draft', false, false, 'Lê Minh', '2026-06-05 09:30:00', 'Khởi tạo Config ô tô hạn mức từ Template TPL-003 v1.2 | Khởi tạo từ Template; + Fragment mặc định'),
   ('config', 'CFG-0041', 'v0.2', 'approved', false, true, 'Phạm Designer', '2026-06-20 15:00:00', 'Override loại tài sản Ô tô & thêm ưu đãi khu vực HCM, phê duyệt | ~ Fragment Asset Type → Ô tô; + Fragment Base Rate Place HCM; → Phê duyệt (Review→Approved)');
 
--- ===== 39. activity_log — 8 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
+-- ===== 39. activity_log — 28 hoạt động (activity view; mốc thời gian quy đổi quanh 01/07/2026) =====
+-- 8 dòng đầu (01/07 → 28/06) là seed gốc. 20 dòng bổ sung (27/06 → 18/06) phản ánh đúng các
+-- sự kiện tạo/gửi duyệt/phê duyệt/xuất bản/thu hồi đã THẬT SỰ xảy ra với entity đang ở đúng
+-- trạng thái đó trong DB (business_intent/product_intent/product_pattern/product_template/
+-- product_config/product_variant) — không bịa entity/trạng thái mới, chỉ ghi lại lịch sử khớp
+-- với status hiện có để list đủ dày cho màn Nhật ký hoạt động.
 INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "entity_code", "detail") VALUES
   ('2026-07-01 09:42:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0042', 'Gửi duyệt Config — Vay nhanh Xe máy · kênh Web'),
   ('2026-07-01 09:15:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-002', 'Phê duyệt Template — Vay cầm cố · DN · kênh Web'),
@@ -1099,4 +1104,24 @@ INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "en
   ('2026-06-30 09:30:00', 'Lê Minh', 'update', 'AnswerSlot', 'BLOCK_INTEREST.base_rate', 'Cập nhật Base Rate · kênh Web'),
   ('2026-06-29 14:00:00', 'Trần Lan', 'retire', 'ProductVariant', 'VAR-106', 'Thu hồi Variant — Vay cầm cố laptop · kênh Web'),
   ('2026-06-29 11:20:00', 'Phạm An', 'assign', 'ProductPattern', 'PT-002', 'Gán Obligation Type — PT-002 ← Vay hạn mức · kênh Web'),
-  ('2026-06-28 08:00:00', 'Hệ thống', 'sync', 'ConstraintMatrix', '1', 'Đồng bộ Matrix — FOA × Obligation Element · kênh API');
+  ('2026-06-28 08:00:00', 'Hệ thống', 'sync', 'ConstraintMatrix', '1', 'Đồng bộ Matrix — FOA × Obligation Element · kênh API'),
+  ('2026-06-27 16:20:00', 'Lê Minh', 'approve', 'BusinessIntent', 'BI-04', 'Phê duyệt Business Intent — Sản phẩm vay hạn mức linh hoạt · kênh Web'),
+  ('2026-06-27 10:05:00', 'Phạm An', 'submit_review', 'BusinessIntent', 'BI-03', 'Gửi duyệt Business Intent — Số hóa hành trình vay · kênh Web'),
+  ('2026-06-26 14:40:00', 'Lê Minh', 'approve', 'ProductIntent', 'PI-004', 'Phê duyệt Product Intent — Cho vay cầm cố ô tô · kênh Web'),
+  ('2026-06-26 09:00:00', 'Trần Lan', 'create', 'BusinessIntent', 'BI-05', 'Tạo Business Intent — Cho vay tín chấp lương · kênh Web'),
+  ('2026-06-25 11:15:00', 'Phạm An', 'submit_review', 'ProductIntent', 'PI-003', 'Gửi duyệt Product Intent — Cho vay tiêu dùng có hạn mức · kênh Web'),
+  ('2026-06-25 08:30:00', 'Trần Lan', 'create', 'ProductIntent', 'PI-006', 'Tạo Product Intent — Vay tín chấp lương · kênh Web'),
+  ('2026-06-24 15:10:00', 'Lê Minh', 'approve', 'ProductPattern', 'PT-003', 'Phê duyệt Pattern — Khuôn vay cầm cố Bullet · kênh Web'),
+  ('2026-06-24 09:00:00', 'Hệ thống', 'publish', 'ProductPattern', 'PT-005', 'Xuất bản Pattern — Khuôn vay tín chấp lương · kênh API'),
+  ('2026-06-23 13:45:00', 'Phạm An', 'submit_review', 'ProductTemplate', 'TPL-003', 'Gửi duyệt Template — Vay hạn mức cầm cố · KH cá nhân · kênh Web'),
+  ('2026-06-23 09:30:00', 'Hệ thống', 'publish', 'ProductTemplate', 'TPL-004', 'Xuất bản Template — Vay cầm cố ô tô · trả góp · kênh API'),
+  ('2026-06-22 16:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0041', 'Phê duyệt Config — Vay ô tô hạn mức HCM · kênh Web'),
+  ('2026-06-22 10:00:00', 'Trần Lan', 'create', 'ProductTemplate', 'TPL-005', 'Tạo Template — Vay Bullet cầm cố · cá nhân · kênh Web'),
+  ('2026-06-21 09:00:00', 'Hệ thống', 'publish', 'ProductConfig', 'CFG-0040', 'Xuất bản Config — Vay xe máy KH thân thiết · kênh API'),
+  ('2026-06-21 08:20:00', 'Trần Lan', 'create', 'ProductConfig', 'CFG-0038', 'Tạo Config — Vay tín chấp lương GV · kênh Web'),
+  ('2026-06-20 14:30:00', 'Phạm An', 'retire', 'ProductConfig', 'CFG-0021', 'Thu hồi Config — Vay cầm cố laptop · kênh Web'),
+  ('2026-06-20 11:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-104', 'Phê duyệt Variant — Vay Bullet vàng 3 tháng · kênh Web'),
+  ('2026-06-19 15:20:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-105', 'Gửi duyệt Variant — Vay tín chấp lương GV · kênh Web'),
+  ('2026-06-19 09:10:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-107', 'Tạo Variant — Vay cầm cố DN nhỏ · kênh Web'),
+  ('2026-06-18 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-101', 'Xuất bản Variant — Vay nhanh Xe máy 18 tháng · kênh API'),
+  ('2026-06-18 08:40:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-102', 'Xuất bản Variant — Vay ô tô hạn mức · kênh API');
