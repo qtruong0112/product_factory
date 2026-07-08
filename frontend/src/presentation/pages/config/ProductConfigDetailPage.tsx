@@ -4,6 +4,7 @@ import { getDetail } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
 import { StatusChip } from '../../components/StatusChip'
 import VersionHistoryDrawer from '../../components/VersionHistoryDrawer'
+import ApprovalHistory from '../../components/ApprovalHistory'
 
 // ---- kiểu dữ liệu từ API /product-configs/{code}/detail ----
 interface ConfigMeta {
@@ -232,6 +233,9 @@ export default function ProductConfigDetailPage() {
               })}
             </div>
           ))}
+          <div style={{ marginTop: 12 }}>
+            <ApprovalHistory entityType="ProductConfig" entityCode={data.config.code} />
+          </div>
         </div>
 
         {/* CENTER: fragment của slot đang chọn */}

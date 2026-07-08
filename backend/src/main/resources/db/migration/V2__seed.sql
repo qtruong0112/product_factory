@@ -361,6 +361,17 @@ INSERT INTO "selector_scope" ("code", "name", "priority") VALUES
   ('place', 'Place (Khu vực)', 2),
   ('people', 'People (Borrower Segment)', 3);
 
+-- ===== 17b. app_user — Giai đoạn 42: người dùng thật cho bộ chọn "đổi vai trò" ở sidebar.
+-- 5/6 tên đã tồn tại thật, dùng nhất quán trong activity_log/version_entry từ trước (không bịa
+-- người mới) — chỉ 'Quản trị viên' (Admin) là nhân vật mới thêm để demo vai trò xem-toàn-bộ. =====
+INSERT INTO "app_user" ("code", "name", "role", "status") VALUES
+  ('USR-01', 'Phạm An', 'Product Designer', 'published'),
+  ('USR-02', 'Trần Lan', 'Product Owner', 'published'),
+  ('USR-03', 'Lê Minh', 'Checker / Approver', 'published'),
+  ('USR-04', 'Phạm Designer', 'Product Designer', 'published'),
+  ('USR-05', 'Hệ thống', 'Operations', 'published'),
+  ('USR-06', 'Quản trị viên', 'Admin', 'published');
+
 -- ===== 18. business_intent — 7 BI (list view; period/objective theo UI) =====
 INSERT INTO "business_intent" ("id", "name", "owner", "period", "objective", "status") VALUES
   (1, 'Mở rộng tín dụng nhân văn 2025', 'Khối Kinh doanh', 'Năm 2025', 'Phục vụ KH dưới chuẩn ngân hàng', 'published'),
@@ -1196,3 +1207,44 @@ INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "en
   ('2026-06-19 09:10:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-107', 'Tạo Variant — Vay cầm cố DN nhỏ · kênh Web'),
   ('2026-06-18 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-101', 'Xuất bản Variant — Vay nhanh Xe máy 18 tháng · kênh API'),
   ('2026-06-18 08:40:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-102', 'Xuất bản Variant — Vay ô tô hạn mức · kênh API');
+
+-- ===== 40. Populate created_user/updated_user (Giai đoạn 42) — suy TRỰC TIẾP từ activity_log
+-- thật ở trên: created_user = actor của hành động 'create' (nếu có); updated_user = actor của
+-- hành động MUỘN NHẤT theo occurred_at (dù là create/submit_review/approve/publish/retire...).
+-- CHỈ update những dòng có ít nhất 1 activity_log thật — không suy đoán/bịa cho các dòng chưa
+-- từng xuất hiện trong activity_log (business_intent 1,2,6,7; product_intent 1,2,5; pattern
+-- PT-001,006; template TPL-001,006; config CFG-0039,0037; toàn bộ product_catalog — 3 dòng
+-- catalog "kệ sản phẩm" chưa từng có activity_log nào nhắc tới, giữ NULL đúng thật).
+UPDATE "business_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
+UPDATE "business_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
+UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 5;
+
+UPDATE "product_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
+UPDATE "product_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
+UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 6;
+
+UPDATE "product_pattern" SET "updated_user" = 'Phạm An' WHERE "code" = 'PT-002';
+UPDATE "product_pattern" SET "updated_user" = 'Lê Minh' WHERE "code" = 'PT-003';
+UPDATE "product_pattern" SET "created_user" = 'Phạm An', "updated_user" = 'Phạm An' WHERE "code" = 'PT-004';
+UPDATE "product_pattern" SET "updated_user" = 'Hệ thống' WHERE "code" = 'PT-005';
+
+UPDATE "product_template" SET "updated_user" = 'Lê Minh' WHERE "code" = 'TPL-002';
+UPDATE "product_template" SET "updated_user" = 'Phạm An' WHERE "code" = 'TPL-003';
+UPDATE "product_template" SET "updated_user" = 'Hệ thống' WHERE "code" = 'TPL-004';
+UPDATE "product_template" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "code" = 'TPL-005';
+
+UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0042';
+UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0041';
+UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0040';
+UPDATE "product_config" SET "created_user" = 'Trần Lan', "updated_user" = 'Phạm An' WHERE "code" = 'CFG-0038';
+UPDATE "product_config" SET "updated_user" = 'Phạm An' WHERE "code" = 'CFG-0021';
+UPDATE "product_config" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0043';
+
+UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-101';
+UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-102';
+UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-103';
+UPDATE "product_variant" SET "updated_user" = 'Lê Minh' WHERE "code" = 'VAR-104';
+UPDATE "product_variant" SET "updated_user" = 'Phạm An' WHERE "code" = 'VAR-105';
+UPDATE "product_variant" SET "updated_user" = 'Trần Lan' WHERE "code" = 'VAR-106';
+UPDATE "product_variant" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "code" = 'VAR-107';
+UPDATE "product_variant" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-108';

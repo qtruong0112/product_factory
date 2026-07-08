@@ -6,8 +6,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,5 +25,11 @@ public class ActivityLogController {
     @GetMapping
     public Page<Map<String, Object>> list(@PageableDefault(size = 50) Pageable pageable) {
         return service.list(pageable);
+    }
+
+    /** Giai đoạn 42 — khối "Lịch sử duyệt" theo từng sản phẩm (Config/Pattern/Template/Variant...). */
+    @GetMapping("/entity")
+    public List<Map<String, Object>> forEntity(@RequestParam String type, @RequestParam String code) {
+        return service.forEntity(type, code);
     }
 }

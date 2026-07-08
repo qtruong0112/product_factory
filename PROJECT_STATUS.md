@@ -737,9 +737,69 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 40 — Sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng
+
+**Bối cảnh:** user chỉ ra qua UI: màn Product Config `CFG-0042` "Chờ duyệt" nhưng màn Product Variant `VAR-101` đóng gói từ nó lại "Đã xuất bản". Verify bằng SQL join thật theo `from_config_code` (không phải trùng tên) xác nhận đây là lỗi seed data thật (frontend/backend hiển thị đúng những gì DB lưu) — vi phạm thứ tự lifecycle Pattern→Template→**Config→Variant**: Variant là đóng gói TỪ Config nên không thể tiến xa hơn Config nguồn.
+
+**Sửa lệch (chỉ sửa `V2__seed.sql`, không đổi Variant vì nhiều màn khác — Release/Simulation/Catalog — dùng VAR-101 published làm mốc ổn định):**
+- `CFG-0042` review→published, `CFG-0041` approved→published, `CFG-0038` draft→review — khớp/vượt status Variant tương ứng.
+- Bổ sung `version_entry` (approve/publish/submit_review) + `activity_log` cho từng bước — không đổi trơ 1 cột status.
+
+**Thêm cột audit/governance (theo file DDL mới user cung cấp — đã tự sửa lỗi double-encode UTF-8 trong enum `biz_group_enum` của file gốc trước khi áp dụng, không copy nguyên mojibake):**
+- 9 cột audit/soft-delete/CDC (`created_user`, `created_date`, `updated_user`, `updated_date`, `is_deleted`, `deleted_user`, `deleted_date`, `cdc_version`, `cdc_timestamp`) cho **TẤT CẢ 43 bảng**.
+- Enum mới `data_sensitivity_enum` + 4 cột governance (`data_owner`, `data_steward`, `sensitivity`, `retention_policy`) cho 8 bảng nghiệp vụ chính (business_intent, customer_segment, product_intent, product_pattern, product_template, product_config, product_variant, product_catalog).
+- Cột `status` mới cho `customer_segment`/`product_catalog` (2 bảng trước đây chưa có).
+- Toàn bộ cột mới nullable/có DEFAULT nên không phá insert của `V2__seed.sql` (mọi INSERT chỉ định tên cột rõ ràng).
+
+**Verify:** `docker compose down -v && up --build`; SQL join xác nhận mọi `Variant.status` ≤ `Config.status` nguồn; `\d business_intent` xác nhận đủ cột audit/governance với default đúng; API `/api/blocks` trả `bizGroup` tiếng Việt đúng (không mojibake); Playwright UI hiển thị đúng "Đã xuất bản"/"Chờ duyệt" khớp nhau giữa Config/Variant.
+
+---
+
+### Giai đoạn 41 — Sample data "Vay xe máy mùa tựu trường" (sản phẩm đầy đủ, đã duyệt)
+
+**Bối cảnh:** user yêu cầu tạo 1 sản phẩm vay hoàn chỉnh, đi đủ các bước, đã được duyệt qua kiểm duyệt — dùng làm ví dụ mẫu đầy đủ nhất trong hệ thống.
+
+**Quyết định:** tái dùng khuôn `PT-001`/`TPL-001` (published có sẵn, cùng khuôn mà `CFG-0040`/`VAR-103` "xe máy KH thân thiết" đang dùng) thay vì tạo mới Business Intent/Product Intent/Pattern — đúng bản chất kiến trúc Pattern/Template dùng chung, chỉ Config/Variant khác nhau theo mùa/phân khúc.
+
+**Mới:**
+- `CFG-0043` 'Vay xe máy mùa tựu trường' ← TPL-001, 17 fragment đủ 15/15 slot bắt buộc (completeness 100%), 2 fragment ưu đãi thời vụ: `base_rate` scope `people`='Học sinh, sinh viên' 0,99%/tháng và scope `time`='Mùa tựu trường (01/08–30/09)' 0,89%/tháng (default 1,3%/tháng).
+- `VAR-108` ← CFG-0043, hạn mức 3tr–40tr, niêm yết Catalog App+Web (07/07/2026), `marketing_content` nêu rõ ưu đãi, status `published`.
+- `version_entry` CFG-0043 đủ 5 version (draft×2→review→approved→published) + 8 dòng `activity_log` (create/submit_review/approve/publish cho cả CFG-0043 và VAR-108) — dấu vết duyệt đầy đủ, không set thẳng status.
+
+**Verify:** API `/product-configs/CFG-0043/detail` completeness 15/15; `/product-variants/VAR-108/detail` đúng lineage Pattern→Template→Config→Variant + 2 listing + 4 activity; `/release-processes/VAR-108/detail` tự tính đúng done 8/8 (runtime từ status, không cần seed thêm `maker_checker_process`); `GET /api/search?q=tựu+trường` ra đúng cả Config và Variant; Playwright xác nhận UI `ProductVariantDetailPage` hiển thị đúng, đẹp.
+
+---
+
+### Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng
+
+**Bối cảnh:** user hỏi "nhật ký hoạt động có lưu ai duyệt, ai làm gì cho từng sản phẩm không — ví dụ từ bước tạo mới cần gửi duyệt thì ai gửi, đã duyệt thì ai duyệt", rồi muốn xử lý theo cột audit/governance (Giai đoạn 40 đã thêm `created_user`/`updated_user` nhưng seed chưa từng populate — toàn NULL), đồng ý thêm bảng user thật nếu cần. Kế đó bổ sung thêm yêu cầu: menu sidebar phải lọc theo role người dùng — mỗi role chỉ thấy tab liên quan việc của mình, có 1 role Admin thấy toàn bộ. Do phạm vi lớn (DB + backend + frontend, ảnh hưởng toàn bộ điều hướng) đã dùng `EnterPlanMode` trước khi code.
+
+**Audit hiện trạng (trước khi code):** `ActivityLogService.forEntity()` đã tồn tại (dùng cho "Hoạt động gần đây" ở Variant detail từ Giai đoạn 36) nhưng **chưa có REST endpoint** để Config/Pattern/Template gọi được. `version_entry.author` hiển thị ở "Phiên bản" nhưng chỉ áp dụng pattern/template/config (đúng theo `version_entity_type_enum`, Variant dùng activity_log thay thế — không phải thiếu sót). Sidebar (`Layout.tsx`) đang hiển thị avatar/tên/role **hoàn toàn hardcode** ("PD"/"Phạm Designer"/"Product Owner" — literal string, không lấy từ đâu cả) — không có bất kỳ khái niệm user/role/auth nào trong toàn bộ code.
+
+**Quyết định kiến trúc (đã nói rõ với user):**
+- Bộ chọn "đổi vai trò" ở sidebar là **demo kiểu chuyển đổi user** (dropdown, không mật khẩu/session/JWT), lọc menu **thuần phía frontend** — KHÔNG phải hệ thống đăng nhập/bảo mật thật, khớp bản chất "read-only 90%, CUD no-op" của toàn app.
+- `activity_log.actor`/`version_entry.author` **giữ nguyên `varchar`** (không đổi thành FK) — cách audit-trail phổ biến (snapshot tên tại thời điểm ghi log), tránh viết lại ~70 dòng INSERT có sẵn.
+- Role riêng `user_role_enum` (Product Owner/Product Designer/Checker · Approver/Operations/Admin) — tách khỏi `release_role_enum` cũ (đang dùng cho `process_step.role`, không đụng tới).
+
+**Backend:**
+- `V1__schema.sql`: enum `user_role_enum` + bảng `app_user` (id/code/name/role/status + đủ 9 cột audit).
+- `V2__seed.sql`: 6 dòng `app_user` — 5 tên đã dùng thật nhất quán trong `activity_log`/`version_entry` từ trước (Phạm An→Product Designer, Trần Lan→Product Owner, Lê Minh→Checker/Approver, Phạm Designer→Product Designer, Hệ thống→Operations), chỉ 1 dòng `Quản trị viên`/Admin là nhân vật mới. Populate `created_user`/`updated_user` cho 6 loại entity (business_intent/product_intent/pattern/template/config/variant) suy **trực tiếp** từ `activity_log` đã có (actor hành động `create`→`created_user`; actor hành động muộn nhất theo `occurred_at`→`updated_user`) — chỉ update dòng có ≥1 activity_log thật; các dòng chưa từng xuất hiện trong activity_log giữ NULL, **kể cả `product_catalog`** (dự tính ban đầu nằm trong nhóm "6 entity chính" nhưng audit lại activity_log xác nhận không có dòng nào nhắc tới catalog → bỏ qua, không suy đoán).
+- `AppUser`/`AppUserRepository`/`AppUserController` (`GET /api/users`, thuần đọc, không phân trang — chỉ 6 dòng).
+- `ActivityLogController` thêm `GET /api/activity-logs/entity?type=&code=` gọi thẳng `forEntity()` có sẵn.
+
+**Frontend:**
+- `infrastructure/user/UserContext.tsx` (mới): Context, fetch `/api/users` 1 lần, lưu lựa chọn vào `localStorage`, mặc định lần đầu = user role Admin (không ai bị ẩn menu khi mới vào).
+- `nav.ts`: thêm `roles?: UserRole[]` mỗi `NavItem` (undefined = mọi role thấy — dashboard/activity); gán role cho 17 mục còn lại theo nhóm nghiệp vụ (Product Owner→BI/PI; Product Designer→Pattern/Template/Config/thư viện nền tảng; Operations→Variant/Catalog/Release; Checker/Approver→Pattern/Template/Config/Variant/Matrix để duyệt; Simulation→Designer+Operations).
+- `Layout.tsx`: thay khối user hardcode bằng dropdown thật (avatar initials tính từ tên, click mở danh sách `app_user`, chọn → `setCurrentUser`); lọc `NAV` groups/items theo `currentUser.role` trước khi render (Admin bỏ qua lọc, group lọc hết item thì ẩn cả group).
+- `components/ApprovalHistory.tsx` (mới, dùng chung): tái dùng đúng style timeline chấm tròn của "Hoạt động gần đây" (Variant detail), gọi endpoint `/api/activity-logs/entity`. Thêm vào `ProductConfigDetailPage`/`ProductPatternDetailPage`/`ProductTemplateDetailPage` (mỗi trang 1 vị trí phù hợp bố cục riêng — cột trái với Config/Template, cuối canvas với Pattern).
+
+**Verify:** curl `/api/users` (đủ 6 user đúng role) + `/api/activity-logs/entity?type=ProductConfig&code=CFG-0043` (đúng 4 dòng create/submit_review/approve/publish); `npm run build` 0 lỗi TS; Playwright: mặc định Admin thấy đủ 20 mục nav; chuyển Trần Lan (Product Owner) → chỉ còn 4 mục (Bảng điều khiển/Business Intent/Product Intent/Nhật ký hoạt động); reload → role giữ nguyên (localStorage); chuyển Lê Minh (Checker/Approver) → đúng 7 mục (Pattern/Template/Config/Variant/Matrix + Dashboard/Activity); vào `/config/CFG-0043` → khối "Lịch sử duyệt" hiện đúng Phạm An tạo (04/07 09:00) → Trần Lan gửi duyệt (05/07 09:15) → Lê Minh phê duyệt (05/07 16:00) → Hệ thống xuất bản (06/07 09:00).
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39 — overlay toàn màn hình, không cần API mới), sau khi hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa xong **Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng** (bảng `app_user` mới, populate `created_user`/`updated_user` từ activity_log thật, sidebar lọc menu theo role qua `UserContext`, khối "Lịch sử duyệt" ở Config/Pattern/Template detail — role-switch là demo, không phải đăng nhập thật), sau **Giai đoạn 41 — sample data "Vay xe máy mùa tựu trường"** (sản phẩm đầy đủ đã duyệt, tái dùng khuôn PT-001/TPL-001), **Giai đoạn 40 — sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng**, làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39), hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 
