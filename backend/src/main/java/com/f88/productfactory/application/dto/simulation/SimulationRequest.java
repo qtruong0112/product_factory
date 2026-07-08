@@ -35,6 +35,11 @@ public class SimulationRequest {
     private BigDecimal rateCapPct;
     private BigDecimal penaltyFactor;
 
+    // Số ngày trễ hạn được miễn phạt — chính sách THẬT của sản phẩm (slot `grace`, BLK_PENALTY),
+    // resolve theo configCode trong SimulationService#applyRegulatoryCaps, không phải input người
+    // dùng nhập. Khác khái niệm với `graceMonths` (ân hạn gốc đầu kỳ vay, người dùng tự bật).
+    private Integer graceDays;
+
     private boolean penaltyOn;
     private Integer penaltyPeriod;
     private Integer penaltyDays;
@@ -83,6 +88,8 @@ public class SimulationRequest {
     public void setRateCapPct(BigDecimal v) { this.rateCapPct = v; }
     public BigDecimal getPenaltyFactor() { return penaltyFactor; }
     public void setPenaltyFactor(BigDecimal v) { this.penaltyFactor = v; }
+    public Integer getGraceDays() { return graceDays; }
+    public void setGraceDays(Integer v) { this.graceDays = v; }
 
     public boolean isPenaltyOn() { return penaltyOn; }
     public void setPenaltyOn(boolean v) { this.penaltyOn = v; }

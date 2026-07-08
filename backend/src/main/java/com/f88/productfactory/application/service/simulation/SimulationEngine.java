@@ -20,8 +20,11 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  * sàn 0.3%/tháng. Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí, gốc dồn qua kỳ sau, PMT tính trên
  * số kỳ còn lại sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn
  * lại. Tất toán sớm (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
- * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ/30) × lãi suất × hệ số phạt
- * (mặc định 1.5 = trần 150% theo attribute_constraint 'penalty_rate', có thể ghi đè qua request).
+ * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ TÍNH PHẠT/30) × lãi suất × hệ số
+ * phạt (mặc định 1.5 = trần 150% theo attribute_constraint 'penalty_rate', có thể ghi đè qua
+ * request). Số ngày trễ tính phạt = max(0, số ngày trễ nhập − số ngày ân hạn THẬT của sản phẩm
+ * (`graceDays`, slot `grace`/BLK_PENALTY, Giai đoạn 47) — khác `graceMonths` bên dưới (ân hạn gốc
+ * đầu kỳ vay, do người dùng tự bật, không có nguồn per-product).
  *
  * Ngoài lịch trả nợ, còn tính thêm dữ liệu biểu đồ Cashflow (chart bar %, đường thu hồi lũy kế,
  * điểm hòa vốn, đường vốn giải ngân) — cổng đúng công thức `simData()` đoạn cuối của bundler.
@@ -71,7 +74,9 @@ public final class SimulationEngine {
             double penalty = 0;
             if (isPenalty) {
                 int days = req.getPenaltyDays() != null ? req.getPenaltyDays() : 0;
-                penalty = pmt * (days / 30.0) * r * penaltyFactor;
+                int graceDays = req.getGraceDays() != null ? req.getGraceDays() : 0;
+                int billableDays = Math.max(0, days - graceDays);
+                penalty = pmt * (billableDays / 30.0) * r * penaltyFactor;
                 totalPenalty += penalty;
             }
 
@@ -211,6 +216,7 @@ public final class SimulationEngine {
         result.put("totalPrepay", round(totalPrepay));
         result.put("totalEarlyPenalty", round(totalEarlyPenalty));
         result.put("appraisalFee", round(appraisalFee));
+        result.put("graceDaysApplied", req.getGraceDays() != null ? req.getGraceDays() : 0);
         result.put("totalPayment", round(totalPayment));
         result.put("grossInflow", round(grossInflow));
         result.put("ltvPct", ltvPct);

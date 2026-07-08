@@ -80,6 +80,7 @@ interface RunResult {
   totalPrepay: number
   totalEarlyPenalty: number
   appraisalFee: number
+  graceDaysApplied: number
   totalPayment: number
   grossInflow: number
   ltvPct: number | null
@@ -525,7 +526,11 @@ export default function SimulationPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 18 }}>
               {kpiCardSmall('tag', 'PHÍ THẨM ĐỊNH (1 LẦN)', vnd(r.appraisalFee), '#2F73C4', 'Thu tại thời điểm giải ngân')}
               {kpiCardSmall('config', 'PHÍ QUẢN LÝ THEO KỲ', fmt2(form.periodicFeePct) + '%/kỳ', '#2F73C4', 'Trên dư nợ đầu kỳ · ' + vnd(r.periodicFeeOnly))}
-              {kpiCardSmall('bell', 'TỔNG PHẠT TRỄ HẠN', vnd(r.totalPenalty), r.totalPenalty > 0 ? '#B23B3B' : '#A7B5AC', form.penaltyOn ? `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày` : 'Không có')}
+              {kpiCardSmall('bell', 'TỔNG PHẠT TRỄ HẠN', vnd(r.totalPenalty), r.totalPenalty > 0 ? '#B23B3B' : '#A7B5AC', form.penaltyOn
+                ? (r.graceDaysApplied > 0
+                    ? `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày · miễn ${r.graceDaysApplied} ngày đầu (chính sách sản phẩm)`
+                    : `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày`)
+                : 'Không có')}
               {kpiCardSmall('variant', 'ĐÃ TRẢ BỚT GỐC', vnd(r.totalPrepay), r.totalPrepay > 0 ? '#0B7349' : '#A7B5AC', form.prepayOn ? `Kỳ ${form.prepayPeriod} · còn ${r.periodsUsed} kỳ` : 'Không có')}
             </div>
 
