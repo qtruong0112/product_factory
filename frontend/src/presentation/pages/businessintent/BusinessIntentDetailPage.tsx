@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getDetail } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
 import { StatusChip } from '../../components/StatusChip'
+import ApprovalHistory from '../../components/ApprovalHistory'
 
 interface Intent {
   id: number
@@ -97,6 +98,10 @@ export default function BusinessIntentDetailPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <ApprovalHistory entityType="BusinessIntent" entityCode={code} />
       </div>
     </div>
   )

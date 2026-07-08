@@ -79,7 +79,7 @@ export default function ActivityPage() {
       columns={columns}
       rows={rows}
       searchPlaceholder="Tìm hoạt động…"
-      filters={['Actor', 'Loại', 'Kênh']}
+      filters={['Actor', 'Hành động', 'Kênh']}
       actionLabel="Xuất nhật ký"
     />
   )

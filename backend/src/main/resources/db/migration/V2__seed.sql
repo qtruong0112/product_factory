@@ -1299,22 +1299,73 @@ INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "en
   ('2026-02-01 09:00:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-106', 'Tạo Variant — Vay cầm cố laptop · kênh Web'),
   ('2026-02-05 10:00:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-106', 'Gửi duyệt Variant — Vay cầm cố laptop · kênh Web'),
   ('2026-02-10 14:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-106', 'Phê duyệt Variant — Vay cầm cố laptop · kênh Web'),
-  ('2026-02-12 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-106', 'Xuất bản Variant — Vay cầm cố laptop · kênh API');
+  ('2026-02-12 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-106', 'Xuất bản Variant — Vay cầm cố laptop · kênh API'),
+  -- ===== Giai đoạn 44: bổ sung "Lịch sử duyệt" cho Business Intent & Product Intent (cùng đợt vá
+  -- lỗ hổng activity_log như Giai đoạn 43, mở rộng lên 2 tầng đầu Pipeline) =====
+  -- BI-01 (published, chưa có dòng nào)
+  ('2025-11-05 09:00:00', 'Trần Lan', 'create', 'BusinessIntent', 'BI-01', 'Tạo Business Intent — Mở rộng tín dụng nhân văn 2025 · kênh Web'),
+  ('2025-11-10 10:00:00', 'Phạm An', 'submit_review', 'BusinessIntent', 'BI-01', 'Gửi duyệt Business Intent — Mở rộng tín dụng nhân văn 2025 · kênh Web'),
+  ('2025-11-15 14:00:00', 'Lê Minh', 'approve', 'BusinessIntent', 'BI-01', 'Phê duyệt Business Intent — Mở rộng tín dụng nhân văn 2025 · kênh Web'),
+  ('2025-11-18 09:00:00', 'Hệ thống', 'publish', 'BusinessIntent', 'BI-01', 'Xuất bản Business Intent — Mở rộng tín dụng nhân văn 2025 · kênh API'),
+  -- BI-02 (published, chưa có dòng nào)
+  ('2025-12-01 09:00:00', 'Phạm An', 'create', 'BusinessIntent', 'BI-02', 'Tạo Business Intent — Tăng trưởng cầm cố xe máy · kênh Web'),
+  ('2025-12-05 10:00:00', 'Trần Lan', 'submit_review', 'BusinessIntent', 'BI-02', 'Gửi duyệt Business Intent — Tăng trưởng cầm cố xe máy · kênh Web'),
+  ('2025-12-10 14:00:00', 'Lê Minh', 'approve', 'BusinessIntent', 'BI-02', 'Phê duyệt Business Intent — Tăng trưởng cầm cố xe máy · kênh Web'),
+  ('2025-12-12 09:00:00', 'Hệ thống', 'publish', 'BusinessIntent', 'BI-02', 'Xuất bản Business Intent — Tăng trưởng cầm cố xe máy · kênh API'),
+  -- BI-03 (review, đã có 'submit_review' — thiếu create)
+  ('2026-06-20 09:00:00', 'Phạm An', 'create', 'BusinessIntent', 'BI-03', 'Tạo Business Intent — Số hóa hành trình vay · kênh Web'),
+  -- BI-04 (approved, đã có 'approve' — thiếu create/submit_review)
+  ('2026-06-10 09:00:00', 'Trần Lan', 'create', 'BusinessIntent', 'BI-04', 'Tạo Business Intent — Sản phẩm vay hạn mức linh hoạt · kênh Web'),
+  ('2026-06-20 10:00:00', 'Trần Lan', 'submit_review', 'BusinessIntent', 'BI-04', 'Gửi duyệt Business Intent — Sản phẩm vay hạn mức linh hoạt · kênh Web'),
+  -- BI-06 (published, chưa có dòng nào)
+  ('2026-01-05 09:00:00', 'Lê Minh', 'create', 'BusinessIntent', 'BI-06', 'Tạo Business Intent — Tối ưu thu hồi & rủi ro · kênh Web'),
+  ('2026-01-10 10:00:00', 'Phạm An', 'submit_review', 'BusinessIntent', 'BI-06', 'Gửi duyệt Business Intent — Tối ưu thu hồi & rủi ro · kênh Web'),
+  ('2026-01-15 14:00:00', 'Trần Lan', 'approve', 'BusinessIntent', 'BI-06', 'Phê duyệt Business Intent — Tối ưu thu hồi & rủi ro · kênh Web'),
+  ('2026-01-18 09:00:00', 'Hệ thống', 'publish', 'BusinessIntent', 'BI-06', 'Xuất bản Business Intent — Tối ưu thu hồi & rủi ro · kênh API'),
+  -- BI-07 (review, chưa có dòng nào)
+  ('2026-06-15 09:00:00', 'Trần Lan', 'create', 'BusinessIntent', 'BI-07', 'Tạo Business Intent — Gói KH thân thiết · kênh Web'),
+  ('2026-06-22 10:00:00', 'Trần Lan', 'submit_review', 'BusinessIntent', 'BI-07', 'Gửi duyệt Business Intent — Gói KH thân thiết · kênh Web'),
+  -- PI-001 (published, chưa có dòng nào)
+  ('2025-11-20 09:00:00', 'Trần Lan', 'create', 'ProductIntent', 'PI-001', 'Tạo Product Intent — Cho vay tiêu dùng nhỏ lẻ · kênh Web'),
+  ('2025-11-25 10:00:00', 'Phạm An', 'submit_review', 'ProductIntent', 'PI-001', 'Gửi duyệt Product Intent — Cho vay tiêu dùng nhỏ lẻ · kênh Web'),
+  ('2025-11-28 14:00:00', 'Lê Minh', 'approve', 'ProductIntent', 'PI-001', 'Phê duyệt Product Intent — Cho vay tiêu dùng nhỏ lẻ · kênh Web'),
+  ('2025-12-01 09:00:00', 'Hệ thống', 'publish', 'ProductIntent', 'PI-001', 'Xuất bản Product Intent — Cho vay tiêu dùng nhỏ lẻ · kênh API'),
+  -- PI-002 (published, chưa có dòng nào)
+  ('2026-01-20 09:00:00', 'Lê Minh', 'create', 'ProductIntent', 'PI-002', 'Tạo Product Intent — Cấp hạn mức để cho vay · kênh Web'),
+  ('2026-01-25 10:00:00', 'Phạm An', 'submit_review', 'ProductIntent', 'PI-002', 'Gửi duyệt Product Intent — Cấp hạn mức để cho vay · kênh Web'),
+  ('2026-01-28 14:00:00', 'Trần Lan', 'approve', 'ProductIntent', 'PI-002', 'Phê duyệt Product Intent — Cấp hạn mức để cho vay · kênh Web'),
+  ('2026-02-01 09:00:00', 'Hệ thống', 'publish', 'ProductIntent', 'PI-002', 'Xuất bản Product Intent — Cấp hạn mức để cho vay · kênh API'),
+  -- PI-003 (review, đã có 'submit_review' — thiếu create)
+  ('2026-06-18 09:00:00', 'Trần Lan', 'create', 'ProductIntent', 'PI-003', 'Tạo Product Intent — Cho vay tiêu dùng có hạn mức · kênh Web'),
+  -- PI-004 (approved, đã có 'approve' — thiếu create/submit_review)
+  ('2026-06-05 09:00:00', 'Lê Minh', 'create', 'ProductIntent', 'PI-004', 'Tạo Product Intent — Cho vay cầm cố ô tô · kênh Web'),
+  ('2026-06-15 10:00:00', 'Phạm An', 'submit_review', 'ProductIntent', 'PI-004', 'Gửi duyệt Product Intent — Cho vay cầm cố ô tô · kênh Web'),
+  -- PI-005 (published, chưa có dòng nào)
+  ('2026-03-01 09:00:00', 'Trần Lan', 'create', 'ProductIntent', 'PI-005', 'Tạo Product Intent — Cho vay cầm cố xe máy trả góp · kênh Web'),
+  ('2026-03-05 10:00:00', 'Phạm Designer', 'submit_review', 'ProductIntent', 'PI-005', 'Gửi duyệt Product Intent — Cho vay cầm cố xe máy trả góp · kênh Web'),
+  ('2026-03-10 14:00:00', 'Lê Minh', 'approve', 'ProductIntent', 'PI-005', 'Phê duyệt Product Intent — Cho vay cầm cố xe máy trả góp · kênh Web'),
+  ('2026-03-12 09:00:00', 'Hệ thống', 'publish', 'ProductIntent', 'PI-005', 'Xuất bản Product Intent — Cho vay cầm cố xe máy trả góp · kênh API');
 
--- ===== 40. Populate created_user/updated_user (Giai đoạn 42, VIẾT LẠI ở Giai đoạn 43) — suy TRỰC
--- TIẾP từ activity_log thật ở trên: created_user = actor của hành động 'create' (nếu có);
+-- ===== 40. Populate created_user/updated_user (Giai đoạn 42, VIẾT LẠI ở Giai đoạn 43 + 44) — suy
+-- TRỰC TIẾP từ activity_log thật ở trên: created_user = actor của hành động 'create' (nếu có);
 -- updated_user = actor của hành động MUỘN NHẤT theo occurred_at (create/submit_review/approve/
--- publish/retire...). Giai đoạn 43 đã bổ sung đủ activity_log cho TOÀN BỘ Pattern/Template/Config/
--- Variant nên khối UPDATE này viết lại đầy đủ (không còn dòng nào NULL trong 4 loại này). Business
--- Intent/Product Intent (1,2,6,7 / 1,2,5) và toàn bộ product_catalog vẫn CHƯA từng xuất hiện trong
--- activity_log — ngoài phạm vi Giai đoạn 43 (không có UI "Lịch sử duyệt" nào đọc 2 loại này), giữ
--- NULL đúng thật, không suy đoán.
-UPDATE "business_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
-UPDATE "business_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
+-- publish/retire...). Giai đoạn 43 đã bổ sung đủ activity_log cho Pattern/Template/Config/Variant;
+-- Giai đoạn 44 bổ sung tiếp Business Intent + Product Intent (đi kèm khối "Lịch sử duyệt" mới trên
+-- 2 màn detail) — 6 loại entity Pipeline nay đều hết NULL. product_catalog vẫn CHƯA từng xuất hiện
+-- trong activity_log — không có UI "Lịch sử duyệt" nào đọc, giữ NULL đúng thật, không suy đoán.
+UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "id" = 1;
+UPDATE "business_intent" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "id" = 2;
+UPDATE "business_intent" SET "created_user" = 'Phạm An', "updated_user" = 'Phạm An' WHERE "id" = 3;
+UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Lê Minh' WHERE "id" = 4;
 UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 5;
+UPDATE "business_intent" SET "created_user" = 'Lê Minh', "updated_user" = 'Hệ thống' WHERE "id" = 6;
+UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 7;
 
-UPDATE "product_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
-UPDATE "product_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
+UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "id" = 1;
+UPDATE "product_intent" SET "created_user" = 'Lê Minh', "updated_user" = 'Hệ thống' WHERE "id" = 2;
+UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Phạm An' WHERE "id" = 3;
+UPDATE "product_intent" SET "created_user" = 'Lê Minh', "updated_user" = 'Lê Minh' WHERE "id" = 4;
+UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "id" = 5;
 UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 6;
 
 UPDATE "product_pattern" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'PT-001';
