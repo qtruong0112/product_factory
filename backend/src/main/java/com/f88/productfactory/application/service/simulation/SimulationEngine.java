@@ -25,9 +25,11 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  * khi có phí — bug thật, đối chiếu ra từ file Excel tham chiếu của công ty). CPV mỗi kỳ tính theo
  * SỐ NGÀY THẬT trong tháng lịch (28-31 ngày) chia 365 (khớp cách công ty tính), không cố định "1 kỳ
  * = 1 tháng chẵn": `cpv = dư_nợ_đầu_kỳ × (rTotal×12/365) × số_ngày_thật_kỳ_đó`, rồi tách lại thành
- * Lãi/Phí theo đúng tỷ lệ cấu thành (rMonth/rTotal, feeMonth/rTotal). Kỳ cuối "plug" — trả hết phần
- * dư nợ còn lại thay vì đúng PMT cố định — để bù sai số dồn từ số ngày mỗi tháng khác nhau, dư nợ
- * về đúng 0.
+ * Lãi/Phí theo đúng tỷ lệ cấu thành (rMonth/rTotal, feeMonth/rTotal). Vì mỗi kỳ dài ngắn khác nhau
+ * (28-31 ngày) nên KHÔNG có công thức annuity đóng chính xác cho EMI — `solveEmiByDays()` giải lặp
+ * (bisection) tìm EMI sao cho chạy hết lịch theo đúng số ngày thật thì dư nợ về đúng 0, khớp cách
+ * Excel tham chiếu tính (thay vì công thức annuity đóng giả định mọi kỳ dài bằng nhau). Kỳ cuối vẫn
+ * giữ "plug" (trả hết phần dư nợ còn lại) đề phòng sai số làm tròn dồn nhỏ còn sót lại.
  *
  * Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí (CPV), gốc dồn qua kỳ sau, PMT tính trên số kỳ còn lại
  * sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn lại. Tất toán sớm
@@ -68,7 +70,7 @@ public final class SimulationEngine {
         double penaltyFactor = req.getPenaltyFactor() != null ? req.getPenaltyFactor().doubleValue() / 100.0 : 1.5;
 
         double balance = amount.doubleValue();
-        double pmt = annuity(balance, rTotal, months - grace);
+        double pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace);
         double maxBar = pmt * 1.6;
 
         List<Map<String, Object>> schedule = new ArrayList<>();
@@ -181,9 +183,9 @@ public final class SimulationEngine {
 
             if (isEarly) break;
             if (period == grace && grace > 0) {
-                pmt = annuity(balance, rTotal, months - grace);
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace);
             } else if (prepayExtra > 0 && balance > 1) {
-                pmt = annuity(balance, rTotal, months - period);
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, period, months - period);
             }
             if (balance <= 1) break;
         }
@@ -271,10 +273,29 @@ public final class SimulationEngine {
         return m;
     }
 
-    private static double annuity(double balance, double r, int k) {
-        if (k <= 0) return balance;
-        if (r <= 0) return balance / k;
-        return balance * r / (1 - Math.pow(1 + r, -k));
+    /**
+     * Giải lặp (bisection) tìm EMI cố định sao cho chạy hết `periodsCount` kỳ kế tiếp — mỗi kỳ tính
+     * CPV theo đúng số ngày lịch thật (`scheduleStart.plusMonths(periodOffset+i)` .. `+i+1`) và
+     * `dailyRate` — thì dư nợ về đúng 0. Không có công thức annuity đóng chính xác vì mỗi kỳ dài
+     * ngắn khác nhau (28-31 ngày) — khớp cách file Excel tham chiếu tính (Giai đoạn 50).
+     */
+    private static double solveEmiByDays(double balance, double dailyRate, LocalDate scheduleStart, int periodOffset, int periodsCount) {
+        if (periodsCount <= 0 || balance <= 0) return balance;
+        double lo = balance / periodsCount;
+        double hi = balance;
+        for (int iter = 0; iter < 100; iter++) {
+            double mid = (lo + hi) / 2;
+            double bal = balance;
+            for (int i = 0; i < periodsCount; i++) {
+                LocalDate s = scheduleStart.plusMonths(periodOffset + i);
+                LocalDate e = scheduleStart.plusMonths(periodOffset + i + 1);
+                long days = ChronoUnit.DAYS.between(s, e);
+                double cpv = bal * dailyRate * days;
+                bal -= (mid - cpv);
+            }
+            if (bal > 0) lo = mid; else hi = mid;
+        }
+        return (lo + hi) / 2;
     }
 
     private static String pct(double v, double max) {
