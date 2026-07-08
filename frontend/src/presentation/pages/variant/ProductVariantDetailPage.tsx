@@ -385,7 +385,9 @@ export default function ProductVariantDetailPage() {
   )
 }
 
-// ---- Tab "Giá trị cấu hình" — tái dùng GET /api/product-configs/{code}/detail đã có sẵn ----
+// ---- Tab "Giá trị cấu hình" — tái dùng GET /api/product-configs/{code}/resolved (Giai đoạn 46,
+// khác /detail của màn builder Config: /resolved hiện ĐỦ mọi Answer Slot của Pattern, không lọc
+// theo block đã có fragment — slot nào không có fragment sẽ lấy default Template/Answer Slot) ----
 interface FragmentRow {
   scopeCode: string
   scopeName: string
@@ -401,6 +403,7 @@ interface SlotDetail {
   attributeName: string | null
   dataTypeName: string | null
   inheritedFrameValue: string | null
+  slotDefaultValue: string | null
   fragments: FragmentRow[]
 }
 interface SlotSummary {
@@ -433,7 +436,7 @@ function ConfigValuesTab({ configCode }: { configCode: string }) {
 
   useEffect(() => {
     setLoading(true)
-    getDetail<ConfigDetail>('product-configs', configCode)
+    getDetail<ConfigDetail>('product-configs', configCode, 'resolved')
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -514,7 +517,11 @@ function ConfigValuesTab({ configCode }: { configCode: string }) {
                       </div>
                     ) : (
                       <div style={{ fontSize: 11.5, color: '#A7B5AC', marginTop: 4 }}>
-                        {detail?.inheritedFrameValue ? `Kế thừa Template: ${detail.inheritedFrameValue}` : 'Chưa cấu hình giá trị'}
+                        {detail?.inheritedFrameValue
+                          ? `Kế thừa Template: ${detail.inheritedFrameValue}`
+                          : detail?.slotDefaultValue
+                            ? `Mặc định Answer Slot: ${detail.slotDefaultValue}`
+                            : 'Chưa cấu hình giá trị'}
                       </div>
                     )}
                   </div>

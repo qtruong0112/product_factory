@@ -4,6 +4,7 @@ import { getDetail, getList } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
 import { STATUS_COLORS, STATUS_LABELS } from '../../components/StatusChip'
 import VersionHistoryDrawer from '../../components/VersionHistoryDrawer'
+import ApprovalHistory from '../../components/ApprovalHistory'
 import PatternPreviewModal from './PatternPreviewModal'
 
 // ---- kiểu dữ liệu từ API /product-patterns/{code}/detail (đã wire DB thật, mục 2.7) ----
@@ -414,6 +415,10 @@ export default function ProductPatternDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: 16, border: '1.5px dashed #C7D5CC', borderRadius: 11, color: '#A7B5AC', fontSize: 12.5, fontWeight: 500, marginTop: 2 }}>
               <Icon name="plus" size={15} color="#A7B5AC" /> Thả block vào đây hoặc chọn từ thư viện bên trái
             </div>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <ApprovalHistory entityType="ProductPattern" entityCode={pt.code} />
           </div>
         </div>
 

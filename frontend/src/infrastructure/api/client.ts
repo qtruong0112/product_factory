@@ -43,3 +43,17 @@ export async function searchGlobal<T>(q: string): Promise<T[]> {
   if (!res.ok) throw new Error(`GET search thất bại: ${res.status}`)
   return res.json()
 }
+
+// Danh sách người dùng thật cho bộ chọn "đổi vai trò" ở sidebar: GET /api/users
+export async function getUsers<T>(): Promise<T[]> {
+  const res = await fetch(`${BASE}/users`)
+  if (!res.ok) throw new Error(`GET users thất bại: ${res.status}`)
+  return res.json()
+}
+
+// Lịch sử duyệt của 1 sản phẩm (Config/Pattern/Template...): GET /api/activity-logs/entity?type=&code=
+export async function getActivityForEntity<T>(type: string, code: string): Promise<T[]> {
+  const res = await fetch(`${BASE}/activity-logs/entity?type=${encodeURIComponent(type)}&code=${encodeURIComponent(code)}`)
+  if (!res.ok) throw new Error(`GET activity-logs/entity thất bại: ${res.status}`)
+  return res.json()
+}

@@ -31,10 +31,12 @@ import ProductVariantPage from './presentation/pages/variant/ProductVariantPage'
 import ProductVariantDetailPage from './presentation/pages/variant/ProductVariantDetailPage'
 import ProductCatalogPage from './presentation/pages/ProductCatalogPage'
 import ReleasePage from './presentation/pages/ReleasePage'
-import ActivityPage from './presentation/pages/ActivityPage'
+import ActivityPage from './presentation/pages/activity/ActivityPage'
+import ActivityDetailPage from './presentation/pages/activity/ActivityDetailPage'
 import SimulationPage from './presentation/pages/SimulationPage'
 import DataTable from './presentation/components/DataTable'
 import { TABLES } from './infrastructure/tables'
+import { UserProvider } from './infrastructure/user/UserContext'
 
 // Các view đã dựng pixel-perfect (đọc API thật)
 const CUSTOM: Record<string, React.ReactNode> = {
@@ -81,26 +83,29 @@ function GenericView() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/businessintent/:id" element={<BusinessIntentDetailPage />} />
-          <Route path="/intent/:id" element={<ProductIntentDetailPage />} />
-          <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
-          <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
-          <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
-          <Route path="/config/:code" element={<ProductConfigDetailPage />} />
-          <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
-          <Route path="/block/:id" element={<BlockDetailPage />} />
-          <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
-          <Route path="/domain/:code" element={<DomainDetailPage />} />
-          <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
-          <Route path="/release/:variantCode" element={<ReleasePage />} />
-          <Route path="/:view" element={<GenericView />} />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+    <UserProvider>
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/businessintent/:id" element={<BusinessIntentDetailPage />} />
+            <Route path="/intent/:id" element={<ProductIntentDetailPage />} />
+            <Route path="/pattern/:code" element={<ProductPatternDetailPage />} />
+            <Route path="/archetype/:code" element={<ArchetypeDetailPage />} />
+            <Route path="/template/:code" element={<ProductTemplateDetailPage />} />
+            <Route path="/config/:code" element={<ProductConfigDetailPage />} />
+            <Route path="/attribute/:code" element={<AttributeUsageDetailPage />} />
+            <Route path="/block/:id" element={<BlockDetailPage />} />
+            <Route path="/lifecycle/:code" element={<LifecycleDetailPage />} />
+            <Route path="/domain/:code" element={<DomainDetailPage />} />
+            <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
+            <Route path="/release/:variantCode" element={<ReleasePage />} />
+            <Route path="/activity/:id" element={<ActivityDetailPage />} />
+            <Route path="/:view" element={<GenericView />} />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
+    </UserProvider>
   )
 }
 

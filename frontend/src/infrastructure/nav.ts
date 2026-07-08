@@ -1,9 +1,17 @@
 // Cấu trúc menu trích nguyên từ Product_Factory_5_1.html (hàm nav)
+
+// Giai đoạn 42 — vai trò người dùng cho bộ chọn "đổi vai trò" ở sidebar (lọc menu phía
+// frontend, khớp đúng user_role_enum trong DB — xem app_user). Không phải hệ thống đăng
+// nhập/bảo mật thật.
+export type UserRole = 'Product Owner' | 'Product Designer' | 'Checker / Approver' | 'Operations' | 'Admin'
+
 export interface NavItem {
   key: string
   label: string
   icon: string
   count: string | null
+  // undefined = mọi role đều thấy (dashboard, activity). Admin luôn bỏ qua field này (xem Layout.tsx).
+  roles?: UserRole[]
 }
 export interface NavGroup {
   label: string
@@ -20,34 +28,34 @@ export const NAV: NavGroup[] = [
   {
     label: 'Pipeline sản phẩm',
     items: [
-      { key: 'businessintent', label: 'Business Intent', icon: 'target', count: null },
-      { key: 'intent', label: 'Product Intent', icon: 'intent', count: null },
-      { key: 'pattern', label: 'Product Pattern', icon: 'pattern', count: null },
-      { key: 'template', label: 'Product Template', icon: 'template', count: null },
-      { key: 'config', label: 'Product Config', icon: 'config', count: null },
-      { key: 'variant', label: 'Product Variant', icon: 'variant', count: null },
-      { key: 'catalog', label: 'Product Catalog', icon: 'catalog', count: null },
+      { key: 'businessintent', label: 'Business Intent', icon: 'target', count: null, roles: ['Product Owner'] },
+      { key: 'intent', label: 'Product Intent', icon: 'intent', count: null, roles: ['Product Owner'] },
+      { key: 'pattern', label: 'Product Pattern', icon: 'pattern', count: null, roles: ['Product Designer', 'Checker / Approver'] },
+      { key: 'template', label: 'Product Template', icon: 'template', count: null, roles: ['Product Designer', 'Checker / Approver'] },
+      { key: 'config', label: 'Product Config', icon: 'config', count: null, roles: ['Product Designer', 'Checker / Approver'] },
+      { key: 'variant', label: 'Product Variant', icon: 'variant', count: null, roles: ['Operations', 'Checker / Approver'] },
+      { key: 'catalog', label: 'Product Catalog', icon: 'catalog', count: null, roles: ['Operations'] },
     ],
   },
   {
     label: 'Thư viện nền tảng',
     items: [
-      { key: 'obligation', label: 'Obligation Library', icon: 'obligation', count: null },
-      { key: 'ontology', label: 'Sơ đồ Ontology', icon: 'network', count: null },
-      { key: 'sysmap', label: 'Sơ đồ quan hệ tổng thể', icon: 'matrix', count: null },
-      { key: 'archetype', label: 'Financial Obligation Archetype', icon: 'layers', count: null },
-      { key: 'attribute', label: 'Attribute', icon: 'tag', count: null },
-      { key: 'block', label: 'Block & Answer Slot', icon: 'block', count: null },
-      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: null },
-      { key: 'lifecycle', label: 'Lifecycle & State', icon: 'lifecycle', count: null },
-      { key: 'domain', label: 'Domain', icon: 'domain', count: null },
+      { key: 'obligation', label: 'Obligation Library', icon: 'obligation', count: null, roles: ['Product Designer'] },
+      { key: 'ontology', label: 'Sơ đồ Ontology', icon: 'network', count: null, roles: ['Product Designer'] },
+      { key: 'sysmap', label: 'Sơ đồ quan hệ tổng thể', icon: 'matrix', count: null, roles: ['Product Designer'] },
+      { key: 'archetype', label: 'Financial Obligation Archetype', icon: 'layers', count: null, roles: ['Product Designer'] },
+      { key: 'attribute', label: 'Attribute', icon: 'tag', count: null, roles: ['Product Designer'] },
+      { key: 'block', label: 'Block & Answer Slot', icon: 'block', count: null, roles: ['Product Designer'] },
+      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: null, roles: ['Product Designer', 'Checker / Approver'] },
+      { key: 'lifecycle', label: 'Lifecycle & State', icon: 'lifecycle', count: null, roles: ['Product Designer'] },
+      { key: 'domain', label: 'Domain', icon: 'domain', count: null, roles: ['Product Designer'] },
     ],
   },
   {
     label: 'Công cụ',
     items: [
-      { key: 'release', label: 'Quy trình phát hành', icon: 'rocket', count: null },
-      { key: 'simulation', label: 'Simulation Engine', icon: 'sim', count: null },
+      { key: 'release', label: 'Quy trình phát hành', icon: 'rocket', count: null, roles: ['Operations'] },
+      { key: 'simulation', label: 'Simulation Engine', icon: 'sim', count: null, roles: ['Product Designer', 'Operations'] },
     ],
   },
   {

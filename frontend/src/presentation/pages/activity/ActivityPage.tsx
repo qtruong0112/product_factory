@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen from '../components/ListScreen'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen from '../../components/ListScreen'
 
 // Backend làm giàu: actionLabel dịch từ action code, channel suy ra từ hậu tố "· kênh X" thật
 // trong detail (activity_log không có cột channel riêng).
 interface ActivityRow {
+  id: number
   occurredAtLabel: string
   actor: string
   actionLabel: string
@@ -14,6 +16,7 @@ interface ActivityRow {
 }
 
 export default function ActivityPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<Page<ActivityRow> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -79,8 +82,9 @@ export default function ActivityPage() {
       columns={columns}
       rows={rows}
       searchPlaceholder="Tìm hoạt động…"
-      filters={['Actor', 'Loại', 'Kênh']}
+      filters={['Actor', 'Hành động', 'Kênh']}
       actionLabel="Xuất nhật ký"
+      onRowClick={(i) => navigate(`/activity/${list[i].id}`)}
     />
   )
 }

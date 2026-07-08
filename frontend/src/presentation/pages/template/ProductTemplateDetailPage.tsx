@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getDetail } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
+import ApprovalHistory from '../../components/ApprovalHistory'
 
 // ---- kiểu dữ liệu từ API /product-templates/{code}/detail ----
 interface TemplateMeta {
@@ -125,6 +126,8 @@ export default function ProductTemplateDetailPage() {
               ))}
             </div>
           </div>
+
+          <ApprovalHistory entityType="ProductTemplate" entityCode={data.template.code} />
         </div>
 
         {/* ---------- RIGHT ---------- */}

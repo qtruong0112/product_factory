@@ -176,146 +176,187 @@ public class ProductConfigService {
             // config). Config còn trống → tạm dùng khung block của Template làm bộ khung để điền.
             Set<String> activeBlocks = fragBlocks.isEmpty() ? frameBlocks : fragBlocks;
 
-            List<Map<String, Object>> sidebar = new ArrayList<>();
-            List<Map<String, Object>> missingRequired = new ArrayList<>();
-            List<Map<String, Object>> constraintIssues = new ArrayList<>();
-            Map<String, Object> slotsOut = new LinkedHashMap<>();
-            Set<String> placeOptions = new LinkedHashSet<>();
-            Set<String> timeOptions = new LinkedHashSet<>();
-            int totalReq = 0, reqFilled = 0;
+            return buildBody(cfg, tpl, patternCode, frameByKey, fragsByKey, activeBlocks);
+        });
+    }
 
-            if (patternCode != null) {
-                for (PatternBlock pb : patternBlockRepo.findByPatternCodeOrderByPosition(patternCode)) {
-                    if (!activeBlocks.contains(pb.getBlockId())) continue;
-                    Block block = blockRepo.findById(pb.getBlockId()).orElse(null);
+    /**
+     * Chi tiết ĐẦY ĐỦ mọi Answer Slot của Pattern (Giai đoạn 46) — dùng cho tab "Giá trị cấu
+     * hình" ở Variant detail: KHÔNG lọc theo activeBlocks như {@link #detail(String)} (màn
+     * builder Config, giữ nguyên hành vi cũ để không regression) — luôn hiện đủ mọi block của
+     * Pattern kể cả khi Config chưa từng cấu hình fragment nào ở đó. Slot không có fragment lấy
+     * `inheritedFrameValue` (default Template); không có cả 2 thì lấy `slotDefaultValue` (default
+     * riêng của chính Answer Slot, tầng fallback thứ 3 — cột có sẵn trong DB nhưng trước đây
+     * không được dùng ở luồng resolve giá trị Config/Variant).
+     */
+    public Optional<Map<String, Object>> resolved(String code) {
+        return repo.findById(code).map(cfg -> {
+            ProductTemplate tpl = templateRepo.findById(cfg.getFromTemplateCode()).orElse(null);
+            String patternCode = tpl != null ? tpl.getFromPatternCode() : null;
 
-                    List<Map<String, Object>> slotSummaries = new ArrayList<>();
-                    int blockReqTotal = 0, blockReqFilled = 0;
-
-                    for (AnswerSlot slot : slotRepo.findByBlockId(pb.getBlockId())) {
-                        String k = key(pb.getBlockId(), slot.getCode());
-                        List<Fragment> frags = fragsByKey.getOrDefault(k, List.of());
-                        boolean filled = !frags.isEmpty();
-
-                        if (slot.isRequired()) {
-                            blockReqTotal++;
-                            totalReq++;
-                            if (filled) { blockReqFilled++; reqFilled++; }
-                        }
-
-                        Map<String, Object> ss = new LinkedHashMap<>();
-                        ss.put("code", slot.getCode());
-                        ss.put("name", slot.getName());
-                        ss.put("required", slot.isRequired());
-                        ss.put("filled", filled);
-                        slotSummaries.add(ss);
-
-                        if (slot.isRequired() && !filled) {
-                            Map<String, Object> mr = new LinkedHashMap<>();
-                            mr.put("blockId", pb.getBlockId());
-                            mr.put("slotCode", slot.getCode());
-                            mr.put("slotName", slot.getName());
-                            missingRequired.add(mr);
-                        }
-
-                        Attribute attr = attributeRepo.findById(slot.getAttributeCode()).orElse(null);
-                        DataType dt = attr != null ? dataTypeRepo.findById(attr.getDataTypeCode()).orElse(null) : null;
-                        List<AttributeConstraint> constraints = attr != null
-                                ? constraintRepo.findByAttributeCode(attr.getCode()) : List.of();
-                        String constraintText = constraints.stream()
-                                .filter(c -> "regulatory".equals(c.getKind()) && c.getExpression() != null)
-                                .map(AttributeConstraint::getExpression).findFirst()
-                                .or(() -> constraints.stream().map(AttributeConstraint::getExpression)
-                                        .filter(Objects::nonNull).findFirst())
-                                .orElse(null);
-
-                        List<Map<String, Object>> fragRows = new ArrayList<>();
-                        for (Fragment f : frags) {
-                            SelectorScope scope = scopeRepo.findById(f.getScopeCode()).orElse(null);
-                            int priority = scope != null ? scope.getPriority() : 0;
-                            Map<String, Object> fm = new LinkedHashMap<>();
-                            fm.put("scopeCode", f.getScopeCode());
-                            fm.put("scopeName", scope != null ? scope.getName() : f.getScopeCode());
-                            fm.put("priority", priority);
-                            fm.put("scopeValue", f.getScopeValue());
-                            fm.put("value", f.getValue());
-                            fm.put("isWarning", f.isWarning());
-                            fm.put("validationMsg", f.getValidationMsg());
-                            fragRows.add(fm);
-
-                            if (f.isWarning()) {
-                                Map<String, Object> issue = new LinkedHashMap<>();
-                                issue.put("slotCode", slot.getCode());
-                                issue.put("slotName", slot.getName());
-                                issue.put("scopeLabel", scope != null ? scope.getName() : f.getScopeCode());
-                                issue.put("scopeValue", f.getScopeValue());
-                                issue.put("value", f.getValue());
-                                issue.put("message", f.getValidationMsg());
-                                constraintIssues.add(issue);
-                            }
-                            if ("place".equals(f.getScopeCode()) && f.getScopeValue() != null) {
-                                for (String tok : f.getScopeValue().split(",")) {
-                                    String t = tok.trim();
-                                    if (!t.isEmpty()) placeOptions.add(t);
-                                }
-                            }
-                            if ("time".equals(f.getScopeCode()) && f.getScopeValue() != null) {
-                                timeOptions.add(f.getScopeValue().trim());
-                            }
-                        }
-                        fragRows.sort(Comparator.comparingInt((Map<String, Object> m) -> ((Number) m.get("priority")).intValue()).reversed());
-
-                        Map<String, Object> slotDetail = new LinkedHashMap<>();
-                        slotDetail.put("code", slot.getCode());
-                        slotDetail.put("name", slot.getName());
-                        slotDetail.put("blockId", pb.getBlockId());
-                        slotDetail.put("blockName", block != null ? block.getName() : pb.getBlockId());
-                        slotDetail.put("required", slot.isRequired());
-                        slotDetail.put("attributeCode", attr != null ? attr.getCode() : slot.getAttributeCode());
-                        slotDetail.put("attributeName", attr != null ? attr.getName() : null);
-                        slotDetail.put("dataTypeName", dt != null ? dt.getName() : null);
-                        slotDetail.put("constraintText", constraintText);
-                        slotDetail.put("inheritedFrameValue", frameByKey.get(k));
-                        slotDetail.put("fragmentCount", frags.size());
-                        slotDetail.put("fragments", fragRows);
-                        slotsOut.put(slot.getCode(), slotDetail);
-                    }
-
-                    Map<String, Object> bm = new LinkedHashMap<>();
-                    bm.put("blockId", pb.getBlockId());
-                    bm.put("blockName", block != null ? block.getName() : pb.getBlockId());
-                    bm.put("reqFilled", blockReqFilled);
-                    bm.put("reqTotal", blockReqTotal);
-                    bm.put("slots", slotSummaries);
-                    sidebar.add(bm);
+            Map<String, String> frameByKey = new LinkedHashMap<>();
+            if (tpl != null) {
+                for (TemplateFrame f : templateFrameRepo.findByTemplateCode(tpl.getCode())) {
+                    frameByKey.put(key(f.getBlockId(), f.getSlotCode()), f.getFrameValue());
                 }
             }
 
-            int pct = totalReq > 0 ? Math.round(reqFilled * 100f / totalReq) : 0;
+            Map<String, List<Fragment>> fragsByKey = new LinkedHashMap<>();
+            for (Fragment f : fragmentRepo.findByConfigCode(code)) {
+                fragsByKey.computeIfAbsent(key(f.getBlockId(), f.getSlotCode()), k -> new ArrayList<>()).add(f);
+            }
 
-            Map<String, Object> completeness = new LinkedHashMap<>();
-            completeness.put("reqFilled", reqFilled);
-            completeness.put("totalReq", totalReq);
-            completeness.put("pct", pct);
-
-            Map<String, Object> body = new LinkedHashMap<>();
-            Map<String, Object> configMeta = new LinkedHashMap<>();
-            configMeta.put("code", cfg.getCode());
-            configMeta.put("name", cfg.getName());
-            configMeta.put("fromTemplateCode", cfg.getFromTemplateCode());
-            configMeta.put("status", cfg.getStatus());
-            body.put("config", configMeta);
-            body.put("templateName", tpl != null ? tpl.getName() : cfg.getFromTemplateCode());
-            body.put("completeness", completeness);
-            body.put("sidebar", sidebar);
-            body.put("missingRequired", missingRequired);
-            body.put("constraintIssues", constraintIssues);
-            body.put("slots", slotsOut);
-            body.put("peopleOptions", List.of("Standard", "Loyalty", "VIP"));
-            body.put("placeOptions", new ArrayList<>(placeOptions));
-            body.put("timeOptions", new ArrayList<>(timeOptions));
-
-            return body;
+            return buildBody(cfg, tpl, patternCode, frameByKey, fragsByKey, null);
         });
+    }
+
+    /**
+     * Thân dùng chung cho {@link #detail(String)} và {@link #resolved(String)} — khác nhau duy
+     * nhất ở `blockFilter` (null = không lọc, lấy hết block của Pattern).
+     */
+    private Map<String, Object> buildBody(ProductConfig cfg, ProductTemplate tpl, String patternCode,
+                                           Map<String, String> frameByKey, Map<String, List<Fragment>> fragsByKey,
+                                           Set<String> blockFilter) {
+        List<Map<String, Object>> sidebar = new ArrayList<>();
+        List<Map<String, Object>> missingRequired = new ArrayList<>();
+        List<Map<String, Object>> constraintIssues = new ArrayList<>();
+        Map<String, Object> slotsOut = new LinkedHashMap<>();
+        Set<String> placeOptions = new LinkedHashSet<>();
+        Set<String> timeOptions = new LinkedHashSet<>();
+        int totalReq = 0, reqFilled = 0;
+
+        if (patternCode != null) {
+            for (PatternBlock pb : patternBlockRepo.findByPatternCodeOrderByPosition(patternCode)) {
+                if (blockFilter != null && !blockFilter.contains(pb.getBlockId())) continue;
+                Block block = blockRepo.findById(pb.getBlockId()).orElse(null);
+
+                List<Map<String, Object>> slotSummaries = new ArrayList<>();
+                int blockReqTotal = 0, blockReqFilled = 0;
+
+                for (AnswerSlot slot : slotRepo.findByBlockId(pb.getBlockId())) {
+                    String k = key(pb.getBlockId(), slot.getCode());
+                    List<Fragment> frags = fragsByKey.getOrDefault(k, List.of());
+                    boolean filled = !frags.isEmpty();
+
+                    if (slot.isRequired()) {
+                        blockReqTotal++;
+                        totalReq++;
+                        if (filled) { blockReqFilled++; reqFilled++; }
+                    }
+
+                    Map<String, Object> ss = new LinkedHashMap<>();
+                    ss.put("code", slot.getCode());
+                    ss.put("name", slot.getName());
+                    ss.put("required", slot.isRequired());
+                    ss.put("filled", filled);
+                    slotSummaries.add(ss);
+
+                    if (slot.isRequired() && !filled) {
+                        Map<String, Object> mr = new LinkedHashMap<>();
+                        mr.put("blockId", pb.getBlockId());
+                        mr.put("slotCode", slot.getCode());
+                        mr.put("slotName", slot.getName());
+                        missingRequired.add(mr);
+                    }
+
+                    Attribute attr = attributeRepo.findById(slot.getAttributeCode()).orElse(null);
+                    DataType dt = attr != null ? dataTypeRepo.findById(attr.getDataTypeCode()).orElse(null) : null;
+                    List<AttributeConstraint> constraints = attr != null
+                            ? constraintRepo.findByAttributeCode(attr.getCode()) : List.of();
+                    String constraintText = constraints.stream()
+                            .filter(c -> "regulatory".equals(c.getKind()) && c.getExpression() != null)
+                            .map(AttributeConstraint::getExpression).findFirst()
+                            .or(() -> constraints.stream().map(AttributeConstraint::getExpression)
+                                    .filter(Objects::nonNull).findFirst())
+                            .orElse(null);
+
+                    List<Map<String, Object>> fragRows = new ArrayList<>();
+                    for (Fragment f : frags) {
+                        SelectorScope scope = scopeRepo.findById(f.getScopeCode()).orElse(null);
+                        int priority = scope != null ? scope.getPriority() : 0;
+                        Map<String, Object> fm = new LinkedHashMap<>();
+                        fm.put("scopeCode", f.getScopeCode());
+                        fm.put("scopeName", scope != null ? scope.getName() : f.getScopeCode());
+                        fm.put("priority", priority);
+                        fm.put("scopeValue", f.getScopeValue());
+                        fm.put("value", f.getValue());
+                        fm.put("isWarning", f.isWarning());
+                        fm.put("validationMsg", f.getValidationMsg());
+                        fragRows.add(fm);
+
+                        if (f.isWarning()) {
+                            Map<String, Object> issue = new LinkedHashMap<>();
+                            issue.put("slotCode", slot.getCode());
+                            issue.put("slotName", slot.getName());
+                            issue.put("scopeLabel", scope != null ? scope.getName() : f.getScopeCode());
+                            issue.put("scopeValue", f.getScopeValue());
+                            issue.put("value", f.getValue());
+                            issue.put("message", f.getValidationMsg());
+                            constraintIssues.add(issue);
+                        }
+                        if ("place".equals(f.getScopeCode()) && f.getScopeValue() != null) {
+                            for (String tok : f.getScopeValue().split(",")) {
+                                String t = tok.trim();
+                                if (!t.isEmpty()) placeOptions.add(t);
+                            }
+                        }
+                        if ("time".equals(f.getScopeCode()) && f.getScopeValue() != null) {
+                            timeOptions.add(f.getScopeValue().trim());
+                        }
+                    }
+                    fragRows.sort(Comparator.comparingInt((Map<String, Object> m) -> ((Number) m.get("priority")).intValue()).reversed());
+
+                    Map<String, Object> slotDetail = new LinkedHashMap<>();
+                    slotDetail.put("code", slot.getCode());
+                    slotDetail.put("name", slot.getName());
+                    slotDetail.put("blockId", pb.getBlockId());
+                    slotDetail.put("blockName", block != null ? block.getName() : pb.getBlockId());
+                    slotDetail.put("required", slot.isRequired());
+                    slotDetail.put("attributeCode", attr != null ? attr.getCode() : slot.getAttributeCode());
+                    slotDetail.put("attributeName", attr != null ? attr.getName() : null);
+                    slotDetail.put("dataTypeName", dt != null ? dt.getName() : null);
+                    slotDetail.put("constraintText", constraintText);
+                    slotDetail.put("inheritedFrameValue", frameByKey.get(k));
+                    slotDetail.put("slotDefaultValue", slot.getDefaultValue());
+                    slotDetail.put("fragmentCount", frags.size());
+                    slotDetail.put("fragments", fragRows);
+                    slotsOut.put(slot.getCode(), slotDetail);
+                }
+
+                Map<String, Object> bm = new LinkedHashMap<>();
+                bm.put("blockId", pb.getBlockId());
+                bm.put("blockName", block != null ? block.getName() : pb.getBlockId());
+                bm.put("reqFilled", blockReqFilled);
+                bm.put("reqTotal", blockReqTotal);
+                bm.put("slots", slotSummaries);
+                sidebar.add(bm);
+            }
+        }
+
+        int pct = totalReq > 0 ? Math.round(reqFilled * 100f / totalReq) : 0;
+
+        Map<String, Object> completeness = new LinkedHashMap<>();
+        completeness.put("reqFilled", reqFilled);
+        completeness.put("totalReq", totalReq);
+        completeness.put("pct", pct);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        Map<String, Object> configMeta = new LinkedHashMap<>();
+        configMeta.put("code", cfg.getCode());
+        configMeta.put("name", cfg.getName());
+        configMeta.put("fromTemplateCode", cfg.getFromTemplateCode());
+        configMeta.put("status", cfg.getStatus());
+        body.put("config", configMeta);
+        body.put("templateName", tpl != null ? tpl.getName() : cfg.getFromTemplateCode());
+        body.put("completeness", completeness);
+        body.put("sidebar", sidebar);
+        body.put("missingRequired", missingRequired);
+        body.put("constraintIssues", constraintIssues);
+        body.put("slots", slotsOut);
+        body.put("peopleOptions", List.of("Standard", "Loyalty", "VIP"));
+        body.put("placeOptions", new ArrayList<>(placeOptions));
+        body.put("timeOptions", new ArrayList<>(timeOptions));
+
+        return body;
     }
 }

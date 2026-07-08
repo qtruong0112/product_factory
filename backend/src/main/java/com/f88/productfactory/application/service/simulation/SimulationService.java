@@ -7,14 +7,20 @@ import com.f88.productfactory.domain.model.pipeline.Fragment;
 import com.f88.productfactory.domain.model.pipeline.ProductConfig;
 import com.f88.productfactory.domain.model.pipeline.ProductTemplate;
 import com.f88.productfactory.domain.model.pipeline.ProductVariant;
+import com.f88.productfactory.domain.model.pipeline.TemplateFrame;
+import com.f88.productfactory.domain.model.pipeline.TemplateSegment;
 import com.f88.productfactory.domain.model.simulation.SimulationScenario;
+import com.f88.productfactory.domain.model.structure.AnswerSlot;
 import com.f88.productfactory.domain.repository.attribute.AttributeConstraintRepository;
 import com.f88.productfactory.domain.repository.pipeline.CustomerSegmentRepository;
 import com.f88.productfactory.domain.repository.pipeline.FragmentRepository;
 import com.f88.productfactory.domain.repository.pipeline.ProductConfigRepository;
 import com.f88.productfactory.domain.repository.pipeline.ProductTemplateRepository;
 import com.f88.productfactory.domain.repository.pipeline.ProductVariantRepository;
+import com.f88.productfactory.domain.repository.pipeline.TemplateFrameRepository;
+import com.f88.productfactory.domain.repository.pipeline.TemplateSegmentRepository;
 import com.f88.productfactory.domain.repository.simulation.SimulationScenarioRepository;
+import com.f88.productfactory.domain.repository.structure.AnswerSlotRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -45,6 +51,7 @@ public class SimulationService {
     private static final Pattern MONEY_TOKEN = Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*(tr|tỷ)", Pattern.CASE_INSENSITIVE);
     private static final Pattern RATE_TOKEN = Pattern.compile("(\\d+(?:[.,]\\d+)?)\\s*%");
     private static final Pattern INT_RANGE_TOKEN = Pattern.compile("(\\d+)");
+    private static final Pattern VND_TOKEN = Pattern.compile("([0-9][0-9.,]*)\\s*đ", Pattern.CASE_INSENSITIVE);
 
     private final SimulationScenarioRepository scenarioRepo;
     private final CustomerSegmentRepository segmentRepo;
@@ -53,6 +60,9 @@ public class SimulationService {
     private final ProductTemplateRepository templateRepo;
     private final FragmentRepository fragmentRepo;
     private final AttributeConstraintRepository constraintRepo;
+    private final TemplateFrameRepository templateFrameRepo;
+    private final TemplateSegmentRepository templateSegmentRepo;
+    private final AnswerSlotRepository answerSlotRepo;
 
     public SimulationService(SimulationScenarioRepository scenarioRepo,
                              CustomerSegmentRepository segmentRepo,
@@ -60,7 +70,10 @@ public class SimulationService {
                              ProductConfigRepository configRepo,
                              ProductTemplateRepository templateRepo,
                              FragmentRepository fragmentRepo,
-                             AttributeConstraintRepository constraintRepo) {
+                             AttributeConstraintRepository constraintRepo,
+                             TemplateFrameRepository templateFrameRepo,
+                             TemplateSegmentRepository templateSegmentRepo,
+                             AnswerSlotRepository answerSlotRepo) {
         this.scenarioRepo = scenarioRepo;
         this.segmentRepo = segmentRepo;
         this.variantRepo = variantRepo;
@@ -68,6 +81,9 @@ public class SimulationService {
         this.templateRepo = templateRepo;
         this.fragmentRepo = fragmentRepo;
         this.constraintRepo = constraintRepo;
+        this.templateFrameRepo = templateFrameRepo;
+        this.templateSegmentRepo = templateSegmentRepo;
+        this.answerSlotRepo = answerSlotRepo;
     }
 
     /** Trần "regulatory" thật của 1 attribute (vd base_rate/ltv/penalty_rate) từ attribute_constraint. */
@@ -135,11 +151,58 @@ public class SimulationService {
         return SimulationEngine.run(req, tier);
     }
 
-    /** Gắn trần LTV/lãi suất/hệ số phạt THẬT từ attribute_constraint vào request trước khi tính. */
+    /**
+     * Gắn trần LTV/lãi suất THẬT từ attribute_constraint, và chính sách phạt trễ hạn THẬT của
+     * sản phẩm (`penaltyFactor`/`graceDays`, resolve theo configCode: fragment ghi đè → template
+     * default → answer_slot default) vào request trước khi tính. Nếu request không kèm configCode
+     * (gọi /run trực tiếp không qua sản phẩm nào) thì fallback về trần quy định như trước.
+     */
     private void applyRegulatoryCaps(SimulationRequest req) {
         req.setLtvCapPct(regulatoryCap("ltv"));
         req.setRateCapPct(regulatoryCap("base_rate"));
-        req.setPenaltyFactor(regulatoryCap("penalty_rate"));
+
+        String configCode = req.getConfigCode();
+        String templateCode = configCode != null
+                ? configRepo.findById(configCode).map(ProductConfig::getFromTemplateCode).orElse(null)
+                : null;
+
+        BigDecimal penaltyRate = configCode != null
+                ? parseRate(resolveSlotValue(configCode, templateCode, "BLK_PENALTY", "penalty_rate"))
+                : null;
+        req.setPenaltyFactor(penaltyRate != null ? penaltyRate : regulatoryCap("penalty_rate"));
+
+        Integer graceDays = configCode != null
+                ? parseFirstInt(resolveSlotValue(configCode, templateCode, "BLK_PENALTY", "grace"))
+                : null;
+        req.setGraceDays(graceDays != null ? graceDays : 0);
+    }
+
+    /**
+     * Giá trị THẬT của 1 Answer Slot theo đúng thứ tự resolve của luồng Pattern→Template→Config
+     * (khớp logic Giai đoạn 46): fragment ghi đè (scope "default") của Config → giá trị khung
+     * (`template_frame`) của Template → default riêng của Answer Slot. Trả `null` nếu không tầng
+     * nào có giá trị.
+     */
+    private String resolveSlotValue(String configCode, String templateCode, String blockId, String slotCode) {
+        Optional<String> fragValue = fragmentRepo.findByConfigCode(configCode).stream()
+                .filter(f -> blockId.equals(f.getBlockId()) && slotCode.equals(f.getSlotCode())
+                        && "default".equals(f.getScopeCode()))
+                .map(Fragment::getValue)
+                .findFirst();
+        if (fragValue.isPresent()) return fragValue.get();
+
+        if (templateCode != null) {
+            Optional<String> frameValue = templateFrameRepo.findByTemplateCode(templateCode).stream()
+                    .filter(f -> blockId.equals(f.getBlockId()) && slotCode.equals(f.getSlotCode()))
+                    .map(TemplateFrame::getFrameValue)
+                    .findFirst();
+            if (frameValue.isPresent()) return frameValue.get();
+        }
+
+        return answerSlotRepo.findByBlockId(blockId).stream()
+                .filter(s -> slotCode.equals(s.getCode()))
+                .map(AnswerSlot::getDefaultValue)
+                .findFirst().orElse(null);
     }
 
     private String tierOf(String segmentCode) {
@@ -176,11 +239,16 @@ public class SimulationService {
     /**
      * Suy tham số khởi tạo từ dữ liệu thật của variant: parse `limit_range`/`display_rate` (variant)
      * và fragment `ltv`/`installment_count` (config gốc) — amount/months lấy trung điểm khoảng thật,
-     * assetValue suy từ amount/LTV. Phí thẩm định/quản lý/ân hạn không có nguồn per-product nên dùng
-     * hằng số khởi tạo chung (giống mọi variant khác) — người dùng tự chỉnh tiếp trên form.
+     * assetValue suy từ amount/LTV. `appraisalFee` (fee_amount) và `segmentCode` (template_segment)
+     * cũng resolve THẬT theo Config/Template nguồn (Giai đoạn 47) — chỉ `periodicFeePct`/`startDate`
+     * là không có nguồn per-product nào trong DB nên dùng hằng số khởi tạo chung, người dùng tự
+     * chỉnh tiếp trên form.
      */
     private Map<String, Object> deriveFromVariant(ProductVariant v) {
-        List<Fragment> frags = fragmentRepo.findByConfigCode(v.getFromConfigCode());
+        String configCode = v.getFromConfigCode();
+        String templateCode = configRepo.findById(configCode).map(ProductConfig::getFromTemplateCode).orElse(null);
+
+        List<Fragment> frags = fragmentRepo.findByConfigCode(configCode);
         String ltvDefault = fragmentDefault(frags, "ltv");
         String installDefault = fragmentDefault(frags, "installment_count");
         String limitDefault = fragmentDefault(frags, "limit_amount");
@@ -210,9 +278,21 @@ public class SimulationService {
         }
         assetValue = assetValue.setScale(0, RoundingMode.HALF_UP);
 
+        // Phí thẩm định THẬT theo sản phẩm: fragment ghi đè → template_frame default → answer_slot
+        // default (slot fee_amount, BLK_FEE) — fallback 500.000đ CHỈ khi không tầng nào có giá trị.
+        Long feeAmount = parseVndAmount(resolveSlotValue(configCode, templateCode, "BLK_FEE", "fee_amount"));
+        BigDecimal appraisalFee = feeAmount != null ? BigDecimal.valueOf(feeAmount) : new BigDecimal("500000");
+
+        // Phân khúc THẬT theo Template nguồn (template_segment) — fallback SEG_STANDARD nếu Template
+        // không có mapping nào (phòng thủ, không có nghĩa mọi sản phẩm đều chuẩn).
+        String segmentCode = templateCode != null
+                ? templateSegmentRepo.findByTemplateCode(templateCode).stream()
+                        .map(TemplateSegment::getSegmentCode).findFirst().orElse("SEG_STANDARD")
+                : "SEG_STANDARD";
+
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("variantCode", v.getCode());
-        m.put("configCode", v.getFromConfigCode());
+        m.put("configCode", configCode);
         m.put("amount", BigDecimal.valueOf(amount));
         m.put("amountMin", BigDecimal.valueOf(amountMin));
         m.put("amountMax", BigDecimal.valueOf(amountMax));
@@ -222,9 +302,9 @@ public class SimulationService {
         m.put("termLimit", monthsMax);
         m.put("baseRatePct", rate);
         m.put("assetValue", assetValue);
-        m.put("segmentCode", "SEG_STANDARD");
+        m.put("segmentCode", segmentCode);
         m.put("startDate", LocalDate.now().plusDays(30).toString());
-        m.put("appraisalFee", new BigDecimal("500000"));
+        m.put("appraisalFee", appraisalFee);
         m.put("periodicFeePct", new BigDecimal("0.15"));
         // Tình huống penalty/prepay/grace/early để mặc định TẮT cho variant khác VAR-101 (không như
         // kịch bản demo gốc) — kỳ hạn thực tế mỗi sản phẩm khác nhau (vd VAR-106 chỉ 7 kỳ) nên không
@@ -275,6 +355,22 @@ public class SimulationService {
         Matcher m = RATE_TOKEN.matcher(text);
         if (!m.find()) return null;
         return new BigDecimal(m.group(1).replace(',', '.'));
+    }
+
+    /** "300.000đ" → 300000L (bỏ dấu chấm phân cách nghìn + ký hiệu "đ"). */
+    private static Long parseVndAmount(String text) {
+        if (text == null) return null;
+        Matcher m = VND_TOKEN.matcher(text);
+        if (!m.find()) return null;
+        return Long.parseLong(m.group(1).replace(".", "").replace(",", ""));
+    }
+
+    /** "5 ngày" → 5 (số nguyên đầu tiên tìm thấy). */
+    private static Integer parseFirstInt(String text) {
+        if (text == null) return null;
+        Matcher m = INT_RANGE_TOKEN.matcher(text);
+        if (!m.find()) return null;
+        return Integer.parseInt(m.group(1));
     }
 
     @SuppressWarnings("unchecked")

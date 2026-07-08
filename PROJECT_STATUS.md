@@ -737,9 +737,153 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 40 — Sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng
+
+**Bối cảnh:** user chỉ ra qua UI: màn Product Config `CFG-0042` "Chờ duyệt" nhưng màn Product Variant `VAR-101` đóng gói từ nó lại "Đã xuất bản". Verify bằng SQL join thật theo `from_config_code` (không phải trùng tên) xác nhận đây là lỗi seed data thật (frontend/backend hiển thị đúng những gì DB lưu) — vi phạm thứ tự lifecycle Pattern→Template→**Config→Variant**: Variant là đóng gói TỪ Config nên không thể tiến xa hơn Config nguồn.
+
+**Sửa lệch (chỉ sửa `V2__seed.sql`, không đổi Variant vì nhiều màn khác — Release/Simulation/Catalog — dùng VAR-101 published làm mốc ổn định):**
+- `CFG-0042` review→published, `CFG-0041` approved→published, `CFG-0038` draft→review — khớp/vượt status Variant tương ứng.
+- Bổ sung `version_entry` (approve/publish/submit_review) + `activity_log` cho từng bước — không đổi trơ 1 cột status.
+
+**Thêm cột audit/governance (theo file DDL mới user cung cấp — đã tự sửa lỗi double-encode UTF-8 trong enum `biz_group_enum` của file gốc trước khi áp dụng, không copy nguyên mojibake):**
+- 9 cột audit/soft-delete/CDC (`created_user`, `created_date`, `updated_user`, `updated_date`, `is_deleted`, `deleted_user`, `deleted_date`, `cdc_version`, `cdc_timestamp`) cho **TẤT CẢ 43 bảng**.
+- Enum mới `data_sensitivity_enum` + 4 cột governance (`data_owner`, `data_steward`, `sensitivity`, `retention_policy`) cho 8 bảng nghiệp vụ chính (business_intent, customer_segment, product_intent, product_pattern, product_template, product_config, product_variant, product_catalog).
+- Cột `status` mới cho `customer_segment`/`product_catalog` (2 bảng trước đây chưa có).
+- Toàn bộ cột mới nullable/có DEFAULT nên không phá insert của `V2__seed.sql` (mọi INSERT chỉ định tên cột rõ ràng).
+
+**Verify:** `docker compose down -v && up --build`; SQL join xác nhận mọi `Variant.status` ≤ `Config.status` nguồn; `\d business_intent` xác nhận đủ cột audit/governance với default đúng; API `/api/blocks` trả `bizGroup` tiếng Việt đúng (không mojibake); Playwright UI hiển thị đúng "Đã xuất bản"/"Chờ duyệt" khớp nhau giữa Config/Variant.
+
+---
+
+### Giai đoạn 41 — Sample data "Vay xe máy mùa tựu trường" (sản phẩm đầy đủ, đã duyệt)
+
+**Bối cảnh:** user yêu cầu tạo 1 sản phẩm vay hoàn chỉnh, đi đủ các bước, đã được duyệt qua kiểm duyệt — dùng làm ví dụ mẫu đầy đủ nhất trong hệ thống.
+
+**Quyết định:** tái dùng khuôn `PT-001`/`TPL-001` (published có sẵn, cùng khuôn mà `CFG-0040`/`VAR-103` "xe máy KH thân thiết" đang dùng) thay vì tạo mới Business Intent/Product Intent/Pattern — đúng bản chất kiến trúc Pattern/Template dùng chung, chỉ Config/Variant khác nhau theo mùa/phân khúc.
+
+**Mới:**
+- `CFG-0043` 'Vay xe máy mùa tựu trường' ← TPL-001, 17 fragment đủ 15/15 slot bắt buộc (completeness 100%), 2 fragment ưu đãi thời vụ: `base_rate` scope `people`='Học sinh, sinh viên' 0,99%/tháng và scope `time`='Mùa tựu trường (01/08–30/09)' 0,89%/tháng (default 1,3%/tháng).
+- `VAR-108` ← CFG-0043, hạn mức 3tr–40tr, niêm yết Catalog App+Web (07/07/2026), `marketing_content` nêu rõ ưu đãi, status `published`.
+- `version_entry` CFG-0043 đủ 5 version (draft×2→review→approved→published) + 8 dòng `activity_log` (create/submit_review/approve/publish cho cả CFG-0043 và VAR-108) — dấu vết duyệt đầy đủ, không set thẳng status.
+
+**Verify:** API `/product-configs/CFG-0043/detail` completeness 15/15; `/product-variants/VAR-108/detail` đúng lineage Pattern→Template→Config→Variant + 2 listing + 4 activity; `/release-processes/VAR-108/detail` tự tính đúng done 8/8 (runtime từ status, không cần seed thêm `maker_checker_process`); `GET /api/search?q=tựu+trường` ra đúng cả Config và Variant; Playwright xác nhận UI `ProductVariantDetailPage` hiển thị đúng, đẹp.
+
+---
+
+### Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng
+
+**Bối cảnh:** user hỏi "nhật ký hoạt động có lưu ai duyệt, ai làm gì cho từng sản phẩm không — ví dụ từ bước tạo mới cần gửi duyệt thì ai gửi, đã duyệt thì ai duyệt", rồi muốn xử lý theo cột audit/governance (Giai đoạn 40 đã thêm `created_user`/`updated_user` nhưng seed chưa từng populate — toàn NULL), đồng ý thêm bảng user thật nếu cần. Kế đó bổ sung thêm yêu cầu: menu sidebar phải lọc theo role người dùng — mỗi role chỉ thấy tab liên quan việc của mình, có 1 role Admin thấy toàn bộ. Do phạm vi lớn (DB + backend + frontend, ảnh hưởng toàn bộ điều hướng) đã dùng `EnterPlanMode` trước khi code.
+
+**Audit hiện trạng (trước khi code):** `ActivityLogService.forEntity()` đã tồn tại (dùng cho "Hoạt động gần đây" ở Variant detail từ Giai đoạn 36) nhưng **chưa có REST endpoint** để Config/Pattern/Template gọi được. `version_entry.author` hiển thị ở "Phiên bản" nhưng chỉ áp dụng pattern/template/config (đúng theo `version_entity_type_enum`, Variant dùng activity_log thay thế — không phải thiếu sót). Sidebar (`Layout.tsx`) đang hiển thị avatar/tên/role **hoàn toàn hardcode** ("PD"/"Phạm Designer"/"Product Owner" — literal string, không lấy từ đâu cả) — không có bất kỳ khái niệm user/role/auth nào trong toàn bộ code.
+
+**Quyết định kiến trúc (đã nói rõ với user):**
+- Bộ chọn "đổi vai trò" ở sidebar là **demo kiểu chuyển đổi user** (dropdown, không mật khẩu/session/JWT), lọc menu **thuần phía frontend** — KHÔNG phải hệ thống đăng nhập/bảo mật thật, khớp bản chất "read-only 90%, CUD no-op" của toàn app.
+- `activity_log.actor`/`version_entry.author` **giữ nguyên `varchar`** (không đổi thành FK) — cách audit-trail phổ biến (snapshot tên tại thời điểm ghi log), tránh viết lại ~70 dòng INSERT có sẵn.
+- Role riêng `user_role_enum` (Product Owner/Product Designer/Checker · Approver/Operations/Admin) — tách khỏi `release_role_enum` cũ (đang dùng cho `process_step.role`, không đụng tới).
+
+**Backend:**
+- `V1__schema.sql`: enum `user_role_enum` + bảng `app_user` (id/code/name/role/status + đủ 9 cột audit).
+- `V2__seed.sql`: 6 dòng `app_user` — 5 tên đã dùng thật nhất quán trong `activity_log`/`version_entry` từ trước (Phạm An→Product Designer, Trần Lan→Product Owner, Lê Minh→Checker/Approver, Phạm Designer→Product Designer, Hệ thống→Operations), chỉ 1 dòng `Quản trị viên`/Admin là nhân vật mới. Populate `created_user`/`updated_user` cho 6 loại entity (business_intent/product_intent/pattern/template/config/variant) suy **trực tiếp** từ `activity_log` đã có (actor hành động `create`→`created_user`; actor hành động muộn nhất theo `occurred_at`→`updated_user`) — chỉ update dòng có ≥1 activity_log thật; các dòng chưa từng xuất hiện trong activity_log giữ NULL, **kể cả `product_catalog`** (dự tính ban đầu nằm trong nhóm "6 entity chính" nhưng audit lại activity_log xác nhận không có dòng nào nhắc tới catalog → bỏ qua, không suy đoán).
+- `AppUser`/`AppUserRepository`/`AppUserController` (`GET /api/users`, thuần đọc, không phân trang — chỉ 6 dòng).
+- `ActivityLogController` thêm `GET /api/activity-logs/entity?type=&code=` gọi thẳng `forEntity()` có sẵn.
+
+**Frontend:**
+- `infrastructure/user/UserContext.tsx` (mới): Context, fetch `/api/users` 1 lần, lưu lựa chọn vào `localStorage`, mặc định lần đầu = user role Admin (không ai bị ẩn menu khi mới vào).
+- `nav.ts`: thêm `roles?: UserRole[]` mỗi `NavItem` (undefined = mọi role thấy — dashboard/activity); gán role cho 17 mục còn lại theo nhóm nghiệp vụ (Product Owner→BI/PI; Product Designer→Pattern/Template/Config/thư viện nền tảng; Operations→Variant/Catalog/Release; Checker/Approver→Pattern/Template/Config/Variant/Matrix để duyệt; Simulation→Designer+Operations).
+- `Layout.tsx`: thay khối user hardcode bằng dropdown thật (avatar initials tính từ tên, click mở danh sách `app_user`, chọn → `setCurrentUser`); lọc `NAV` groups/items theo `currentUser.role` trước khi render (Admin bỏ qua lọc, group lọc hết item thì ẩn cả group).
+- `components/ApprovalHistory.tsx` (mới, dùng chung): tái dùng đúng style timeline chấm tròn của "Hoạt động gần đây" (Variant detail), gọi endpoint `/api/activity-logs/entity`. Thêm vào `ProductConfigDetailPage`/`ProductPatternDetailPage`/`ProductTemplateDetailPage` (mỗi trang 1 vị trí phù hợp bố cục riêng — cột trái với Config/Template, cuối canvas với Pattern).
+
+**Verify:** curl `/api/users` (đủ 6 user đúng role) + `/api/activity-logs/entity?type=ProductConfig&code=CFG-0043` (đúng 4 dòng create/submit_review/approve/publish); `npm run build` 0 lỗi TS; Playwright: mặc định Admin thấy đủ 20 mục nav; chuyển Trần Lan (Product Owner) → chỉ còn 4 mục (Bảng điều khiển/Business Intent/Product Intent/Nhật ký hoạt động); reload → role giữ nguyên (localStorage); chuyển Lê Minh (Checker/Approver) → đúng 7 mục (Pattern/Template/Config/Variant/Matrix + Dashboard/Activity); vào `/config/CFG-0043` → khối "Lịch sử duyệt" hiện đúng Phạm An tạo (04/07 09:00) → Trần Lan gửi duyệt (05/07 09:15) → Lê Minh phê duyệt (05/07 16:00) → Hệ thống xuất bản (06/07 09:00).
+
+---
+
+### Giai đoạn 43 — Vá lỗ hổng "Lịch sử duyệt" trống trơn trên toàn Pipeline
+
+**Bối cảnh:** user phát hiện qua UI: Template `TPL-001` ("Vay cầm cố trả góp · KH cá nhân") status "Đã xuất bản" nhưng khối "Lịch sử duyệt" (Giai đoạn 42) trống trơn, hỏi "đây là lỗi data hay lỗi do code" và yêu cầu mọi phần thuộc Pipeline sản phẩm phải có lịch sử duyệt khớp cả nhật ký hoạt động lẫn trạng thái sản phẩm.
+
+**Chẩn đoán:** lỗi **data**, không phải code — `ApprovalHistory.tsx`/`GET /api/activity-logs/entity` hoạt động đúng, chỉ là DB thật sự thiếu dòng `activity_log`. Audit mở rộng ra toàn bộ 28 entity Pattern(6)/Template(6)/Config(8)/Variant(8) — không chỉ TPL-001 — bằng cách đối chiếu 3 nguồn: `status` cột thật, `activity_log` (hành động muộn nhất), `version_entry` (head version, nơi đã có). Kết quả: 22/28 entity thiếu 1-4 bước trong chuỗi create→submit_review→approve→publish/retire so với status thật. Đồng thời phát hiện thêm 1 bug tương tự Giai đoạn 40 (Config↔Variant) nhưng ở cấp khác: `product_template` TPL-003 có `status='review'` trong khi `version_entry` head thật (v1.2, is_head=true) đã `published` từ 2026-06-30, và cả 2 Config đóng gói từ nó (CFG-0042/CFG-0041) đều đã published — Template nguồn không thể đứng sau Config trong lifecycle.
+
+**Sửa (`V2__seed.sql`):**
+- `product_template`: sửa `TPL-003.status` `review` → `published` (khớp version_entry head + downstream Config).
+- Thêm 61 dòng `activity_log` mới (tổng 101, từ 40) — đủ chuỗi khớp ĐÚNG status hiện có của từng entity, tái dùng actor/mốc thời gian từ `version_entry` khi entity đã có sẵn (PT-001/003/005/006, CFG-0021/037/039/040/041, TPL-003) để 2 nguồn không lệch nhau.
+- Viết lại toàn bộ khối `UPDATE ... created_user/updated_user` (Giai đoạn 42) cho khớp chuỗi activity_log mới — không còn dòng NULL nào trong 4 loại entity (Pattern/Template/Config/Variant).
+
+**Ngoài phạm vi (đã báo cho user, chưa sửa vì không phải bug được báo cáo lần này):** Business Intent/Product Intent vẫn còn vài dòng thiếu activity_log (không có khối "Lịch sử duyệt" trên 2 màn này nên không hiện lỗi); 5/6 Template (trừ TPL-003) chưa có `version_entry` riêng — nút "Phiên bản" sẽ trống cho TPL-001/002/004/005/006.
+
+**Verify:** SQL đối chiếu `status` thật ↔ hành động `activity_log` MUỘN NHẤT cho toàn bộ 28 entity — khớp 100% (query kiểm chứng, xem log phiên làm việc); Playwright xác nhận `TPL-001`/`TPL-003` hiện đủ 4 bước "Lịch sử duyệt" đúng actor/thời gian.
+
+---
+
+### Giai đoạn 44 — "Lịch sử duyệt" cho Business Intent & Product Intent + filter Hành động ở Nhật ký hoạt động
+
+**Bối cảnh:** ngay sau Giai đoạn 43, user yêu cầu 2 việc: (1) mở rộng "Lịch sử duyệt" lên Business Intent và Product Intent — 2 tầng đầu Pipeline chưa có khối này; (2) đổi filter "Loại" ở màn Nhật ký hoạt động thành filter theo Hành động (Xuất bản, Phê duyệt, ...).
+
+**(1) Lịch sử duyệt cho BI/PI:** cùng phương pháp Giai đoạn 43 — audit 13 entity (Business Intent ×7, Product Intent ×6), đối chiếu status thật ↔ activity_log. Kết quả 8/13 entity thiếu 1-4 bước trong chuỗi create→submit_review→approve→publish so với status thật (BI-01/02/06, PI-001/002/005 thiếu cả 4 bước; BI-03/04/07, PI-003/004 thiếu 1-2 bước). Thêm 32 dòng `activity_log` mới (tổng 133, từ 101); viết lại toàn bộ `UPDATE ... created_user/updated_user` cho `business_intent`/`product_intent` — hết NULL. Frontend: thêm `<ApprovalHistory entityType="BusinessIntent" entityCode={code} />` cuối `BusinessIntentDetailPage.tsx` và `entityType="ProductIntent"` cuối `ProductIntentDetailPage.tsx` — tái dùng nguyên component có sẵn từ Giai đoạn 42, không sửa gì trong component, không API mới.
+
+**(2) Filter Hành động ở Nhật ký hoạt động:** audit `ActivityPage.tsx` phát hiện `filters={['Actor', 'Loại', 'Kênh']}` — nhãn "Loại" **không khớp bất kỳ cột nào** trong `ListScreen.guessColumnIndex()` (so khớp label filter với label cột thật: Thời gian/Actor/Hành động/Đối tượng/Kênh) nên dropdown "Loại" luôn rỗng ("Không có giá trị để lọc") — filter chết hoàn toàn từ khi màn này được dựng, không ai để ý vì trông vẫn có nút bấm được. Đổi `'Loại'` → `'Hành động'` khớp đúng cột "HÀNH ĐỘNG" đã có sẵn dữ liệu (actionLabel dịch từ `action` qua `ACTION_LABEL` ở backend) — `ListScreen` tự suy option filter từ giá trị cột thật nên không cần sửa gì khác, ra ngay đủ 8 giá trị (Tạo/Gửi duyệt/Phê duyệt/Xuất bản/Thu hồi/Gán/Đồng bộ/Cập nhật).
+
+**Verify:** SQL đối chiếu status↔activity_log muộn nhất cho 13 entity BI/PI khớp 100%; Playwright xác nhận BI-01 hiện đủ 4 bước "Lịch sử duyệt" (Trần Lan tạo → Phạm An gửi duyệt → Lê Minh phê duyệt → Hệ thống xuất bản), PI-005 tương tự; filter "Hành động" trên Nhật ký hoạt động mở ra đúng 8 option, lọc được theo từng loại.
+
+---
+
+### Giai đoạn 45 — Màn detail cho Nhật ký hoạt động
+
+**Bối cảnh:** user yêu cầu "làm màn detail cho nhật ký hoạt động". Prototype gốc không có detail cho màn này (xác nhận lại từ audit Giai đoạn 29 — activity chỉ list, không state/setter mang id) nên đây là UI mới, thiết kế theo đúng ngôn ngữ đã dùng cho các detail "ngoài prototype" khác (Lifecycle/Domain/Block — Giai đoạn 34-35): banner gradient, badge màu, `fadeUp`, back-button.
+
+**Backend:** `ActivityLogService.toRow()` bổ sung field `id` (trước đây thiếu — cần để list row biết điều hướng sang đâu). `ActivityLogService.detail(id)` mới, trả thẳng `toRow()` (không bọc thêm object lồng vì chỉ có 1 entity, không có join phụ). `ActivityLogController` thêm `GET /api/activity-logs/{id}/detail`.
+
+**Frontend:**
+- Chuyển `ActivityPage.tsx` vào `pages/activity/` (đúng convention Giai đoạn 31 — khi 1 nav key có thêm detail thì gộp subfolder), thêm `onRowClick` điều hướng `/activity/{id}` (cần thêm `id` vào interface `ActivityRow`).
+- `ActivityDetailPage.tsx` (mới): banner có badge hành động **tái dùng thẳng `STATUS_COLORS`** (từ `StatusChip.tsx`) qua bảng alias `create~draft, submit_review~review, approve~approved, publish~published, retire~retired` — không bịa màu mới, giữ đúng ngữ nghĩa màu đã có trong app; 4 info card (Actor/Thời gian/Kênh/Đối tượng liên quan); nút "Xem chi tiết" ở card "Đối tượng liên quan" điều hướng đúng route entity nguồn nếu route đó tồn tại — hàm `entityPath()` map `entityType` sang route thật (BusinessIntent/ProductIntent quy đổi code `BI-03`/`PI-003` → id số vì 2 route này dùng `:id` không phải `:code`; Pattern/Template/Config/Variant dùng thẳng `:code`); `AnswerSlot`/`ConstraintMatrix` (không có màn detail riêng) trả `null` → không hiện nút, tránh link chết.
+- Khối "Hoạt động liên quan của đối tượng này" **tái dùng THẲNG** component `ApprovalHistory` (Giai đoạn 42) — chỉ thêm 1 prop tùy chọn `title` (mặc định `'Lịch sử duyệt'`) để đổi nhãn phù hợp ngữ cảnh (không phải mọi entity trong hoạt động này đều đang "chờ duyệt" — có thể là AnswerSlot bị `update`), không viết component mới, không thêm API mới (endpoint `GET /api/activity-logs/entity` đã có sẵn từ trước).
+- Route `/activity/:id` đặt trước `/:view` trong `main.tsx`.
+
+**Verify:** curl `GET /api/activity-logs/{id}/detail` đúng dữ liệu (`id`, `occurredAt`, `actor`, `action`, `actionLabel`, `entityType`, `entityCode`, `channel`, `detail`) + 404 khi id không tồn tại. Playwright: bấm dòng đầu ở list Nhật ký hoạt động → sang `/activity/1` đúng badge "Xuất bản" (màu published) + info card + khối "Hoạt động liên quan" hiện đủ 4 bước của VAR-108; bấm "Xem chi tiết" nhảy đúng sang `/variant/VAR-108`; test 2 case entity không có detail riêng (`AnswerSlot`, `ConstraintMatrix`) xác nhận không hiện nút "Xem chi tiết", trang vẫn render đầy đủ không lỗi.
+
+---
+
+### Giai đoạn 46 — Tab "Giá trị cấu hình" ở Variant hiện ĐỦ mọi Answer Slot
+
+**Bối cảnh:** user mô tả lại đúng bản chất luồng resolve giá trị: Pattern định nghĩa Block → Template (`template_frame`) cấp giá trị **default** mỗi block+slot → Config (`fragment`) **ghi đè** theo scope → Variant đóng gói từ 1 Config. User muốn tab "Giá trị cấu hình" ở Variant detail hiện **đủ mọi Answer Slot của Pattern** — slot có fragment thì lấy giá trị ghi đè, slot không có thì lấy default Template, hỏi database hiện có phục vụ được không.
+
+**Audit xác nhận lỗ hổng thật:** tab này tái dùng thẳng `GET /api/product-configs/{code}/detail` — API của màn **builder** Config, không phải API riêng cho Variant. Dòng `ProductConfigService.java` (cũ): `Set<String> activeBlocks = fragBlocks.isEmpty() ? frameBlocks : fragBlocks;` khiến **toàn bộ block chưa từng có fragment bị loại khỏi kết quả ngay khi config có fragment ở block khác** — dù block đó có sẵn default từ Template. Đây là quyết định **cố ý** từ Giai đoạn 21 (ghi rõ trong comment) để khớp pixel-perfect 1 ảnh chụp prototype cụ thể (CFG-0042), không phải bug ngẫu nhiên. Kiểm chứng thật: CFG-0042 (pattern 9 block/24 slot) API cũ chỉ trả 6 block/17 slot — mất hẳn `BLK_BILLING`/`BLK_ELIGIBILITY`/`BLK_REGULATORY` (7 slot) dù có default Template. Hệ quả phụ: `completeness.pct` cũng tính thiếu vì chỉ đếm slot trong các block "active". Phát hiện thêm: cột `answer_slot.default_value` (tầng fallback thứ 3 — default riêng của slot) có sẵn trong DB nhưng chưa từng được dùng ở luồng resolve giá trị Config/Variant.
+
+**Quyết định kiến trúc (hỏi user qua `AskUserQuestion`, chọn phương án tách):** KHÔNG sửa `detail()` hiện có — màn builder Config giữ nguyên hành vi cũ (tránh regression 1 màn đã build/verify kỹ). Thêm 1 method + endpoint MỚI riêng cho nhu cầu "xem đủ" của Variant.
+
+**Backend (`ProductConfigService.java`):** tách phần thân vòng lặp block/slot của `detail()` thành private method dùng chung `buildBody(cfg, tpl, patternCode, frameByKey, fragsByKey, blockFilter)` (`blockFilter=null` = không lọc, lấy hết `PatternBlock` của pattern); `detail()` gọi lại với `blockFilter=activeBlocks` y hệt cũ (không đổi hành vi/output). Thêm method mới `resolved(code)` gọi `buildBody` với `blockFilter=null`. Bổ sung field `slotDefaultValue` (= `slot.getDefaultValue()`) vào `slotDetail` — áp dụng cho CẢ 2 method (chỉ thêm field mới, an toàn). `ProductConfigController.java` thêm `GET /api/product-configs/{code}/resolved`.
+
+**Frontend (`ProductVariantDetailPage.tsx` — `ConfigValuesTab`):** đổi fetch từ `getDetail('product-configs', configCode)` sang `getDetail('product-configs', configCode, 'resolved')`. Chuỗi fallback hiển thị mỗi slot mở rộng: fragment (chip ghi đè, giữ nguyên) → `inheritedFrameValue` ("Kế thừa Template: X", giữ nguyên) → **mới:** `slotDefaultValue` ("Mặc định Answer Slot: X") → "Chưa cấu hình giá trị" (giữ nguyên). Không đổi gì `ProductConfigDetailPage.tsx` (builder).
+
+**Verify:** curl `GET /api/product-configs/CFG-0042/detail` (cũ) xác nhận **không đổi** — vẫn 6 block/17 slot, completeness 86% (12/14) y hệt trước khi sửa (không regression builder). Curl `GET /api/product-configs/CFG-0042/resolved` (mới) trả đủ **9 block/24 slot**, completeness đổi thành 67% (12/18 — con số đúng thật, trước đây tính thiếu). Playwright: `/variant/VAR-101` (đóng gói từ CFG-0042) tab "Giá trị cấu hình" hiện đủ 9 block kể cả "Sao kê & Hóa đơn" (BLK_BILLING) trước đây bị ẩn, đúng giá trị "Kế thừa Template" từng slot; `/config/CFG-0042` (builder) không đổi, vẫn đúng 6 block như trước.
+
+---
+
+### Giai đoạn 47 — Simulation Engine bỏ hardcode, tính từ dữ liệu thật của sản phẩm
+
+**Bối cảnh:** sau Giai đoạn 46, user hỏi Simulation Engine (`SimulationService`/`SimulationEngine`) có đang tính từ dữ liệu thật của sản phẩm vay không hay đang hardcode.
+
+**Audit `deriveFromVariant()`** đối chiếu toàn bộ Answer Slot/Fragment/Template Frame thật trong `V2__seed.sql`, chia 3 nhóm:
+- **A — đã thật, không sửa:** amount/months/baseRate/LTV (đọc từ `product_variant.limit_range`/`display_rate` + `fragment` thật).
+- **B — DB có dữ liệu thật per-product nhưng code hardcode bỏ qua (sửa trong đợt này, theo yêu cầu user):**
+  - `appraisalFee` — hardcode `500.000đ` mọi sản phẩm, trong khi `template_frame`/`fragment` slot `fee_amount` (BLK_FEE) có giá trị khác nhau thật (TPL-001=300k, TPL-002=800k, TPL-004=400k...).
+  - `segmentCode` — hardcode luôn `SEG_STANDARD`, trong khi `template_segment` cho biết đúng phân khúc thật mỗi Template (TPL-002=`SEG_BUSINESS`, còn lại=`SEG_INDIVIDUAL`).
+  - `penaltyFactor` — lấy **trần quy định** `attribute_constraint('penalty_rate').max` làm luôn giá trị áp dụng, chưa đọc chính sách thật của sản phẩm ở slot `penalty_rate` (BLK_PENALTY).
+  - `grace` (số ngày trễ hạn được miễn phạt, slot `BLK_PENALTY.grace`) — hoàn toàn chưa đọc ở đâu. Đã hỏi user qua `AskUserQuestion` xác nhận: đây KHÔNG cùng khái niệm với `graceMonths`/`graceOn` có sẵn (ân hạn gốc đầu kỳ vay — nhóm C, người dùng tự bật, không có nguồn DB) — user chọn đưa vào công thức phạt: `billableDays = max(0, penaltyDays nhập − graceDays thật)`.
+- **C — genuinely không có nguồn DB, KHÔNG làm trong đợt này (theo yêu cầu user):** `periodicFeePct`, `startDate`, toàn bộ toggle kịch bản penalty/prepay/early/`graceOn`.
+
+**Backend (`SimulationService.java`):** inject thêm `TemplateFrameRepository`/`TemplateSegmentRepository`/`AnswerSlotRepository`. Thêm private method `resolveSlotValue(configCode, templateCode, blockId, slotCode)` — 3 tầng fallback giống Giai đoạn 46 (fragment scope="default" → `template_frame` → `answer_slot.default_value`), cùng 2 parser mới `parseVndAmount` ("300.000đ"→300000) và `parseFirstInt` ("5 ngày"→5). `deriveFromVariant()` giờ resolve `appraisalFee` (slot `fee_amount`) và `segmentCode` (`template_segment` theo Template nguồn) thật, fallback hardcode CHỈ khi cả 3 tầng đều thiếu (giữ tinh thần cũ). `applyRegulatoryCaps()` resolve thêm `penaltyFactor` thật (slot `penalty_rate`) và field mới `graceDays` (slot `grace`) theo `req.getConfigCode()` — áp dụng cho CẢ `getDefault()` và `run()` vì đây là chính sách sản phẩm cố định (khác `appraisalFee`/`segmentCode` — vẫn là input người dùng chỉnh tay trên form, chỉ initial value đổi cho đúng thật). `SimulationRequest` thêm field `graceDays`.
+
+**`SimulationEngine.run()`:** công thức phạt đổi từ `pmt*(penaltyDays/30)*r*penaltyFactor` thành trừ ân hạn trước: `billableDays = Math.max(0, penaltyDays - graceDays)`. Kết quả trả thêm `graceDaysApplied` để minh bạch.
+
+**Frontend (`SimulationPage.tsx`):** thêm `graceDaysApplied` vào interface `RunResult`; card "TỔNG PHẠT TRỄ HẠN" hiện thêm dòng "miễn N ngày đầu (chính sách sản phẩm)" khi `graceDaysApplied>0`.
+
+**Verify:** VAR-101 (CFG-0042←TPL-003, không có `fee_amount`/`penalty_rate` ở cả 3 tầng) đúng fallback `500.000đ` (không phải bug — dữ liệu thật sự không có). VAR-103 (CFG-0040←TPL-001, có `fee_amount`=300.000đ thật) trả đúng `300.000đ` + `segmentCode=SEG_INDIVIDUAL` (không còn `SEG_STANDARD` hardcode). Test phạt trễ hạn 10 ngày với configCode có `graceDays=5`: tổng phạt = 11.086đ; cùng request nhưng bỏ `configCode` (graceDays=0, phạt tính đủ 10 ngày) = 22.172đ ≈ đúng gấp đôi — xác nhận công thức trừ ân hạn hoạt động đúng. Playwright: chọn VAR-103, bật "Tình huống phạt trễ hạn" → card hiện đúng "Kỳ 3 · trễ 10 ngày · miễn 5 ngày đầu (chính sách sản phẩm)".
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39 — overlay toàn màn hình, không cần API mới), sau khi hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa xong **Giai đoạn 47 — Simulation Engine bỏ hardcode, tính từ dữ liệu thật của sản phẩm** (`appraisalFee`/`segmentCode`/`penaltyFactor` resolve thật theo Config/Template nguồn qua `resolveSlotValue` 3 tầng fallback; `grace` (miễn phạt N ngày trễ) áp dụng vào công thức phạt qua field mới `graceDays`; nhóm C — `periodicFeePct`/`startDate`/toggle kịch bản — giữ nguyên là input người dùng theo yêu cầu user), sau **Giai đoạn 46 — tab "Giá trị cấu hình" ở Variant hiện ĐỦ mọi Answer Slot** (endpoint mới `GET /api/product-configs/{code}/resolved` không lọc theo block đã có fragment như `/detail` builder cũ, thêm tầng fallback `slotDefaultValue`, completeness% giờ tính đúng trên toàn pattern), sau **Giai đoạn 45 — màn detail cho Nhật ký hoạt động** (route `/activity/:id`, banner theo hành động tái dùng `STATUS_COLORS`, liên kết sang entity nguồn, khối "Hoạt động liên quan" tái dùng `ApprovalHistory` qua prop `title` mới), sau **Giai đoạn 44 — "Lịch sử duyệt" cho Business Intent & Product Intent + filter Hành động ở Nhật ký hoạt động** (32 dòng activity_log mới cho 8/13 entity BI/PI, `ApprovalHistory` thêm vào 2 detail page, sửa filter "Loại" chết thành "Hành động" hoạt động thật ở màn Activity), sau **Giai đoạn 43 — vá lỗ hổng "Lịch sử duyệt" trống trơn trên toàn Pipeline** (61 dòng activity_log mới cho 22/28 entity Pattern/Template/Config/Variant, sửa bug status TPL-003 lệch version_entry, viết lại created_user/updated_user khớp chuỗi mới), sau **Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng** (bảng `app_user` mới, populate `created_user`/`updated_user` từ activity_log thật, sidebar lọc menu theo role qua `UserContext`, khối "Lịch sử duyệt" ở Config/Pattern/Template detail — role-switch là demo, không phải đăng nhập thật), **Giai đoạn 41 — sample data "Vay xe máy mùa tựu trường"** (sản phẩm đầy đủ đã duyệt, tái dùng khuôn PT-001/TPL-001), **Giai đoạn 40 — sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng**, làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39), hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

@@ -1,9 +1,17 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import Icon from './Icon'
 import GlobalSearch from './GlobalSearch'
-import { NAV, VIEW_TITLES } from '../../infrastructure/nav'
+import { NAV, VIEW_TITLES, type NavGroup } from '../../infrastructure/nav'
 import { getList } from '../../infrastructure/api/client'
+import { useUser } from '../../infrastructure/user/UserContext'
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  const first = parts[0]?.[0] ?? ''
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : ''
+  return (first + last).toUpperCase()
+}
 
 // Mỗi nav key → 1 hoặc nhiều resource thật cần cộng totalElements để ra số đếm hiển thị.
 const NAV_COUNT_RESOURCES: Record<string, string[]> = {
@@ -25,6 +33,26 @@ const NAV_COUNT_RESOURCES: Record<string, string[]> = {
 // Layout tái tạo pixel-perfect từ Product_Factory_5_1.html: sidebar + topbar.
 export default function Layout({ children }: { children: ReactNode }) {
   const [counts, setCounts] = useState<Record<string, number>>({})
+  const { users, currentUser, setCurrentUser } = useUser()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  // Giai đoạn 42: lọc menu theo role người dùng hiện tại — Admin (hoặc chưa tải xong user) thấy
+  // toàn bộ; mục không gán roles (dashboard, activity) luôn hiển thị cho mọi role.
+  const visibleNav: NavGroup[] = NAV.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      (item) => !item.roles || !currentUser || currentUser.role === 'Admin' || item.roles.includes(currentUser.role)
+    ),
+  })).filter((group) => group.items.length > 0)
 
   useEffect(() => {
     let cancelled = false
@@ -101,7 +129,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {/* nav */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 10px 20px' }}>
-          {NAV.map((group) => (
+          {visibleNav.map((group) => (
             <div key={group.label} style={{ marginBottom: 14 }}>
               <div
                 style={{
@@ -176,48 +204,119 @@ export default function Layout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        {/* user */}
-        <div
-          style={{
-            padding: '12px 14px',
-            borderTop: '1px solid rgba(255,255,255,.07)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
+        {/* user — Giai đoạn 42: bộ chọn "đổi vai trò" thật (demo, không mật khẩu/session),
+            lọc menu phía frontend theo role của user đang chọn (xem visibleNav ở trên). */}
+        <div ref={userMenuRef} style={{ position: 'relative', borderTop: '1px solid rgba(255,255,255,.07)' }}>
           <div
+            onClick={() => setUserMenuOpen((o) => !o)}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg,#F2B705,#E8920C)',
+              padding: '12px 14px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              flex: 'none',
-              color: '#1a1206',
-              fontWeight: 700,
-              fontSize: 12.5,
+              gap: 10,
+              cursor: 'pointer',
             }}
           >
-            PD
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
-                color: '#E8F3EE',
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg,#F2B705,#E8920C)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 'none',
+                color: '#1a1206',
+                fontWeight: 700,
                 fontSize: 12.5,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
             >
-              Phạm Designer
+              {currentUser ? initialsOf(currentUser.name) : '…'}
             </div>
-            <div style={{ color: '#5E8C76', fontSize: 10.5 }}>Product Owner</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  color: '#E8F3EE',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {currentUser?.name ?? 'Đang tải…'}
+              </div>
+              <div style={{ color: '#5E8C76', fontSize: 10.5 }}>{currentUser?.role ?? ''}</div>
+            </div>
+            <span style={{ display: 'flex', color: '#5E8C76', flex: 'none', transform: userMenuOpen ? 'rotate(180deg)' : 'none' }}>
+              <Icon name="caret" size={14} />
+            </span>
           </div>
+
+          {userMenuOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 6px)',
+                left: 10,
+                right: 10,
+                background: '#0F4536',
+                border: '1px solid rgba(255,255,255,.1)',
+                borderRadius: 10,
+                boxShadow: '0 8px 24px rgba(0,0,0,.3)',
+                overflow: 'hidden',
+                zIndex: 60,
+              }}
+            >
+              <div style={{ padding: '9px 12px 6px', fontSize: 10, fontWeight: 700, letterSpacing: '.4px', color: '#5E8C76', textTransform: 'uppercase' }}>
+                Đổi vai trò (demo)
+              </div>
+              {users.map((u) => (
+                <div
+                  key={u.id}
+                  onClick={() => {
+                    setCurrentUser(u)
+                    setUserMenuOpen(false)
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 9,
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    background: currentUser?.id === u.id ? 'rgba(255,255,255,.08)' : 'transparent',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,.06)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = currentUser?.id === u.id ? 'rgba(255,255,255,.08)' : 'transparent')}
+                >
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      background: 'rgba(255,255,255,.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flex: 'none',
+                      color: '#E8F3EE',
+                      fontWeight: 700,
+                      fontSize: 10.5,
+                    }}
+                  >
+                    {initialsOf(u.name)}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ color: '#E8F3EE', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {u.name}
+                    </div>
+                    <div style={{ color: '#5E8C76', fontSize: 10 }}>{u.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </aside>
 
