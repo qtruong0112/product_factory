@@ -490,6 +490,9 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   ('PT-001', 'BLK_REPAYMENT', 5, 'active'),
   ('PT-001', 'BLK_COLLATERAL', 6, 'active'),
   ('PT-001', 'BLK_PENALTY', 7, 'active'),
+  -- Giai đoạn 48: bổ sung Block "Hạn mức" — Pattern gốc thiếu sót từ đầu (CFG-0021/0040/0043
+  -- đóng gói từ TPL-001 đều có product_variant.limit_range thật nhưng chưa từng đi qua Answer Slot).
+  ('PT-001', 'BLK_LIMIT', 8, 'active'),
   ('PT-002', 'BLK_ELIGIBILITY', 1, 'active'),
   ('PT-002', 'BLK_COUNTERPARTY', 2, 'active'),
   ('PT-002', 'BLK_REGULATORY', 3, 'active'),
@@ -594,6 +597,8 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-001', 'BLK_COLLATERAL', 'asset_valuation', '80% giá trị'),
   ('TPL-001', 'BLK_COLLATERAL', 'ltv', '80%'),
   ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  -- Giai đoạn 48: BLK_LIMIT mới thêm vào PT-001 — giá trị khung chung, từng Config override riêng.
+  ('TPL-001', 'BLK_LIMIT', 'limit_amount', '3tr – 80tr'),
   -- TPL-002 'Vay cầm cố trả góp · KH doanh nghiệp' ← PT-001 (đối tượng doanh nghiệp)
   ('TPL-002', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-002', 'BLK_COUNTERPARTY', 'borrower_type', 'Doanh nghiệp'),
@@ -610,6 +615,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-002', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
+  ('TPL-002', 'BLK_LIMIT', 'limit_amount', '50tr – 2 tỷ'),
   -- TPL-004 'Vay cầm cố ô tô · trả góp' ← PT-006 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
   ('TPL-004', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-004', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),
@@ -777,6 +783,9 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0021', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '60% giá trị', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '60%', false, 'Hợp lệ'),
   ('CFG-0021', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- Giai đoạn 48: khớp đúng product_variant.limit_range thật của VAR-106 ("2tr – 30tr").
+  ('CFG-0021', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '2.000.000đ – 30.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
   -- CFG-0037 'Vay cầm cố DN nhỏ' (review) ← TPL-002/PT-001 (đối tượng doanh nghiệp)
   ('CFG-0037', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88', false, 'Hợp lệ'),
   ('CFG-0037', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Doanh nghiệp', false, 'Hợp lệ'),
@@ -843,6 +852,9 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0040', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
   ('CFG-0040', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
   ('CFG-0040', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- Giai đoạn 48: khớp đúng product_variant.limit_range thật của VAR-103 ("3tr – 80tr").
+  ('CFG-0040', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '3.000.000đ – 80.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
   -- CFG-0041 'Vay ô tô hạn mức HCM' (approved) ← TPL-003/PT-002 (override asset_type Ô tô so với khung Xe máy của template)
   ('CFG-0041', 'BLK_COUNTERPARTY', 'lender_party', 'default', NULL, 'F88 (Cho vay)', false, 'Hợp lệ'),
   ('CFG-0041', 'BLK_COUNTERPARTY', 'borrower_type', 'default', NULL, 'Cá nhân', false, 'Hợp lệ'),
@@ -879,7 +891,10 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0043', 'BLK_COLLATERAL', 'asset_type', 'default', NULL, 'Xe máy (TwoWheels)', false, 'Hợp lệ'),
   ('CFG-0043', 'BLK_COLLATERAL', 'asset_valuation', 'default', NULL, '80% giá trị', false, 'Hợp lệ'),
   ('CFG-0043', 'BLK_COLLATERAL', 'ltv', 'default', NULL, '80%', false, 'Hợp lệ'),
-  ('CFG-0043', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
+  ('CFG-0043', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ'),
+  -- Giai đoạn 48: khớp đúng product_variant.limit_range thật của VAR-108 ("3tr – 40tr").
+  ('CFG-0043', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '3.000.000đ – 40.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ');
 
 -- ===== 31. product_variant — 8 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
