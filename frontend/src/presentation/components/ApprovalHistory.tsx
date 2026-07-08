@@ -13,7 +13,15 @@ interface ActivityRow {
 // Giai đoạn 42 — khối "Lịch sử duyệt" dùng chung cho Config/Pattern/Template detail: ai tạo,
 // ai gửi duyệt, ai phê duyệt, ai xuất bản — dữ liệu thật từ activity_log (GET
 // /api/activity-logs/entity), cùng style timeline chấm tròn với "Hoạt động gần đây" ở Variant.
-export default function ApprovalHistory({ entityType, entityCode }: { entityType: string; entityCode: string }) {
+export default function ApprovalHistory({
+  entityType,
+  entityCode,
+  title = 'Lịch sử duyệt',
+}: {
+  entityType: string
+  entityCode: string
+  title?: string
+}) {
   const [activity, setActivity] = useState<ActivityRow[] | null>(null)
 
   useEffect(() => {
@@ -26,7 +34,7 @@ export default function ApprovalHistory({ entityType, entityCode }: { entityType
   return (
     <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>Lịch sử duyệt</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>{title}</span>
         {activity && (
           <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>
             {activity.length}

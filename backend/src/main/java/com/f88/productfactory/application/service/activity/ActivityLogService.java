@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,8 +71,14 @@ public class ActivityLogService {
         return rows;
     }
 
+    /** Chi tiết 1 dòng hoạt động theo id — cho màn "detail" của Nhật ký hoạt động. */
+    public Optional<Map<String, Object>> detail(Long id) {
+        return repo.findById(id).map(ActivityLogService::toRow);
+    }
+
     private static Map<String, Object> toRow(ActivityLog a) {
         Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", a.getId());
         row.put("occurredAt", a.getOccurredAt().toString());
         row.put("occurredAtLabel", a.getOccurredAt().format(TIME_FMT));
         row.put("actor", a.getActor());

@@ -31,7 +31,8 @@ import ProductVariantPage from './presentation/pages/variant/ProductVariantPage'
 import ProductVariantDetailPage from './presentation/pages/variant/ProductVariantDetailPage'
 import ProductCatalogPage from './presentation/pages/ProductCatalogPage'
 import ReleasePage from './presentation/pages/ReleasePage'
-import ActivityPage from './presentation/pages/ActivityPage'
+import ActivityPage from './presentation/pages/activity/ActivityPage'
+import ActivityDetailPage from './presentation/pages/activity/ActivityDetailPage'
 import SimulationPage from './presentation/pages/SimulationPage'
 import DataTable from './presentation/components/DataTable'
 import { TABLES } from './infrastructure/tables'
@@ -99,6 +100,7 @@ function App() {
             <Route path="/domain/:code" element={<DomainDetailPage />} />
             <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
             <Route path="/release/:variantCode" element={<ReleasePage />} />
+            <Route path="/activity/:id" element={<ActivityDetailPage />} />
             <Route path="/:view" element={<GenericView />} />
           </Routes>
         </Layout>
