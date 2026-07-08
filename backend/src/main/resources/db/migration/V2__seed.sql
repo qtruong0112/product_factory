@@ -414,8 +414,10 @@ INSERT INTO "customer_segment" ("code", "name", "audience", "tier", "legal_requi
   ('SEG_INDIVIDUAL', 'Khách hàng cá nhân', 'individual', NULL, 'CMND/CCCD · Giấy nhận nợ cá nhân'),
   ('SEG_BUSINESS', 'Khách hàng doanh nghiệp', 'business', NULL, 'ĐKKD · Hợp đồng tín dụng DN'),
   ('SEG_STANDARD', 'Khách hàng tiêu chuẩn', 'individual', 'standard', 'CMND/CCCD · Giấy nhận nợ cá nhân'),
-  ('SEG_LOYALTY', 'Khách hàng thân thiết (−0,5%/tháng)', 'individual', 'loyalty', 'CMND/CCCD · Giấy nhận nợ cá nhân'),
-  ('SEG_VIP', 'Khách hàng VIP (−0,3%/tháng)', 'individual', 'vip', 'CMND/CCCD · Giấy nhận nợ cá nhân');
+  -- Giai đoạn 49: đổi lại mức ưu đãi cho đúng thứ tự thông thường (VIP >= Thân thiết) — trước đó
+  -- seed gốc lỡ đặt Thân thiết (−0,5%) cao hơn VIP (−0,3%), khiến tổng phải trả VIP > Thân thiết.
+  ('SEG_LOYALTY', 'Khách hàng thân thiết (−0,3%/tháng)', 'individual', 'loyalty', 'CMND/CCCD · Giấy nhận nợ cá nhân'),
+  ('SEG_VIP', 'Khách hàng VIP (−0,5%/tháng)', 'individual', 'vip', 'CMND/CCCD · Giấy nhận nợ cá nhân');
 
 -- ===== 21. product_intent — 6 PI (list view; liên kết BI [suy luận] theo chủ đề) =====
 INSERT INTO "product_intent" ("id", "code", "name", "business_intent_id", "nature_element_code", "archetype_code", "status") VALUES

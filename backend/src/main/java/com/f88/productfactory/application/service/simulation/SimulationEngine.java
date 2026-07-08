@@ -15,8 +15,9 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  * Công cụ tính annuity dư nợ giảm dần cho Simulation Engine — cổng Java của `simData()`/
  * `annuity()` trong bundler prototype (KHÔNG ghi DB, chỉ tính runtime cho `POST /api/simulation/run`).
  *
- * Lãi hiệu lực = base_rate_pct + điều chỉnh theo tier (`standard`=0, `loyalty`=−0.5,
- * `vip`=−0.3 — khớp đúng tên hiển thị thật trong seed `customer_segment.name`, không bịa),
+ * Lãi hiệu lực = base_rate_pct + điều chỉnh theo tier (`standard`=0, `loyalty`=−0.3,
+ * `vip`=−0.5 — khớp đúng tên hiển thị thật trong seed `customer_segment.name`, VIP ưu đãi cao
+ * hơn Thân thiết theo đúng thứ tự thông thường, Giai đoạn 49),
  * sàn 0.3%/tháng. Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí, gốc dồn qua kỳ sau, PMT tính trên
  * số kỳ còn lại sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn
  * lại. Tất toán sớm (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
@@ -274,8 +275,8 @@ public final class SimulationEngine {
     private static BigDecimal segmentAdjustment(String tier) {
         if (tier == null) return BigDecimal.ZERO;
         return switch (tier) {
-            case "loyalty" -> new BigDecimal("-0.5");
-            case "vip" -> new BigDecimal("-0.3");
+            case "loyalty" -> new BigDecimal("-0.3");
+            case "vip" -> new BigDecimal("-0.5");
             default -> BigDecimal.ZERO;
         };
     }
