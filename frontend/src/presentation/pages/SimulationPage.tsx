@@ -104,8 +104,8 @@ interface PinnedScenario {
 
 const SEGMENTS = [
   { code: 'SEG_STANDARD', label: 'Khách hàng tiêu chuẩn', sub: 'Base Rate mặc định' },
-  { code: 'SEG_LOYALTY', label: 'Khách hàng thân thiết', sub: 'Ưu đãi −0,5%/tháng' },
-  { code: 'SEG_VIP', label: 'Khách hàng VIP', sub: 'Ưu đãi −0,3%/tháng' },
+  { code: 'SEG_LOYALTY', label: 'Khách hàng thân thiết', sub: 'Ưu đãi −0,3%/tháng' },
+  { code: 'SEG_VIP', label: 'Khách hàng VIP', sub: 'Ưu đãi −0,5%/tháng' },
 ]
 const SCEN_COLORS = ['#0E8C5A', '#2F73C4', '#9A6B00', '#7A4FC7']
 const SCEN_LABELS = ['A', 'B', 'C', 'D']
