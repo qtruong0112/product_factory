@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,10 +18,22 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  *
  * Lãi hiệu lực = base_rate_pct + điều chỉnh theo tier (`standard`=0, `loyalty`=−0.3,
  * `vip`=−0.5 — khớp đúng tên hiển thị thật trong seed `customer_segment.name`, VIP ưu đãi cao
- * hơn Thân thiết theo đúng thứ tự thông thường, Giai đoạn 49),
- * sàn 0.3%/tháng. Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí, gốc dồn qua kỳ sau, PMT tính trên
- * số kỳ còn lại sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn
- * lại. Tất toán sớm (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
+ * hơn Thân thiết theo đúng thứ tự thông thường, Giai đoạn 49), sàn 0.3%/tháng.
+ *
+ * Giai đoạn 50 — EMI (số tiền trả mỗi kỳ) tính trên "Chi phí vay" (CPV) GỘP lãi + phí quản lý
+ * theo kỳ (trước đây PMT chỉ tính trên lãi rồi cộng phí riêng, khiến EMI trôi dần thay vì cố định
+ * khi có phí — bug thật, đối chiếu ra từ file Excel tham chiếu của công ty). CPV mỗi kỳ tính theo
+ * SỐ NGÀY THẬT trong tháng lịch (28-31 ngày) chia 365 (khớp cách công ty tính), không cố định "1 kỳ
+ * = 1 tháng chẵn": `cpv = dư_nợ_đầu_kỳ × (rTotal×12/365) × số_ngày_thật_kỳ_đó`, rồi tách lại thành
+ * Lãi/Phí theo đúng tỷ lệ cấu thành (rMonth/rTotal, feeMonth/rTotal). Vì mỗi kỳ dài ngắn khác nhau
+ * (28-31 ngày) nên KHÔNG có công thức annuity đóng chính xác cho EMI — `solveEmiByDays()` giải lặp
+ * (bisection) tìm EMI sao cho chạy hết lịch theo đúng số ngày thật thì dư nợ về đúng 0, khớp cách
+ * Excel tham chiếu tính (thay vì công thức annuity đóng giả định mọi kỳ dài bằng nhau). Kỳ cuối vẫn
+ * giữ "plug" (trả hết phần dư nợ còn lại) đề phòng sai số làm tròn dồn nhỏ còn sót lại.
+ *
+ * Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí (CPV), gốc dồn qua kỳ sau, PMT tính trên số kỳ còn lại
+ * sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn lại. Tất toán sớm
+ * (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
  * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ TÍNH PHẠT/30) × lãi suất × hệ số
  * phạt (mặc định 1.5 = trần 150% theo attribute_constraint 'penalty_rate', có thể ghi đè qua
  * request). Số ngày trễ tính phạt = max(0, số ngày trễ nhập − số ngày ân hạn THẬT của sản phẩm
@@ -48,12 +61,16 @@ public final class SimulationEngine {
         BigDecimal segAdj = segmentAdjustment(segmentTier);
         BigDecimal effRate = baseRatePct.add(segAdj).max(new BigDecimal("0.3"));
         double r = effRate.doubleValue() / 100.0;
+        double feeMonth = periodicFeePct.doubleValue() / 100.0;
+        // Giai đoạn 50: EMI tính trên rate GỘP lãi+phí (rTotal), không chỉ lãi — xem class-doc.
+        double rTotal = r + feeMonth;
+        double dailyRateTotal = rTotal * 12.0 / 365.0;
         // Hệ số phạt trễ hạn lấy THẬT từ attribute_constraint 'penalty_rate' (regulatory, ≤150% lãi
         // trong hạn) qua SimulationController; fallback 1.5 (=150%) nếu request không kèm theo.
         double penaltyFactor = req.getPenaltyFactor() != null ? req.getPenaltyFactor().doubleValue() / 100.0 : 1.5;
 
         double balance = amount.doubleValue();
-        double pmt = annuity(balance, r, months - grace);
+        double pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace);
         double maxBar = pmt * 1.6;
 
         List<Map<String, Object>> schedule = new ArrayList<>();
@@ -64,12 +81,24 @@ public final class SimulationEngine {
         double cumulativePayment = 0;
         int periodsUsed = 0;
 
+        int scheduledPeriods = months - grace;
         for (int period = 1; period <= months; period++) {
             double opening = balance;
-            double interest = opening * r;
-            double fee = opening * periodicFeePct.doubleValue() / 100.0;
+            LocalDate periodStartDate = start.plusMonths(period - 1);
+            LocalDate periodEndDate = start.plusMonths(period);
+            long daysInPeriod = ChronoUnit.DAYS.between(periodStartDate, periodEndDate);
             boolean inGrace = period <= grace;
-            double principal = inGrace ? 0 : Math.min(pmt - interest, opening);
+            // Chi phí vay (CPV) gộp lãi+phí kỳ đó, tính theo số ngày thật/365 — xem class-doc.
+            double cpv = opening * dailyRateTotal * daysInPeriod;
+            double interest = rTotal > 0 ? cpv * (r / rTotal) : 0;
+            double fee = rTotal > 0 ? cpv * (feeMonth / rTotal) : 0;
+            double principal = inGrace ? 0 : Math.min(pmt - cpv, opening);
+            // Plug kỳ cuối lịch gốc: trả hết phần dư nợ còn lại thay vì đúng PMT cố định, bù sai số
+            // dồn từ số ngày mỗi tháng khác nhau — khớp hành vi file Excel tham chiếu.
+            boolean isLastScheduled = !inGrace && (period - grace) == scheduledPeriods;
+            if (!inGrace && (isLastScheduled || opening - principal < 1)) {
+                principal = opening;
+            }
 
             boolean isPenalty = req.isPenaltyOn() && req.getPenaltyPeriod() != null && period == req.getPenaltyPeriod();
             double penalty = 0;
@@ -116,9 +145,9 @@ public final class SimulationEngine {
 
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("periodNo", period);
-            row.put("periodStart", start.plusMonths(period - 1).format(DATE_FMT));
-            row.put("periodEnd", start.plusMonths(period).format(DATE_FMT));
-            row.put("dueDate", start.plusMonths(period).toString());
+            row.put("periodStart", periodStartDate.format(DATE_FMT));
+            row.put("periodEnd", periodEndDate.format(DATE_FMT));
+            row.put("dueDate", periodEndDate.toString());
             row.put("openingBalance", round(opening));
             row.put("principal", round(principal + earlyAmount));
             row.put("interest", round(interest));
@@ -154,9 +183,9 @@ public final class SimulationEngine {
 
             if (isEarly) break;
             if (period == grace && grace > 0) {
-                pmt = annuity(balance, r, months - grace);
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace);
             } else if (prepayExtra > 0 && balance > 1) {
-                pmt = annuity(balance, r, months - period);
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, period, months - period);
             }
             if (balance <= 1) break;
         }
@@ -244,10 +273,29 @@ public final class SimulationEngine {
         return m;
     }
 
-    private static double annuity(double balance, double r, int k) {
-        if (k <= 0) return balance;
-        if (r <= 0) return balance / k;
-        return balance * r / (1 - Math.pow(1 + r, -k));
+    /**
+     * Giải lặp (bisection) tìm EMI cố định sao cho chạy hết `periodsCount` kỳ kế tiếp — mỗi kỳ tính
+     * CPV theo đúng số ngày lịch thật (`scheduleStart.plusMonths(periodOffset+i)` .. `+i+1`) và
+     * `dailyRate` — thì dư nợ về đúng 0. Không có công thức annuity đóng chính xác vì mỗi kỳ dài
+     * ngắn khác nhau (28-31 ngày) — khớp cách file Excel tham chiếu tính (Giai đoạn 50).
+     */
+    private static double solveEmiByDays(double balance, double dailyRate, LocalDate scheduleStart, int periodOffset, int periodsCount) {
+        if (periodsCount <= 0 || balance <= 0) return balance;
+        double lo = balance / periodsCount;
+        double hi = balance;
+        for (int iter = 0; iter < 100; iter++) {
+            double mid = (lo + hi) / 2;
+            double bal = balance;
+            for (int i = 0; i < periodsCount; i++) {
+                LocalDate s = scheduleStart.plusMonths(periodOffset + i);
+                LocalDate e = scheduleStart.plusMonths(periodOffset + i + 1);
+                long days = ChronoUnit.DAYS.between(s, e);
+                double cpv = bal * dailyRate * days;
+                bal -= (mid - cpv);
+            }
+            if (bal > 0) lo = mid; else hi = mid;
+        }
+        return (lo + hi) / 2;
     }
 
     private static String pct(double v, double max) {
