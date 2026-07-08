@@ -33,4 +33,12 @@ public class ProductConfigController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    /** Giai đoạn 46 — chi tiết ĐẦY ĐỦ mọi Answer Slot của Pattern, cho tab "Giá trị cấu hình" ở Variant. */
+    @GetMapping("/{code}/resolved")
+    public ResponseEntity<Map<String, Object>> resolved(@PathVariable String code) {
+        return service.resolved(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
