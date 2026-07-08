@@ -797,9 +797,26 @@ Tên folder = đúng nav key trong `nav.ts` (đối xứng với routing) — kh
 
 ---
 
+### Giai đoạn 43 — Vá lỗ hổng "Lịch sử duyệt" trống trơn trên toàn Pipeline
+
+**Bối cảnh:** user phát hiện qua UI: Template `TPL-001` ("Vay cầm cố trả góp · KH cá nhân") status "Đã xuất bản" nhưng khối "Lịch sử duyệt" (Giai đoạn 42) trống trơn, hỏi "đây là lỗi data hay lỗi do code" và yêu cầu mọi phần thuộc Pipeline sản phẩm phải có lịch sử duyệt khớp cả nhật ký hoạt động lẫn trạng thái sản phẩm.
+
+**Chẩn đoán:** lỗi **data**, không phải code — `ApprovalHistory.tsx`/`GET /api/activity-logs/entity` hoạt động đúng, chỉ là DB thật sự thiếu dòng `activity_log`. Audit mở rộng ra toàn bộ 28 entity Pattern(6)/Template(6)/Config(8)/Variant(8) — không chỉ TPL-001 — bằng cách đối chiếu 3 nguồn: `status` cột thật, `activity_log` (hành động muộn nhất), `version_entry` (head version, nơi đã có). Kết quả: 22/28 entity thiếu 1-4 bước trong chuỗi create→submit_review→approve→publish/retire so với status thật. Đồng thời phát hiện thêm 1 bug tương tự Giai đoạn 40 (Config↔Variant) nhưng ở cấp khác: `product_template` TPL-003 có `status='review'` trong khi `version_entry` head thật (v1.2, is_head=true) đã `published` từ 2026-06-30, và cả 2 Config đóng gói từ nó (CFG-0042/CFG-0041) đều đã published — Template nguồn không thể đứng sau Config trong lifecycle.
+
+**Sửa (`V2__seed.sql`):**
+- `product_template`: sửa `TPL-003.status` `review` → `published` (khớp version_entry head + downstream Config).
+- Thêm 61 dòng `activity_log` mới (tổng 101, từ 40) — đủ chuỗi khớp ĐÚNG status hiện có của từng entity, tái dùng actor/mốc thời gian từ `version_entry` khi entity đã có sẵn (PT-001/003/005/006, CFG-0021/037/039/040/041, TPL-003) để 2 nguồn không lệch nhau.
+- Viết lại toàn bộ khối `UPDATE ... created_user/updated_user` (Giai đoạn 42) cho khớp chuỗi activity_log mới — không còn dòng NULL nào trong 4 loại entity (Pattern/Template/Config/Variant).
+
+**Ngoài phạm vi (đã báo cho user, chưa sửa vì không phải bug được báo cáo lần này):** Business Intent/Product Intent vẫn còn vài dòng thiếu activity_log (không có khối "Lịch sử duyệt" trên 2 màn này nên không hiện lỗi); 5/6 Template (trừ TPL-003) chưa có `version_entry` riêng — nút "Phiên bản" sẽ trống cho TPL-001/002/004/005/006.
+
+**Verify:** SQL đối chiếu `status` thật ↔ hành động `activity_log` MUỘN NHẤT cho toàn bộ 28 entity — khớp 100% (query kiểm chứng, xem log phiên làm việc); Playwright xác nhận `TPL-001`/`TPL-003` hiện đủ 4 bước "Lịch sử duyệt" đúng actor/thời gian.
+
+---
+
 ## 5. ĐANG LÀM DỞ
 
-Không có màn nào đang dở giữa chừng. Vừa xong **Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng** (bảng `app_user` mới, populate `created_user`/`updated_user` từ activity_log thật, sidebar lọc menu theo role qua `UserContext`, khối "Lịch sử duyệt" ở Config/Pattern/Template detail — role-switch là demo, không phải đăng nhập thật), sau **Giai đoạn 41 — sample data "Vay xe máy mùa tựu trường"** (sản phẩm đầy đủ đã duyệt, tái dùng khuôn PT-001/TPL-001), **Giai đoạn 40 — sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng**, làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39), hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
+Không có màn nào đang dở giữa chừng. Vừa xong **Giai đoạn 43 — vá lỗ hổng "Lịch sử duyệt" trống trơn trên toàn Pipeline** (61 dòng activity_log mới cho 22/28 entity Pattern/Template/Config/Variant, sửa bug status TPL-003 lệch version_entry, viết lại created_user/updated_user khớp chuỗi mới), sau **Giai đoạn 42 — Nhật ký hoạt động theo audit thật + Menu theo Role người dùng** (bảng `app_user` mới, populate `created_user`/`updated_user` từ activity_log thật, sidebar lọc menu theo role qua `UserContext`, khối "Lịch sử duyệt" ở Config/Pattern/Template detail — role-switch là demo, không phải đăng nhập thật), **Giai đoạn 41 — sample data "Vay xe máy mùa tựu trường"** (sản phẩm đầy đủ đã duyệt, tái dùng khuôn PT-001/TPL-001), **Giai đoạn 40 — sửa lệch lifecycle Config↔Variant + thêm cột audit/CDC/governance vào 43 bảng**, làm thật nút "Xem trước" ở builder Product Pattern (Giai đoạn 39), hoàn thiện thanh tìm kiếm toàn cục ở topbar (Giai đoạn 38), chia detail Product Variant thành 3 tab con (Giai đoạn 37), thêm detail đầy đủ cho Product Variant (Giai đoạn 36), detail cho Block & Answer Slot (Giai đoạn 35), detail cho Lifecycle & State và Domain (Giai đoạn 34), bổ sung seed `activity_log` (Giai đoạn 33), liên kết Catalog ↔ Quy trình phát hành theo trạng thái sản phẩm thật (Giai đoạn 32), gộp cấu trúc thư mục pages theo feature (Giai đoạn 31) và màn "Attribute Usage" + popup Group/Data Type (Giai đoạn 29-30). Việc kế tiếp: đợt polish cuối (mục 5.3 — loading/error states, Docker hoàn thiện), chưa có yêu cầu mới nào khác từ user.
 
 ---
 

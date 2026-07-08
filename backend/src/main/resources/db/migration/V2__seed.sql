@@ -540,7 +540,11 @@ INSERT INTO "pattern_obligation_type" ("pattern_code", "obligation_type_code", "
 INSERT INTO "product_template" ("code", "name", "from_pattern_code", "status") VALUES
   ('TPL-001', 'Vay cầm cố trả góp · KH cá nhân', 'PT-001', 'published'),
   ('TPL-002', 'Vay cầm cố trả góp · KH doanh nghiệp', 'PT-001', 'approved'),
-  ('TPL-003', 'Vay hạn mức cầm cố · KH cá nhân', 'PT-002', 'review'),
+  -- TPL-003 sửa 'review' → 'published' (Giai đoạn 43): version_entry head thật (v1.2, is_head=true)
+  -- đã ở status 'published' từ 2026-06-30, và cả CFG-0042/CFG-0041 (đóng gói từ TPL-003) đều đã
+  -- published — Template nguồn không thể ở lifecycle sau Config↔Variant. Lỗi seed cùng loại với
+  -- Giai đoạn 40 (Config↔Variant), lần này ở cấp Template↔version_entry.
+  ('TPL-003', 'Vay hạn mức cầm cố · KH cá nhân', 'PT-002', 'published'),
   ('TPL-004', 'Vay cầm cố ô tô · trả góp', 'PT-006', 'published'),
   ('TPL-005', 'Vay Bullet cầm cố · cá nhân', 'PT-003', 'draft'),
   ('TPL-006', 'Vay tín chấp lương · cá nhân', 'PT-005', 'published');
@@ -1206,15 +1210,105 @@ INSERT INTO "activity_log" ("occurred_at", "actor", "action", "entity_type", "en
   ('2026-06-19 15:20:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-105', 'Gửi duyệt Variant — Vay tín chấp lương GV · kênh Web'),
   ('2026-06-19 09:10:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-107', 'Tạo Variant — Vay cầm cố DN nhỏ · kênh Web'),
   ('2026-06-18 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-101', 'Xuất bản Variant — Vay nhanh Xe máy 18 tháng · kênh API'),
-  ('2026-06-18 08:40:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-102', 'Xuất bản Variant — Vay ô tô hạn mức · kênh API');
+  ('2026-06-18 08:40:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-102', 'Xuất bản Variant — Vay ô tô hạn mức · kênh API'),
+  -- ===== Giai đoạn 43: bổ sung TOÀN BỘ bước duyệt còn thiếu cho Pattern/Template/Config/Variant
+  -- (audit phát hiện: "Lịch sử duyệt" trống trơn ở nhiều sản phẩm dù status đã approved/published —
+  -- vì activity_log chỉ có 0-1 dòng lẻ tẻ cho các entity này, không phải lỗi code (API/component đã
+  -- đúng, chỉ thiếu dữ liệu). Bổ sung đủ create→submit_review→approve→publish/retire khớp ĐÚNG status
+  -- hiện có của từng entity, dùng lại đúng actor/mốc thời gian đã có trong version_entry khi có sẵn. =====
+  -- PT-001 (published, chưa có dòng nào)
+  ('2026-05-10 09:00:00', 'Phạm An', 'create', 'ProductPattern', 'PT-001', 'Tạo Pattern — Khuôn vay cầm cố trả góp · kênh Web'),
+  ('2026-05-14 10:00:00', 'Trần Lan', 'submit_review', 'ProductPattern', 'PT-001', 'Gửi duyệt Pattern — Khuôn vay cầm cố trả góp · kênh Web'),
+  ('2026-05-18 15:00:00', 'Lê Minh', 'approve', 'ProductPattern', 'PT-001', 'Phê duyệt Pattern — Khuôn vay cầm cố trả góp · kênh Web'),
+  ('2026-05-20 11:30:00', 'Hệ thống', 'publish', 'ProductPattern', 'PT-001', 'Xuất bản Pattern — Khuôn vay cầm cố trả góp · kênh API'),
+  -- PT-002 (review, đã có 'assign' — thiếu create/submit_review)
+  ('2026-06-28 10:00:00', 'Trần Lan', 'create', 'ProductPattern', 'PT-002', 'Tạo Pattern — Khuôn vay tiêu dùng có hạn mức · kênh Web'),
+  ('2026-07-01 09:40:00', 'Phạm Designer', 'submit_review', 'ProductPattern', 'PT-002', 'Gửi duyệt Pattern — Khuôn vay tiêu dùng có hạn mức · kênh Web'),
+  -- PT-003 (approved, đã có 'approve' — thiếu create/submit_review)
+  ('2026-05-12 10:15:00', 'Trần Lan', 'create', 'ProductPattern', 'PT-003', 'Tạo Pattern — Khuôn vay cầm cố Bullet · kênh Web'),
+  ('2026-05-20 09:00:00', 'Trần Lan', 'submit_review', 'ProductPattern', 'PT-003', 'Gửi duyệt Pattern — Khuôn vay cầm cố Bullet · kênh Web'),
+  -- PT-005 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-04-15 09:20:00', 'Trần Lan', 'create', 'ProductPattern', 'PT-005', 'Tạo Pattern — Khuôn vay tín chấp lương · kênh Web'),
+  ('2026-04-20 10:00:00', 'Phạm Designer', 'submit_review', 'ProductPattern', 'PT-005', 'Gửi duyệt Pattern — Khuôn vay tín chấp lương · kênh Web'),
+  ('2026-04-25 14:00:00', 'Lê Minh', 'approve', 'ProductPattern', 'PT-005', 'Phê duyệt Pattern — Khuôn vay tín chấp lương · kênh Web'),
+  -- PT-006 (approved, chưa có dòng nào)
+  ('2026-06-01 09:00:00', 'Lê Minh', 'create', 'ProductPattern', 'PT-006', 'Tạo Pattern — Khuôn vay cầm cố ô tô · kênh Web'),
+  ('2026-06-08 10:00:00', 'Phạm An', 'submit_review', 'ProductPattern', 'PT-006', 'Gửi duyệt Pattern — Khuôn vay cầm cố ô tô · kênh Web'),
+  ('2026-06-15 13:30:00', 'Phạm An', 'approve', 'ProductPattern', 'PT-006', 'Phê duyệt Pattern — Khuôn vay cầm cố ô tô · kênh Web'),
+  -- TPL-001 (published, chưa có dòng nào — đúng bug user báo cáo, KH cá nhân)
+  ('2026-01-02 09:00:00', 'Phạm An', 'create', 'ProductTemplate', 'TPL-001', 'Tạo Template — Vay cầm cố trả góp · KH cá nhân · kênh Web'),
+  ('2026-01-04 10:00:00', 'Trần Lan', 'submit_review', 'ProductTemplate', 'TPL-001', 'Gửi duyệt Template — Vay cầm cố trả góp · KH cá nhân · kênh Web'),
+  ('2026-01-06 14:00:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-001', 'Phê duyệt Template — Vay cầm cố trả góp · KH cá nhân · kênh Web'),
+  ('2026-01-08 09:00:00', 'Hệ thống', 'publish', 'ProductTemplate', 'TPL-001', 'Xuất bản Template — Vay cầm cố trả góp · KH cá nhân · kênh API'),
+  -- TPL-002 (approved, đã có 'approve' — thiếu create/submit_review)
+  ('2026-05-01 09:00:00', 'Trần Lan', 'create', 'ProductTemplate', 'TPL-002', 'Tạo Template — Vay cầm cố trả góp · KH doanh nghiệp · kênh Web'),
+  ('2026-05-10 10:00:00', 'Trần Lan', 'submit_review', 'ProductTemplate', 'TPL-002', 'Gửi duyệt Template — Vay cầm cố trả góp · KH doanh nghiệp · kênh Web'),
+  -- TPL-003 (sửa status → published ở trên; đã có 'submit_review' — thiếu create/approve/publish,
+  -- mốc approve/publish khớp đúng version_entry v1.1/v1.2 thật)
+  ('2026-06-10 09:00:00', 'Phạm Designer', 'create', 'ProductTemplate', 'TPL-003', 'Tạo Template — Vay hạn mức cầm cố · KH cá nhân · kênh Web'),
+  ('2026-06-24 11:00:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-003', 'Phê duyệt Template — Vay hạn mức cầm cố · KH cá nhân · kênh Web'),
+  ('2026-06-30 08:30:00', 'Lê Minh', 'publish', 'ProductTemplate', 'TPL-003', 'Xuất bản Template — Vay hạn mức cầm cố · KH cá nhân · kênh API'),
+  -- TPL-004 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-05-15 09:00:00', 'Lê Minh', 'create', 'ProductTemplate', 'TPL-004', 'Tạo Template — Vay cầm cố ô tô · trả góp · kênh Web'),
+  ('2026-05-25 10:00:00', 'Phạm An', 'submit_review', 'ProductTemplate', 'TPL-004', 'Gửi duyệt Template — Vay cầm cố ô tô · trả góp · kênh Web'),
+  ('2026-06-05 14:00:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-004', 'Phê duyệt Template — Vay cầm cố ô tô · trả góp · kênh Web'),
+  -- TPL-006 (published, chưa có dòng nào)
+  ('2026-03-10 09:00:00', 'Trần Lan', 'create', 'ProductTemplate', 'TPL-006', 'Tạo Template — Vay tín chấp lương · cá nhân · kênh Web'),
+  ('2026-03-15 10:00:00', 'Phạm An', 'submit_review', 'ProductTemplate', 'TPL-006', 'Gửi duyệt Template — Vay tín chấp lương · cá nhân · kênh Web'),
+  ('2026-03-20 14:00:00', 'Lê Minh', 'approve', 'ProductTemplate', 'TPL-006', 'Phê duyệt Template — Vay tín chấp lương · cá nhân · kênh Web'),
+  ('2026-03-22 09:00:00', 'Hệ thống', 'publish', 'ProductTemplate', 'TPL-006', 'Xuất bản Template — Vay tín chấp lương · cá nhân · kênh API'),
+  -- CFG-0042 (published, đã có submit_review/approve/publish — thiếu create)
+  ('2026-06-27 16:00:00', 'Phạm An', 'create', 'ProductConfig', 'CFG-0042', 'Tạo Config — Vay nhanh Xe máy 18 tháng · kênh Web'),
+  -- CFG-0041 (published, đã có approve/publish — thiếu create/submit_review)
+  ('2026-06-05 09:30:00', 'Lê Minh', 'create', 'ProductConfig', 'CFG-0041', 'Tạo Config — Vay ô tô hạn mức HCM · kênh Web'),
+  ('2026-06-20 15:00:00', 'Phạm Designer', 'submit_review', 'ProductConfig', 'CFG-0041', 'Gửi duyệt Config — Vay ô tô hạn mức HCM · kênh Web'),
+  -- CFG-0040 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-05-25 10:00:00', 'Phạm An', 'create', 'ProductConfig', 'CFG-0040', 'Tạo Config — Vay xe máy KH thân thiết · kênh Web'),
+  ('2026-06-05 09:00:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0040', 'Gửi duyệt Config — Vay xe máy KH thân thiết · kênh Web'),
+  ('2026-06-15 10:00:00', 'Lê Minh', 'approve', 'ProductConfig', 'CFG-0040', 'Phê duyệt Config — Vay xe máy KH thân thiết · kênh Web'),
+  -- CFG-0039 (approved, chưa có dòng nào)
+  ('2026-05-05 09:15:00', 'Trần Lan', 'create', 'ProductConfig', 'CFG-0039', 'Tạo Config — Vay Bullet vàng 3 tháng · kênh Web'),
+  ('2026-05-12 10:00:00', 'Trần Lan', 'submit_review', 'ProductConfig', 'CFG-0039', 'Gửi duyệt Config — Vay Bullet vàng 3 tháng · kênh Web'),
+  ('2026-05-18 14:20:00', 'Phạm Designer', 'approve', 'ProductConfig', 'CFG-0039', 'Phê duyệt Config — Vay Bullet vàng 3 tháng · kênh Web'),
+  -- CFG-0037 (review, chưa có dòng nào)
+  ('2026-06-20 09:30:00', 'Lê Minh', 'create', 'ProductConfig', 'CFG-0037', 'Tạo Config — Vay cầm cố DN nhỏ · kênh Web'),
+  ('2026-07-01 09:10:00', 'Lê Minh', 'submit_review', 'ProductConfig', 'CFG-0037', 'Gửi duyệt Config — Vay cầm cố DN nhỏ · kênh Web'),
+  -- CFG-0021 (retired, đã có 'retire' — thiếu create/submit_review/approve/publish)
+  ('2026-01-10 09:00:00', 'Phạm An', 'create', 'ProductConfig', 'CFG-0021', 'Tạo Config — Vay cầm cố laptop · kênh Web'),
+  ('2026-01-14 10:00:00', 'Phạm An', 'submit_review', 'ProductConfig', 'CFG-0021', 'Gửi duyệt Config — Vay cầm cố laptop · kênh Web'),
+  ('2026-01-17 14:00:00', 'Trần Lan', 'approve', 'ProductConfig', 'CFG-0021', 'Phê duyệt Config — Vay cầm cố laptop · kênh Web'),
+  ('2026-01-20 10:30:00', 'Trần Lan', 'publish', 'ProductConfig', 'CFG-0021', 'Xuất bản Config — Vay cầm cố laptop · kênh API'),
+  -- VAR-101 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-06-01 09:00:00', 'Hệ thống', 'create', 'ProductVariant', 'VAR-101', 'Tạo Variant — Vay nhanh Xe máy 18 tháng · kênh Web'),
+  ('2026-06-05 10:00:00', 'Trần Lan', 'submit_review', 'ProductVariant', 'VAR-101', 'Gửi duyệt Variant — Vay nhanh Xe máy 18 tháng · kênh Web'),
+  ('2026-06-10 14:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-101', 'Phê duyệt Variant — Vay nhanh Xe máy 18 tháng · kênh Web'),
+  -- VAR-102 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-05-20 09:00:00', 'Hệ thống', 'create', 'ProductVariant', 'VAR-102', 'Tạo Variant — Vay ô tô hạn mức · kênh Web'),
+  ('2026-05-25 10:00:00', 'Phạm Designer', 'submit_review', 'ProductVariant', 'VAR-102', 'Gửi duyệt Variant — Vay ô tô hạn mức · kênh Web'),
+  ('2026-06-01 14:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-102', 'Phê duyệt Variant — Vay ô tô hạn mức · kênh Web'),
+  -- VAR-103 (published, đã có 'publish' — thiếu create/submit_review/approve)
+  ('2026-06-10 09:00:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-103', 'Tạo Variant — Vay xe máy KH thân thiết · kênh Web'),
+  ('2026-06-18 10:00:00', 'Trần Lan', 'submit_review', 'ProductVariant', 'VAR-103', 'Gửi duyệt Variant — Vay xe máy KH thân thiết · kênh Web'),
+  ('2026-06-25 14:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-103', 'Phê duyệt Variant — Vay xe máy KH thân thiết · kênh Web'),
+  -- VAR-104 (approved, đã có 'approve' — thiếu create/submit_review)
+  ('2026-05-25 09:00:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-104', 'Tạo Variant — Vay Bullet vàng 3 tháng · kênh Web'),
+  ('2026-06-05 10:00:00', 'Phạm Designer', 'submit_review', 'ProductVariant', 'VAR-104', 'Gửi duyệt Variant — Vay Bullet vàng 3 tháng · kênh Web'),
+  -- VAR-105 (review, đã có 'submit_review' — thiếu create)
+  ('2026-06-15 09:00:00', 'Phạm An', 'create', 'ProductVariant', 'VAR-105', 'Tạo Variant — Vay tín chấp lương GV · kênh Web'),
+  -- VAR-106 (retired, đã có 'retire' — thiếu create/submit_review/approve/publish)
+  ('2026-02-01 09:00:00', 'Trần Lan', 'create', 'ProductVariant', 'VAR-106', 'Tạo Variant — Vay cầm cố laptop · kênh Web'),
+  ('2026-02-05 10:00:00', 'Phạm An', 'submit_review', 'ProductVariant', 'VAR-106', 'Gửi duyệt Variant — Vay cầm cố laptop · kênh Web'),
+  ('2026-02-10 14:00:00', 'Lê Minh', 'approve', 'ProductVariant', 'VAR-106', 'Phê duyệt Variant — Vay cầm cố laptop · kênh Web'),
+  ('2026-02-12 09:00:00', 'Hệ thống', 'publish', 'ProductVariant', 'VAR-106', 'Xuất bản Variant — Vay cầm cố laptop · kênh API');
 
--- ===== 40. Populate created_user/updated_user (Giai đoạn 42) — suy TRỰC TIẾP từ activity_log
--- thật ở trên: created_user = actor của hành động 'create' (nếu có); updated_user = actor của
--- hành động MUỘN NHẤT theo occurred_at (dù là create/submit_review/approve/publish/retire...).
--- CHỈ update những dòng có ít nhất 1 activity_log thật — không suy đoán/bịa cho các dòng chưa
--- từng xuất hiện trong activity_log (business_intent 1,2,6,7; product_intent 1,2,5; pattern
--- PT-001,006; template TPL-001,006; config CFG-0039,0037; toàn bộ product_catalog — 3 dòng
--- catalog "kệ sản phẩm" chưa từng có activity_log nào nhắc tới, giữ NULL đúng thật).
+-- ===== 40. Populate created_user/updated_user (Giai đoạn 42, VIẾT LẠI ở Giai đoạn 43) — suy TRỰC
+-- TIẾP từ activity_log thật ở trên: created_user = actor của hành động 'create' (nếu có);
+-- updated_user = actor của hành động MUỘN NHẤT theo occurred_at (create/submit_review/approve/
+-- publish/retire...). Giai đoạn 43 đã bổ sung đủ activity_log cho TOÀN BỘ Pattern/Template/Config/
+-- Variant nên khối UPDATE này viết lại đầy đủ (không còn dòng nào NULL trong 4 loại này). Business
+-- Intent/Product Intent (1,2,6,7 / 1,2,5) và toàn bộ product_catalog vẫn CHƯA từng xuất hiện trong
+-- activity_log — ngoài phạm vi Giai đoạn 43 (không có UI "Lịch sử duyệt" nào đọc 2 loại này), giữ
+-- NULL đúng thật, không suy đoán.
 UPDATE "business_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
 UPDATE "business_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
 UPDATE "business_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 5;
@@ -1223,28 +1317,34 @@ UPDATE "product_intent" SET "updated_user" = 'Phạm An' WHERE "id" = 3;
 UPDATE "product_intent" SET "updated_user" = 'Lê Minh' WHERE "id" = 4;
 UPDATE "product_intent" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "id" = 6;
 
-UPDATE "product_pattern" SET "updated_user" = 'Phạm An' WHERE "code" = 'PT-002';
-UPDATE "product_pattern" SET "updated_user" = 'Lê Minh' WHERE "code" = 'PT-003';
+UPDATE "product_pattern" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'PT-001';
+UPDATE "product_pattern" SET "created_user" = 'Trần Lan', "updated_user" = 'Phạm Designer' WHERE "code" = 'PT-002';
+UPDATE "product_pattern" SET "created_user" = 'Trần Lan', "updated_user" = 'Lê Minh' WHERE "code" = 'PT-003';
 UPDATE "product_pattern" SET "created_user" = 'Phạm An', "updated_user" = 'Phạm An' WHERE "code" = 'PT-004';
-UPDATE "product_pattern" SET "updated_user" = 'Hệ thống' WHERE "code" = 'PT-005';
+UPDATE "product_pattern" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "code" = 'PT-005';
+UPDATE "product_pattern" SET "created_user" = 'Lê Minh', "updated_user" = 'Phạm An' WHERE "code" = 'PT-006';
 
-UPDATE "product_template" SET "updated_user" = 'Lê Minh' WHERE "code" = 'TPL-002';
-UPDATE "product_template" SET "updated_user" = 'Phạm An' WHERE "code" = 'TPL-003';
-UPDATE "product_template" SET "updated_user" = 'Hệ thống' WHERE "code" = 'TPL-004';
+UPDATE "product_template" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'TPL-001';
+UPDATE "product_template" SET "created_user" = 'Trần Lan', "updated_user" = 'Lê Minh' WHERE "code" = 'TPL-002';
+UPDATE "product_template" SET "created_user" = 'Phạm Designer', "updated_user" = 'Lê Minh' WHERE "code" = 'TPL-003';
+UPDATE "product_template" SET "created_user" = 'Lê Minh', "updated_user" = 'Hệ thống' WHERE "code" = 'TPL-004';
 UPDATE "product_template" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "code" = 'TPL-005';
+UPDATE "product_template" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "code" = 'TPL-006';
 
-UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0042';
-UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0041';
-UPDATE "product_config" SET "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0040';
+UPDATE "product_config" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0042';
+UPDATE "product_config" SET "created_user" = 'Lê Minh', "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0041';
+UPDATE "product_config" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0040';
+UPDATE "product_config" SET "created_user" = 'Trần Lan', "updated_user" = 'Phạm Designer' WHERE "code" = 'CFG-0039';
 UPDATE "product_config" SET "created_user" = 'Trần Lan', "updated_user" = 'Phạm An' WHERE "code" = 'CFG-0038';
-UPDATE "product_config" SET "updated_user" = 'Phạm An' WHERE "code" = 'CFG-0021';
+UPDATE "product_config" SET "created_user" = 'Lê Minh', "updated_user" = 'Lê Minh' WHERE "code" = 'CFG-0037';
+UPDATE "product_config" SET "created_user" = 'Phạm An', "updated_user" = 'Trần Lan' WHERE "code" = 'CFG-0021';
 UPDATE "product_config" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'CFG-0043';
 
-UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-101';
-UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-102';
-UPDATE "product_variant" SET "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-103';
-UPDATE "product_variant" SET "updated_user" = 'Lê Minh' WHERE "code" = 'VAR-104';
-UPDATE "product_variant" SET "updated_user" = 'Phạm An' WHERE "code" = 'VAR-105';
-UPDATE "product_variant" SET "updated_user" = 'Trần Lan' WHERE "code" = 'VAR-106';
+UPDATE "product_variant" SET "created_user" = 'Hệ thống', "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-101';
+UPDATE "product_variant" SET "created_user" = 'Hệ thống', "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-102';
+UPDATE "product_variant" SET "created_user" = 'Trần Lan', "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-103';
+UPDATE "product_variant" SET "created_user" = 'Trần Lan', "updated_user" = 'Lê Minh' WHERE "code" = 'VAR-104';
+UPDATE "product_variant" SET "created_user" = 'Phạm An', "updated_user" = 'Phạm An' WHERE "code" = 'VAR-105';
+UPDATE "product_variant" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "code" = 'VAR-106';
 UPDATE "product_variant" SET "created_user" = 'Trần Lan', "updated_user" = 'Trần Lan' WHERE "code" = 'VAR-107';
 UPDATE "product_variant" SET "created_user" = 'Phạm An', "updated_user" = 'Hệ thống' WHERE "code" = 'VAR-108';
