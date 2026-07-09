@@ -544,7 +544,7 @@ INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_
   ('limit_amount', 'dependency', NULL, NULL, NULL, 'limit_amount ≤ ltv × asset_value', 'ltv', 'Vượt hạn mức theo LTV'),
   ('installment_count', 'range', 1, 18, 1, '1 – 18', NULL, 'Số kỳ ngoài khoảng 1–18'),
   ('penalty_rate', 'regulatory', NULL, 150, NULL, '≤ 150% lãi trong hạn', NULL, 'Vượt trần lãi phạt'),
-  ('asset_type', 'enum', NULL, NULL, NULL, 'TwoWheels / Car / Gold…', NULL, NULL),
+  ('asset_type', 'enum', NULL, NULL, NULL, 'TwoWheels / Car / Gold / Electronics…', NULL, NULL),
   ('age', 'range', 18, 60, NULL, 'MIN 18', NULL, 'Ngoài độ tuổi cho phép'),
   ('min_income', 'range', 0, NULL, NULL, '≥ 0', NULL, NULL),
   ('billing_day', 'range', 1, 28, 1, '1–28', NULL, 'Ngày chốt ngoài 1–28'),
@@ -564,12 +564,18 @@ INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VAL
   ('asset_type', 1, 'Xe máy (TwoWheels)'),
   ('asset_type', 2, 'Ô tô (Car)'),
   ('asset_type', 3, 'Vàng (Gold)'),
+  -- Giai đoạn 63: thêm giá trị thứ 4 — CFG-0021 (laptop cầm cố) đã dùng thật giá trị này ở fragment
+  -- từ trước nhưng catalog chưa có, phát hiện qua đối chiếu fragment.value với attribute_enum_value.
+  ('asset_type', 4, 'Thiết bị điện tử (Laptop)'),
   ('rate_type', 1, 'Cố định'),
   ('rate_type', 2, 'Thả nổi'),
   ('occupation', 1, 'Nhân viên văn phòng'),
   ('occupation', 2, 'Công nhân'),
   ('occupation', 3, 'Kinh doanh tự do'),
   ('occupation', 4, 'Giáo viên / Công chức'),
+  -- Giai đoạn 63: TPL-003/TPL-006 đã dùng thật giá trị này (nghĩa "không ràng buộc nghề nghiệp cụ
+  -- thể") nhưng catalog chưa có — thêm để đóng catalog, khớp đúng dữ liệu template_frame hiện có.
+  ('occupation', 5, 'Không giới hạn'),
   ('repay_method', 1, 'Trả góp nhiều kỳ'),
   ('repay_method', 2, 'Trả 1 lần (Bullet)'),
   ('borrower_type', 1, 'Cá nhân'),
@@ -612,6 +618,19 @@ INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VAL
   ('stmt_channel', 1, 'SMS'),
   ('stmt_channel', 2, 'Email'),
   ('stmt_channel', 3, 'Thông báo trong App');
+
+-- ===== 14c. attribute_enum_value — Giai đoạn 63: catalog "giá trị kèm theo" cho 3 Attribute DT_BOOL
+-- (co_borrower_allowed/compliance/insurance_required) — trước đây DT_BOOL không có dòng nào trong
+-- bảng này (chỉ DT_ENUM mới có), nhưng thực chất Bool cũng là 1 tập giá trị đóng 2 phần tử. Thêm để
+-- mọi Attribute (không riêng DT_ENUM) đều có sẵn "giá trị kèm theo" ngay từ khi khởi tạo — mục đích:
+-- khi điền Template/Config sau này không cần gõ tay, chỉ cần lấy đúng từ danh mục này (user yêu cầu). =====
+INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VALUES
+  ('co_borrower_allowed', 1, 'Bật'),
+  ('co_borrower_allowed', 2, 'Tắt'),
+  ('compliance', 1, 'Bật'),
+  ('compliance', 2, 'Tắt'),
+  ('insurance_required', 1, 'Bật'),
+  ('insurance_required', 2, 'Tắt');
 
 -- ===== 15. block — 12 block (BLOCKS) =====
 INSERT INTO "block" ("id", "code", "name", "biz_group", "governed_by_element_code", "governed_by_aspect", "status") VALUES
@@ -656,7 +675,7 @@ INSERT INTO "answer_slot" ("block_id", "code", "name", "attribute_code", "is_req
   ('BLK_REPAYMENT', 'repay_method', 'Repayment Method', 'repay_method', true, 'Trả góp nhiều kỳ', 'MULTISTEP'),
   ('BLK_REPAYMENT', 'installment_count', 'Số kỳ', 'installment_count', true, '1 – 18', NULL),
   ('BLK_REPAYMENT', 'schedule', 'Lịch trả', 'schedule', true, 'Hàng tháng', 'HAS_CYCLE'),
-  ('BLK_COLLATERAL', 'asset_type', 'Asset Type', 'asset_type', true, 'Xe máy', 'OE_REC_ASSET_PLEDGE'),
+  ('BLK_COLLATERAL', 'asset_type', 'Asset Type', 'asset_type', true, 'Xe máy (TwoWheels)', 'OE_REC_ASSET_PLEDGE'),
   ('BLK_COLLATERAL', 'asset_valuation', 'Asset Valuation Formula', 'asset_valuation', true, '70% giá trị', 'LTV ≤ 80%'),
   ('BLK_COLLATERAL', 'ltv', 'LTV tối đa', 'ltv', true, '80%', '≤ 80%'),
   ('BLK_PENALTY', 'penalty_rate', 'Penalty Rate', 'penalty_rate', true, '150% lãi', '≤ 150%'),
@@ -907,7 +926,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-003', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
   ('TPL-003', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-003', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-003', 'BLK_COLLATERAL', 'asset_type', 'Xe máy (TwoWheels)'),
   ('TPL-003', 'BLK_COLLATERAL', 'ltv', '75%'),
   ('TPL-003', 'BLK_BILLING', 'stmt_cycle', 'Hàng tháng');
 
@@ -930,7 +949,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-001', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-001', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
   ('TPL-001', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy (TwoWheels)'),
   ('TPL-001', 'BLK_COLLATERAL', 'asset_valuation', '80% giá trị'),
   ('TPL-001', 'BLK_COLLATERAL', 'ltv', '80%'),
   ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -948,7 +967,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-002', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-002', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
   ('TPL-002', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô (Car)'),
   ('TPL-002', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -965,7 +984,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-004', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-004', 'BLK_REPAYMENT', 'installment_count', '6 – 36'),
   ('TPL-004', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô (Car)'),
   ('TPL-004', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-004', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-004', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -978,7 +997,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-005', 'BLK_INTEREST', 'interest_calc', 'Lãi hàng tháng, gốc cuối kỳ (Bullet)'),
   ('TPL-005', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
   ('TPL-005', 'BLK_INTEREST', 'rate_type', 'Cố định'),
-  ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng'),
+  ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng (Gold)'),
   ('TPL-005', 'BLK_COLLATERAL', 'asset_valuation', '85% giá trị'),
   ('TPL-005', 'BLK_COLLATERAL', 'ltv', '85%'),
   ('TPL-005', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
