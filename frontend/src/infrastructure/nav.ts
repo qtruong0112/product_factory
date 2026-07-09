@@ -46,7 +46,7 @@ export const NAV: NavGroup[] = [
       { key: 'archetype', label: 'Financial Obligation Archetype', icon: 'layers', count: null, roles: ['Product Designer'] },
       { key: 'attribute', label: 'Attribute', icon: 'tag', count: null, roles: ['Product Designer'] },
       { key: 'block', label: 'Block & Answer Slot', icon: 'block', count: null, roles: ['Product Designer'] },
-      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: null, roles: ['Product Designer', 'Checker / Approver'] },
+      { key: 'matrix', label: 'Ma trận ràng buộc', icon: 'matrix', count: '2', roles: ['Product Designer', 'Checker / Approver'] },
       { key: 'lifecycle', label: 'Lifecycle & State', icon: 'lifecycle', count: null, roles: ['Product Designer'] },
       { key: 'domain', label: 'Domain', icon: 'domain', count: null, roles: ['Product Designer'] },
     ],
