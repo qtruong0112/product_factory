@@ -95,16 +95,20 @@ public class ConstraintMatrixService {
     /**
      * Tab "Obligation Element × Block" — Giai đoạn 58, PHÁI SINH TRỰC TIẾP từ
      * block.governed_by_element_code (nguồn duy nhất, không lưu matrix_cell riêng). Mỗi Block tối
-     * đa 1 OE chi phối → chỉ 2 mức req/na (không có "tuỳ chọn"). Cols = các OE thực sự chi phối
-     * ít nhất 1 Block; rows = toàn bộ Block trong thư viện.
+     * đa 1 OE chi phối → chỉ 2 mức req/na (không có "tuỳ chọn"). Rows CHỈ gồm Block thực sự có
+     * governed_by_element_code (không phải toàn bộ 12 Block trong thư viện) — 7/12 Block còn lại
+     * được chi phối bởi thứ khác không phải OE (FOA cho BLK_LIMIT/INTEREST/FEE, khái niệm tự do
+     * cho BLK_ELIGIBILITY/COUNTERPARTY/REGULATORY/PENALTY — xem governed_by_aspect), luôn "na" ở
+     * mọi cột nên đưa vào chỉ gây loãng ma trận, không thêm thông tin thật.
      */
     public Map<String, Object> oeBlockMatrix() {
-        List<Block> allBlocks = blockRepo.findAll();
+        List<Block> governedBlocks = new ArrayList<>();
+        for (Block b : blockRepo.findAll()) {
+            if (b.getGovernedByElementCode() != null) governedBlocks.add(b);
+        }
 
         LinkedHashSet<String> colCodes = new LinkedHashSet<>();
-        for (Block b : allBlocks) {
-            if (b.getGovernedByElementCode() != null) colCodes.add(b.getGovernedByElementCode());
-        }
+        for (Block b : governedBlocks) colCodes.add(b.getGovernedByElementCode());
 
         List<Map<String, Object>> cols = new ArrayList<>();
         for (String cc : colCodes) {
@@ -115,7 +119,7 @@ public class ConstraintMatrixService {
         }
 
         List<Map<String, Object>> rows = new ArrayList<>();
-        for (Block b : allBlocks) {
+        for (Block b : governedBlocks) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("code", b.getId());
             row.put("label", b.getName());

@@ -76,19 +76,37 @@ INSERT INTO "financial_obligation_archetype" ("code", "name", "nature", "nature_
 -- ===== 4. foa_element — Element gắn Archetype kèm requirement (archDetail.elementRows)
 -- Giai đoạn 52: bỏ 3 dòng nature-tautology (vd FOA_TERM_LOAN→TERM_LOAN_OBLIGATION required) —
 -- trùng lặp hiển nhiên (FOA nào cũng "required" đúng nature của chính nó), làm nhiễu ma trận FOA×OE
--- (foaOeMatrix() derive thẳng từ bảng này) =====
+-- (foaOeMatrix() derive thẳng từ bảng này).
+-- Giai đoạn 58b: đối chiếu tài liệu "Ví dụ xuyên suốt: Ma Trận FOA × OE..." (Mục 1) phát hiện lệch —
+-- thêm 9 ô "possible"/"required" còn thiếu cho 5 OE đã có (mỗi OE thật ra có nhiều mức theo từng
+-- FOA, không chỉ 1 cột "required" duy nhất) + thêm mới 2 OE hoàn toàn vắng mặt dù có trong bảng
+-- Mục 1 (OE_VAL_PRINCIPAL_SINGLE_DECREASE "bullet", OE_REC_UNSECURED "Tín chấp") =====
 INSERT INTO "foa_element" ("archetype_code", "element_code", "requirement") VALUES
   ('FOA_TERM_LOAN', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'possible'),
+  ('FOA_TERM_LOAN', 'OE_VAL_PRINCIPAL_SINGLE_DECREASE', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_VAL_PRINCIPAL_SINGLE_DECREASE', 'possible'),
   ('FOA_TERM_LOAN', 'OE_ACT_ON_DISBURSEMENT', 'required'),
+  ('FOA_REVOLVING', 'OE_ACT_ON_DISBURSEMENT', 'possible'),
   ('FOA_TERM_LOAN', 'OE_FUL_INSTALLMENT', 'required'),
+  ('FOA_REVOLVING', 'OE_FUL_INSTALLMENT', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_FUL_INSTALLMENT', 'possible'),
   ('FOA_TERM_LOAN', 'OE_REC_ASSET_PLEDGE', 'possible'),
+  ('FOA_TERM_LOAN', 'OE_REC_UNSECURED', 'possible'),
+  ('FOA_REVOLVING', 'OE_REC_UNSECURED', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_REC_UNSECURED', 'possible'),
   ('FOA_TERM_LOAN', 'OE_TIME_CYCLE_DEADLINE', 'required'),
+  ('FOA_REVOLVING', 'OE_TIME_CYCLE_DEADLINE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_TIME_CYCLE_DEADLINE', 'possible'),
   ('FOA_REVOLVING', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', 'required'),
   ('FOA_REVOLVING', 'OE_ACT_FACILITY_OPEN', 'required'),
+  ('FOA_TERM_LOAN', 'OE_FUL_STATEMENT_CYCLE', 'possible'),
   ('FOA_REVOLVING', 'OE_FUL_STATEMENT_CYCLE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_FUL_STATEMENT_CYCLE', 'possible'),
   ('FOA_REVOLVING', 'OE_REC_ASSET_PLEDGE', 'possible'),
   ('FOA_REVOLVING', 'OE_TIME_CYCLE_STATEMENT', 'required'),
   ('FOA_CONDITIONAL', 'OE_VAL_BY_EVENT', 'required'),
+  ('FOA_REVOLVING', 'OE_ACT_CONDITIONAL_TRIGGER', 'possible'),
   ('FOA_CONDITIONAL', 'OE_ACT_CONDITIONAL_TRIGGER', 'required'),
   ('FOA_CONDITIONAL', 'OE_FUL_ON_CONDITION', 'required'),
   ('FOA_CONDITIONAL', 'OE_REC_ASSET_PLEDGE', 'possible'),
