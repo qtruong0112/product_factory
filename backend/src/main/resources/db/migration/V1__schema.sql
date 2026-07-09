@@ -541,7 +541,6 @@ CREATE TABLE "product_intent" (
   "code" varchar(20),
   "name" varchar(200) NOT NULL,
   "business_intent_id" bigint NOT NULL,
-  "nature_element_code" varchar(60) NOT NULL,
   "archetype_code" varchar(30) NOT NULL,
   "status" entity_status_enum NOT NULL,
   "data_owner" varchar(120),
@@ -948,7 +947,7 @@ CREATE UNIQUE INDEX ON "version_entry" ("entity_type", "entity_code", "version")
 
 COMMENT ON TABLE "app_user" IS 'Giai đoạn 42 — Người dùng thật cho bộ chọn "đổi vai trò" ở sidebar (lọc menu phía frontend, KHÔNG phải đăng nhập/bảo mật thật) và nguồn populate created_user/updated_user của các bảng nghiệp vụ chính.';
 
-COMMENT ON TABLE "obligation_element_type" IS '#1 Obligation Element Type (OET) — Chiều phân loại ngữ nghĩa của nghĩa vụ. 6 chiều chuẩn theo tài liệu Giai đoạn 51 (Party/Value/Activation/Time/Fulfillment/Recovery, mã OET_PARTY…OET_TIME) + giữ lại OET_NATURE (lịch sử, không dùng cho dòng composition mới) + mở rộng OET_LIFECYCLE trong thư viện.';
+COMMENT ON TABLE "obligation_element_type" IS '#1 Obligation Element Type (OET) — Chiều phân loại ngữ nghĩa của nghĩa vụ. Đúng 6 chiều chuẩn, tập đóng (Giai đoạn 52): Party/Value/Activation/Time/Fulfillment/Recovery (mã OET_PARTY…OET_TIME). Đã gỡ OET_NATURE (trùng lặp financial_obligation_archetype) và OET_LIFECYCLE (không gắn dữ liệu obligation_element nào).';
 
 COMMENT ON TABLE "obligation_element" IS '#2 Obligation Element (OE) — Giá trị nguyên tử — câu trả lời cụ thể cho 1 OET, dùng lắp thành Obligation Type. Rel #1: ElementType 1:N Element.';
 
@@ -986,7 +985,7 @@ COMMENT ON COLUMN "attribute_constraint"."depends_on_attribute_code" IS 'Attribu
 
 COMMENT ON TABLE "attribute_enum_value" IS '#11 Constraint (kind=enum) — Giá trị enum của attribute kiểu DT_ENUM (vd asset_type: Xe máy / Ô tô / Vàng).';
 
-COMMENT ON TABLE "block" IS '#7 Block — Khối cấu hình nghiệp vụ, 5 nhóm (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi). App: 12 block, thư viện: 26. Rel #10: mỗi Block governance bởi 1 Element (BLK_INTEREST↔TERM_LOAN_OBLIGATION, BLK_COLLATERAL↔ASSET_PLEDGE…) — FK nullable vì một số block neo vào ’khía cạnh’ chưa mã hóa thành element (Eligibility, Obligor Party).';
+COMMENT ON TABLE "block" IS '#7 Block — Khối cấu hình nghiệp vụ, 5 nhóm (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi). App: 12 block, thư viện: 26. Rel #10: mỗi Block governance bởi 1 Element thật (BLK_COLLATERAL↔OE_REC_ASSET_PLEDGE…) hoặc 1 aspect (FOA/khía cạnh chưa mã hóa thành element — Eligibility, Obligor Party, FOA_REVOLVING…) — 2 cột nullable, đúng 1 trong 2 khác NULL.';
 
 COMMENT ON COLUMN "block"."governed_by_aspect" IS 'Khía cạnh chi phối khi không phải element (Eligibility, Obligor Party, PENALTY…)';
 
@@ -1006,13 +1005,11 @@ COMMENT ON TABLE "business_intent_kpi" IS '#15 Business Intent — KPI của Bus
 
 COMMENT ON TABLE "customer_segment" IS '#22 Customer Segment / Audience — Đối tượng KH mục tiêu — object riêng theo semantic sheet (MỚI so với v2): KH cá nhân (CMND/CCCD · Giấy nhận nợ) / KH doanh nghiệp (ĐKKD · HĐ tín dụng DN), kèm tier Standard/Loyalty/VIP.';
 
-COMMENT ON TABLE "product_intent" IS '#16 Product Intent — Ý định sản phẩm (12 intent: PI-001…). Rel #19: anchored to Obligation Nature + Archetype. Rel #20: 1 Intent định hình N Pattern.';
+COMMENT ON TABLE "product_intent" IS '#16 Product Intent — Ý định sản phẩm (12 intent: PI-001…). Rel #19: anchored to Archetype (FOA). Rel #20: 1 Intent định hình N Pattern.';
 
 COMMENT ON COLUMN "product_intent"."code" IS 'PI-001…';
 
-COMMENT ON COLUMN "product_intent"."nature_element_code" IS 'Element thuộc OET_NATURE (is_identify)';
-
-COMMENT ON TABLE "product_intent_element" IS '#16 Product Intent — Element nền khai báo cho Intent (đối chiếu Ma trận 1). PI-003 ghép FACILITY + LOAN → junction cho phép nhiều nature/element phụ.';
+COMMENT ON TABLE "product_intent_element" IS '#16 Product Intent — Element nền khai báo cho Intent (đối chiếu Ma trận 1). PI-003 ghép FACILITY + LOAN → junction cho phép nhiều element phụ.';
 
 COMMENT ON TABLE "product_pattern" IS '#17 Product Pattern — Khung sản phẩm (8 pattern): lắp Obligation Type × Block theo Ma trận 3, khóa Block không áp dụng (khóa chuyển về Pattern theo semantic sheet — pattern_block.usage). Rel #22: 1 Pattern sinh N Template.';
 
@@ -1102,7 +1099,6 @@ ALTER TABLE "business_intent_kpi" ADD FOREIGN KEY ("business_intent_id") REFEREN
 
 ALTER TABLE "product_intent" ADD FOREIGN KEY ("business_intent_id") REFERENCES "business_intent" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "product_intent" ADD FOREIGN KEY ("nature_element_code") REFERENCES "obligation_element" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "product_intent" ADD FOREIGN KEY ("archetype_code") REFERENCES "financial_obligation_archetype" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 

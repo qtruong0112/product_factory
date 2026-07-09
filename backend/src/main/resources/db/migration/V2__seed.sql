@@ -6,31 +6,29 @@
 -- Lưu ý enum: UI dùng verdict 'no' → schema v3 dùng 'na' (đã quy đổi).
 -- ============================================================================
 
--- ===== 1. obligation_element_type — 7 chiều (6 lõi + OET_LIFECYCLE thư viện) =====
+-- ===== 1. obligation_element_type — 6 chiều chuẩn (Giai đoạn 52: gỡ OET_NATURE/OET_LIFECYCLE,
+-- không phải 1 trong 6 OET thật — xem Giai đoạn 52 trong PROJECT_STATUS.md) =====
 INSERT INTO "obligation_element_type" ("code", "name", "short_name", "description", "is_identify") VALUES
-  ('OET_NATURE', 'Obligation Nature', 'Bản chất', '[lịch sử, Giai đoạn 51 không còn dùng để backfill — xem OET_PARTY…OET_TIME]', true),
   ('OET_PARTY', 'Party', 'Bên tham gia', 'Ai chuyển giao cho ai — Giai đoạn 51', false),
   ('OET_VALUE', 'Value Structure', 'Giá trị', 'Cách giá trị/dư nợ thay đổi theo thời gian', false),
   ('OET_ACTIVATION', 'Activation Logic', 'Kích hoạt', 'Điều kiện/sự kiện làm nghĩa vụ phát sinh', false),
   ('OET_FULFILLMENT', 'Fulfillment Logic', 'Thực thi', 'Cách thực hiện / hoàn trả nghĩa vụ', false),
   ('OET_RECOVERY', 'Recovery Anchor', 'Thu hồi', 'Phương án bảo đảm & thu hồi', false),
-  ('OET_TIME', 'Time Structure', 'Thời gian', 'Chu kỳ và hạn chót của nghĩa vụ', false),
-  ('OET_LIFECYCLE', 'Lifecycle & State Machine', 'Vòng đời', 'Vòng đời & máy trạng thái [thư viện, tab Element Type]', false);
+  ('OET_TIME', 'Time Structure', 'Thời gian', 'Chu kỳ và hạn chót của nghĩa vụ', false);
 
 -- ===== 2. obligation_element — 17 element lõi (ONTO) + 1 từ archDetail
 --          + Giai đoạn 51: 6 OE_PARTY (Data dictionary Mục 4.1) + 5 OE dùng cho OT lõi
 --          Giải ngân/Bàn giao TS (Value/Activation/Time/Fulfillment/Recovery "1 lần, cố định")
 --          + OE_VAL_ACCRUAL_ON_BALANCE (OT Trả lãi) =====
--- Giai đoạn 51b: đổi tên toàn bộ mã OE (trừ 3 mã OET_NATURE lịch sử) khớp ĐÚNG catalog 36 mã
--- đóng của Data Dictionary Mục 4 (trước đó Giai đoạn 51 giữ nhầm tên cũ kiểu ONTO gốc) + bổ sung
--- 10 mã còn thiếu cho đủ 36 (6 Party + 8 Value + 7 Activation + 5 Time + 5 Fulfillment + 5 Recovery).
+-- Giai đoạn 51b: đổi tên toàn bộ mã OE khớp ĐÚNG catalog 36 mã đóng của Data Dictionary Mục 4
+-- (trước đó Giai đoạn 51 giữ nhầm tên cũ kiểu ONTO gốc) + bổ sung 10 mã còn thiếu cho đủ 36
+-- (6 Party + 8 Value + 7 Activation + 5 Time + 5 Fulfillment + 5 Recovery).
 -- OE_ACT_SETTLEMENT_TRIGGER giữ làm mã MỞ RỘNG ngoài 36 (ghi chú rõ): Ví dụ xuyên suốt cần khái
 -- niệm "trigger tất toán" cho Bàn giao TS (trả) nhưng catalog 7 mã OET_ACTIVATION đóng của chính
 -- Data Dictionary không có mã nào khớp đúng nghĩa này — lỗ hổng của tài liệu gốc, không phải bịa.
+-- Giai đoạn 52: bỏ hẳn 3 mã OET_NATURE (TERM_LOAN_OBLIGATION/FACILITY_OBLIGATION/CONDITIONAL_OBLIGATION)
+-- — trùng lặp 1:1 với financial_obligation_archetype.code, đúng tinh thần tài liệu BA v1.0 (OI-4).
 INSERT INTO "obligation_element" ("code", "name", "element_type_code") VALUES
-  ('TERM_LOAN_OBLIGATION', 'Nợ 1 chiều (đi vay)', 'OET_NATURE'),
-  ('FACILITY_OBLIGATION', 'Cấp hạn mức', 'OET_NATURE'),
-  ('CONDITIONAL_OBLIGATION', 'Nghĩa vụ có điều kiện', 'OET_NATURE'),
   ('OE_PARTY_LENDER_BORROWER', 'Bên cho vay → Bên vay', 'OET_PARTY'),
   ('OE_PARTY_LENDER_BENEFICIARY', 'Bên cho vay → Bên thụ hưởng', 'OET_PARTY'),
   ('OE_PARTY_BORROWER_LENDER', 'Bên vay → Bên cho vay', 'OET_PARTY'),
@@ -75,21 +73,21 @@ INSERT INTO "financial_obligation_archetype" ("code", "name", "nature", "nature_
   ('FOA_REVOLVING', 'Revolving Obligation', 'Cấp hạn mức tái sử dụng', 'Bên cho vay cấp một hạn mức, bên vay rút/trả nhiều lần trong hạn mức.', 'Hạn mức tăng/giảm có capacity', 'Số dư khả dụng biến động theo rút vốn và trả nợ, có quản trị capacity.'),
   ('FOA_CONDITIONAL', 'Conditional Obligation', 'Nghĩa vụ phát sinh có điều kiện', 'Nghĩa vụ chỉ hình thành/được thực thi khi một sự kiện điều kiện xảy ra.', 'Giá trị theo sự kiện kích hoạt', 'Giá trị nghĩa vụ phụ thuộc kết quả của sự kiện kích hoạt (trigger).');
 
--- ===== 4. foa_element — Element gắn Archetype kèm requirement (archDetail.elementRows) =====
+-- ===== 4. foa_element — Element gắn Archetype kèm requirement (archDetail.elementRows)
+-- Giai đoạn 52: bỏ 3 dòng nature-tautology (vd FOA_TERM_LOAN→TERM_LOAN_OBLIGATION required) —
+-- trùng lặp hiển nhiên (FOA nào cũng "required" đúng nature của chính nó), làm nhiễu ma trận FOA×OE
+-- (foaOeMatrix() derive thẳng từ bảng này) =====
 INSERT INTO "foa_element" ("archetype_code", "element_code", "requirement") VALUES
-  ('FOA_TERM_LOAN', 'TERM_LOAN_OBLIGATION', 'required'),
   ('FOA_TERM_LOAN', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'required'),
   ('FOA_TERM_LOAN', 'OE_ACT_ON_DISBURSEMENT', 'required'),
   ('FOA_TERM_LOAN', 'OE_FUL_INSTALLMENT', 'required'),
   ('FOA_TERM_LOAN', 'OE_REC_ASSET_PLEDGE', 'possible'),
   ('FOA_TERM_LOAN', 'OE_TIME_CYCLE_DEADLINE', 'required'),
-  ('FOA_REVOLVING', 'FACILITY_OBLIGATION', 'required'),
   ('FOA_REVOLVING', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', 'required'),
   ('FOA_REVOLVING', 'OE_ACT_FACILITY_OPEN', 'required'),
   ('FOA_REVOLVING', 'OE_FUL_STATEMENT_CYCLE', 'required'),
   ('FOA_REVOLVING', 'OE_REC_ASSET_PLEDGE', 'possible'),
   ('FOA_REVOLVING', 'OE_TIME_CYCLE_STATEMENT', 'required'),
-  ('FOA_CONDITIONAL', 'CONDITIONAL_OBLIGATION', 'required'),
   ('FOA_CONDITIONAL', 'OE_VAL_BY_EVENT', 'required'),
   ('FOA_CONDITIONAL', 'OE_ACT_CONDITIONAL_TRIGGER', 'required'),
   ('FOA_CONDITIONAL', 'OE_FUL_ON_CONDITION', 'required'),
@@ -551,11 +549,13 @@ INSERT INTO "block" ("id", "code", "name", "biz_group", "governed_by_element_cod
   ('BLK_ELIGIBILITY', 'BLOCK_ELIGIBILITY', 'Điều kiện tham gia', 'Khởi tạo', NULL, 'Eligibility', 'published'),
   ('BLK_COUNTERPARTY', 'BLOCK_COUNTERPARTY', 'Bên tham gia', 'Khởi tạo', NULL, 'Obligor Party', 'published'),
   ('BLK_REGULATORY', 'BLOCK_REGULATORY', 'Tuân thủ & Pháp lý', 'Khởi tạo', NULL, 'Legal Form', 'published'),
-  ('BLK_LIMIT', 'BLOCK_LIMIT', 'Hạn mức (Limit)', 'Giá trị', 'FACILITY_OBLIGATION', NULL, 'published'),
+  -- Giai đoạn 52: BLK_LIMIT/BLK_INTEREST/BLK_FEE trước đây governed_by mã OET_NATURE giả (đã xóa) —
+  -- chuyển sang governed_by_aspect = mã FOA thật (giữ đúng ý nghĩa gốc, không bịa liên kết OE mới).
+  ('BLK_LIMIT', 'BLOCK_LIMIT', 'Hạn mức (Limit)', 'Giá trị', NULL, 'FOA_REVOLVING', 'published'),
   ('BLK_VALUEBASE', 'BLOCK_VALUE_BASE', 'Cơ sở giá trị (Value Base)', 'Giá trị', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', NULL, 'published'),
   ('BLK_DISBURSEMENT', 'BLOCK_DISBURSEMENT', 'Giải ngân (Disbursement)', 'Kích hoạt', 'OE_ACT_ON_DISBURSEMENT', NULL, 'published'),
-  ('BLK_INTEREST', 'BLOCK_INTEREST', 'Lãi suất (Interest)', 'Vận hành', 'TERM_LOAN_OBLIGATION', NULL, 'published'),
-  ('BLK_FEE', 'BLOCK_FEE', 'Phí (Fee)', 'Vận hành', 'TERM_LOAN_OBLIGATION', NULL, 'published'),
+  ('BLK_INTEREST', 'BLOCK_INTEREST', 'Lãi suất (Interest)', 'Vận hành', NULL, 'FOA_TERM_LOAN', 'published'),
+  ('BLK_FEE', 'BLOCK_FEE', 'Phí (Fee)', 'Vận hành', NULL, 'FOA_TERM_LOAN', 'published'),
   ('BLK_REPAYMENT', 'BLOCK_REPAYMENT', 'Trả nợ (Repayment)', 'Vận hành', 'OE_FUL_INSTALLMENT', NULL, 'published'),
   ('BLK_COLLATERAL', 'BLOCK_COLLATERAL', 'Tài sản đảm bảo', 'Thu hồi', 'OE_REC_ASSET_PLEDGE', NULL, 'published'),
   ('BLK_PENALTY', 'BLOCK_PENALTY', 'Phạt & Quá hạn', 'Thu hồi', NULL, 'PENALTY', 'published'),
@@ -660,20 +660,21 @@ INSERT INTO "customer_segment" ("code", "name", "audience", "tier", "legal_requi
   ('SEG_LOYALTY', 'Khách hàng thân thiết (−0,3%/tháng)', 'individual', 'loyalty', 'CMND/CCCD · Giấy nhận nợ cá nhân'),
   ('SEG_VIP', 'Khách hàng VIP (−0,5%/tháng)', 'individual', 'vip', 'CMND/CCCD · Giấy nhận nợ cá nhân');
 
--- ===== 21. product_intent — 6 PI (list view; liên kết BI [suy luận] theo chủ đề) =====
-INSERT INTO "product_intent" ("id", "code", "name", "business_intent_id", "nature_element_code", "archetype_code", "status") VALUES
-  (1, 'PI-001', 'Cho vay tiêu dùng nhỏ lẻ', 1, 'TERM_LOAN_OBLIGATION', 'FOA_TERM_LOAN', 'published'),
-  (2, 'PI-002', 'Cấp hạn mức để cho vay', 4, 'FACILITY_OBLIGATION', 'FOA_REVOLVING', 'published'),
-  (3, 'PI-003', 'Cho vay tiêu dùng có hạn mức', 4, 'FACILITY_OBLIGATION', 'FOA_REVOLVING', 'review'),
-  (4, 'PI-004', 'Cho vay cầm cố ô tô', 2, 'TERM_LOAN_OBLIGATION', 'FOA_TERM_LOAN', 'approved'),
-  (5, 'PI-005', 'Cho vay cầm cố xe máy trả góp', 2, 'TERM_LOAN_OBLIGATION', 'FOA_TERM_LOAN', 'published'),
-  (6, 'PI-006', 'Vay tín chấp lương', 5, 'TERM_LOAN_OBLIGATION', 'FOA_TERM_LOAN', 'draft');
+-- ===== 21. product_intent — 6 PI (list view; liên kết BI [suy luận] theo chủ đề)
+-- Giai đoạn 52: bỏ cột nature_element_code (trùng lặp 1:1 với archetype_code, xem OI-4) =====
+INSERT INTO "product_intent" ("id", "code", "name", "business_intent_id", "archetype_code", "status") VALUES
+  (1, 'PI-001', 'Cho vay tiêu dùng nhỏ lẻ', 1, 'FOA_TERM_LOAN', 'published'),
+  (2, 'PI-002', 'Cấp hạn mức để cho vay', 4, 'FOA_REVOLVING', 'published'),
+  (3, 'PI-003', 'Cho vay tiêu dùng có hạn mức', 4, 'FOA_REVOLVING', 'review'),
+  (4, 'PI-004', 'Cho vay cầm cố ô tô', 2, 'FOA_TERM_LOAN', 'approved'),
+  (5, 'PI-005', 'Cho vay cầm cố xe máy trả góp', 2, 'FOA_TERM_LOAN', 'published'),
+  (6, 'PI-006', 'Vay tín chấp lương', 5, 'FOA_TERM_LOAN', 'draft');
 
 SELECT setval(pg_get_serial_sequence('product_intent','id'), 6);
 
--- ===== 22. product_intent_element — element nền (PI-003 ghép FACILITY + LOAN theo list view) =====
+-- ===== 22. product_intent_element — element nền (PI-003 ghép FACILITY + LOAN theo list view)
+-- Giai đoạn 52: bỏ dòng đầu mã nature (trùng lặp archetype_code của product_intent) =====
 INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUES
-  (3, 'TERM_LOAN_OBLIGATION'),
   (3, 'OE_VAL_LIMIT_INC_DEC_CAPACITY'),
   (3, 'OE_FUL_STATEMENT_CYCLE'),
   (5, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
@@ -687,28 +688,24 @@ INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUE
 INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUES
   -- PI-001 'Cho vay tiêu dùng nhỏ lẻ' → PT-005/PT-003 nhóm tín chấp+cầm cố trả góp dùng chung archetype FOA_TERM_LOAN;
   -- lấy nguyên bộ composition của OT_UNSECURED (đại diện Term Loan không TSĐB)
-  (1, 'TERM_LOAN_OBLIGATION'),
   (1, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
   (1, 'OE_ACT_ON_DISBURSEMENT'),
   (1, 'OE_FUL_INSTALLMENT'),
   (1, 'OE_REC_UNSECURED'),
   (1, 'OE_TIME_CYCLE_DEADLINE'),
   -- PI-002 'Cấp hạn mức để cho vay' → archetype FOA_REVOLVING; lấy nguyên bộ composition của OT_FACILITY
-  (2, 'FACILITY_OBLIGATION'),
   (2, 'OE_VAL_LIMIT_INC_DEC_CAPACITY'),
   (2, 'OE_ACT_FACILITY_OPEN'),
   (2, 'OE_FUL_STATEMENT_CYCLE'),
   (2, 'OE_REC_ASSET_PLEDGE'),
   (2, 'OE_TIME_CYCLE_STATEMENT'),
   -- PI-004 'Cho vay cầm cố ô tô' → Pattern PT-006 gắn OT_AUTO_PLEDGE; lấy nguyên bộ composition tương ứng
-  (4, 'TERM_LOAN_OBLIGATION'),
   (4, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
   (4, 'OE_ACT_ON_DISBURSEMENT'),
   (4, 'OE_FUL_INSTALLMENT'),
   (4, 'OE_REC_ASSET_PLEDGE'),
   (4, 'OE_TIME_CYCLE_DEADLINE'),
   -- PI-006 'Vay tín chấp lương' → Pattern PT-005 gắn OT_UNSECURED; lấy nguyên bộ composition tương ứng
-  (6, 'TERM_LOAN_OBLIGATION'),
   (6, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
   (6, 'OE_ACT_ON_DISBURSEMENT'),
   (6, 'OE_FUL_INSTALLMENT'),
@@ -1187,39 +1184,30 @@ INSERT INTO "constraint_matrix" ("id", "kind", "title", "description") VALUES
 
 SELECT setval(pg_get_serial_sequence('constraint_matrix','id'), 3);
 
--- ===== 35. matrix_cell — verdict 'no' của UI quy đổi thành 'na' =====
+-- ===== 35. matrix_cell — verdict 'no' của UI quy đổi thành 'na'
+-- Giai đoạn 52: bỏ hàng/cột OET_NATURE khỏi Matrix 2 (ELEMENTTYPE_X_ELEMENTTYPE) — không còn là
+-- 1 trong 6 OET chuẩn, ma trận co từ 6×6 (36 ô) còn đúng 5×5 (25 ô) =====
 INSERT INTO "matrix_cell" ("matrix_id", "row_code", "col_code", "verdict", "is_override") VALUES
-  (2, 'OET_NATURE', 'OET_NATURE', 'req', false),
-  (2, 'OET_NATURE', 'OET_VALUE', 'req', false),
-  (2, 'OET_NATURE', 'OET_ACTIVATION', 'req', false),
-  (2, 'OET_NATURE', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_NATURE', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_NATURE', 'OET_TIME', 'req', false),
-  (2, 'OET_VALUE', 'OET_NATURE', 'req', false),
   (2, 'OET_VALUE', 'OET_VALUE', 'req', false),
   (2, 'OET_VALUE', 'OET_ACTIVATION', 'pos', false),
   (2, 'OET_VALUE', 'OET_FULFILLMENT', 'req', false),
   (2, 'OET_VALUE', 'OET_RECOVERY', 'pos', false),
   (2, 'OET_VALUE', 'OET_TIME', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_NATURE', 'req', false),
   (2, 'OET_ACTIVATION', 'OET_VALUE', 'pos', false),
   (2, 'OET_ACTIVATION', 'OET_ACTIVATION', 'req', false),
   (2, 'OET_ACTIVATION', 'OET_FULFILLMENT', 'pos', false),
   (2, 'OET_ACTIVATION', 'OET_RECOVERY', 'na', false),
   (2, 'OET_ACTIVATION', 'OET_TIME', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_NATURE', 'req', false),
   (2, 'OET_FULFILLMENT', 'OET_VALUE', 'req', false),
   (2, 'OET_FULFILLMENT', 'OET_ACTIVATION', 'pos', false),
   (2, 'OET_FULFILLMENT', 'OET_FULFILLMENT', 'req', false),
   (2, 'OET_FULFILLMENT', 'OET_RECOVERY', 'pos', false),
   (2, 'OET_FULFILLMENT', 'OET_TIME', 'req', false),
-  (2, 'OET_RECOVERY', 'OET_NATURE', 'pos', false),
   (2, 'OET_RECOVERY', 'OET_VALUE', 'pos', false),
   (2, 'OET_RECOVERY', 'OET_ACTIVATION', 'na', false),
   (2, 'OET_RECOVERY', 'OET_FULFILLMENT', 'pos', false),
   (2, 'OET_RECOVERY', 'OET_RECOVERY', 'req', false),
   (2, 'OET_RECOVERY', 'OET_TIME', 'pos', false),
-  (2, 'OET_TIME', 'OET_NATURE', 'req', false),
   (2, 'OET_TIME', 'OET_VALUE', 'pos', false),
   (2, 'OET_TIME', 'OET_ACTIVATION', 'req', false),
   (2, 'OET_TIME', 'OET_FULFILLMENT', 'req', false),
