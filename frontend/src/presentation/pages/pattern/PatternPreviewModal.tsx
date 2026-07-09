@@ -134,7 +134,7 @@ export default function PatternPreviewModal({ pattern, productIntentLabel, assig
             </div>
             <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#122019' }}>{assignedOTs.length}</div>
-              <div style={{ fontSize: 11.5, color: '#8A998F', marginTop: 4 }}>Obligation Type</div>
+              <div style={{ fontSize: 11.5, color: '#8A998F', marginTop: 4 }}>Obligation Type Family</div>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function PatternPreviewModal({ pattern, productIntentLabel, assig
           {/* coverage */}
           {coverageRows.length > 0 && (
             <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginBottom: 20 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 14 }}>Độ phủ theo ma trận Obligation Type × Block</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 14 }}>Độ phủ theo ma trận Obligation Type Family × Block</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {coverageRows.map((r) => (
                   <span

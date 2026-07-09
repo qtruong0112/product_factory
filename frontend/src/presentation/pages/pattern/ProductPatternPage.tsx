@@ -42,7 +42,7 @@ export default function ProductPatternPage() {
   const columns = [
     { label: 'Mã', width: '120px' },
     { label: 'Tên Pattern' },
-    { label: 'Obligation Type', width: '220px' },
+    { label: 'Obligation Type Family', width: '220px' },
     { label: 'Số Block', width: '100px', align: 'center' as const },
     { label: 'Trạng thái', width: '130px' },
   ]
@@ -62,7 +62,7 @@ export default function ProductPatternPage() {
       columns={columns}
       rows={rows}
       searchPlaceholder="Tìm Product Pattern…"
-      filters={['Obligation Type', 'Trạng thái']}
+      filters={['Obligation Type Family', 'Trạng thái']}
       actionLabel="Tạo Pattern"
       onRowClick={(i) => navigate(`/pattern/${list[i].code}`)}
     />

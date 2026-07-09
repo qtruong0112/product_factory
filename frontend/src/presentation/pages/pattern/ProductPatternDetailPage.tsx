@@ -146,10 +146,10 @@ export default function ProductPatternDetailPage() {
     const assignedCount = data?.assignedOTs.length ?? 0
     const verdict =
       assignedCount === 0
-        ? { label: 'Chưa gán Obligation Type — gán trước để kiểm tra độ phủ', bg: '#FEF3D6', fg: '#9A6B00' }
+        ? { label: 'Chưa gán Obligation Type Family — gán trước để kiểm tra độ phủ', bg: '#FEF3D6', fg: '#9A6B00' }
         : missing.length > 0
         ? { label: '⚠ Thiếu ' + missing.length + ' Block bắt buộc theo ma trận', bg: '#FBE3E3', fg: '#B23B3B' }
-        : { label: '✓ Đủ Block bắt buộc theo ma trận Obligation Type × Block', bg: '#DCF3E7', fg: '#0B7349' }
+        : { label: '✓ Đủ Block bắt buộc theo ma trận Obligation Type Family × Block', bg: '#DCF3E7', fg: '#0B7349' }
     return { rows, missing, reqTotal, reqCovered, verdict, pctLabel: reqCovered + '/' + reqTotal }
   }, [data])
 
@@ -258,7 +258,7 @@ export default function ProductPatternDetailPage() {
           <div style={{ padding: '14px 16px 0', flex: 'none' }}>
             <div style={{ display: 'flex', background: '#F1F5F2', borderRadius: 9, padding: 3, marginBottom: 13 }}>
               <button style={tabBtn(paletteTab === 'block')} onClick={() => setPaletteTab('block')}>Block</button>
-              <button style={tabBtn(paletteTab === 'ot')} onClick={() => setPaletteTab('ot')}>Obligation Type</button>
+              <button style={tabBtn(paletteTab === 'ot')} onClick={() => setPaletteTab('ot')}>Obligation Type Family</button>
             </div>
           </div>
 
