@@ -44,4 +44,10 @@ public class ConstraintMatrixController {
     public Map<String, Object> patternCoverage() {
         return service.patternCoverage();
     }
+
+    /** Tab "FOA × Obligation Element" — Giai đoạn 51, PHÁI SINH TỪ foa_element (nguồn duy nhất). */
+    @GetMapping("/foa-oe-matrix")
+    public Map<String, Object> foaOeMatrix() {
+        return service.foaOeMatrix();
+    }
 }
