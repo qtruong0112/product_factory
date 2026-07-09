@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 // ---- Bảng màu legend trích NGUYÊN từ prototype (LEG). Key 'no' ứng verdict DB 'na'. ----
-type LegKind = 'rpn' | 'compat' | 'block'
+type LegKind = 'rpn'
 type Tone = [string, string, string, string] // [label, bg, fg, border]
 const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
   rpn: {
@@ -9,25 +9,11 @@ const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
     pos: ['Được phép', '#E5EEF9', '#2F73C4', '#BBD4F2'],
     no: ['Không', '#F4F7F5', '#B8C5BD', '#E2E8E4'],
   },
-  compat: {
-    req: ['Tương thích', '#DCF3E7', '#0B7349', '#B7E6CE'],
-    pos: ['Có điều kiện', '#FEF3D6', '#9A6B00', '#F2DE9E'],
-    no: ['Xung đột', '#FBE3E3', '#B23B3B', '#F0C4C4'],
-  },
-  block: {
-    req: ['Bắt buộc', '#DCF3E7', '#0B7349', '#B7E6CE'],
-    pos: ['Tùy chọn', '#E5EEF9', '#2F73C4', '#BBD4F2'],
-    no: ['Không dùng', '#F4F7F5', '#B8C5BD', '#E2E8E4'],
-  },
 }
 
-// Nhãn tab ngắn (UI chrome — trích nguyên prototype `labels`).
-const TAB_LABELS = [
-  'FOA × Obligation Element',
-  'OET × OET',
-  'Obligation Type Family (OTF) × Block',
-  'Pattern × Block (độ phủ)',
-]
+// Nhãn tab ngắn — Giai đoạn 58: chỉ còn đúng 2 ma trận (bỏ "OET × OET" và
+// "Pattern × Block (độ phủ)" khỏi màn Ma trận theo yêu cầu user).
+const TAB_LABELS = ['FOA × Obligation Element', 'Obligation Element × Block']
 
 interface Grid {
   title: string
@@ -38,20 +24,7 @@ interface Grid {
   rows: { code: string; label: string; cells: string[] }[]
 }
 
-interface MatrixMeta {
-  id: number
-  kind: string
-  title: string
-  description: string
-}
-interface DetailResp {
-  matrix: MatrixMeta
-  rowHead: string
-  legend: LegKind
-  cols: { code: string; label: string }[]
-  rows: { code: string; label: string; cells: string[] }[]
-}
-interface CoverageResp {
+interface MatrixResp {
   rowHead: string
   legend: LegKind
   cols: { code: string; label: string }[]
@@ -71,27 +44,13 @@ export default function MatrixPage() {
 
   useEffect(() => {
     async function load() {
-      // Giai đoạn 51: ma trận "FOA × Obligation Element" không còn lưu trong constraint_matrix —
-      // đã gộp về foa_element (nguồn duy nhất), lấy qua endpoint derived riêng, giống cách
-      // "Pattern × Block (độ phủ)" đã derived từ trước.
       const foaOeRes = await fetch('/api/constraint-matrices/foa-oe-matrix')
       if (!foaOeRes.ok) throw new Error(`GET foa-oe-matrix ${foaOeRes.status}`)
-      const foaOe: CoverageResp = await foaOeRes.json()
+      const foaOe: MatrixResp = await foaOeRes.json()
 
-      const listRes = await fetch('/api/constraint-matrices')
-      if (!listRes.ok) throw new Error(`GET constraint-matrices ${listRes.status}`)
-      const matrices: MatrixMeta[] = await listRes.json()
-
-      const details: DetailResp[] = await Promise.all(
-        matrices.map(async (m) => {
-          const r = await fetch(`/api/constraint-matrices/${m.id}/detail`)
-          if (!r.ok) throw new Error(`GET matrix ${m.id} detail ${r.status}`)
-          return r.json()
-        }),
-      )
-      const covRes = await fetch('/api/constraint-matrices/pattern-coverage')
-      if (!covRes.ok) throw new Error(`GET pattern-coverage ${covRes.status}`)
-      const cov: CoverageResp = await covRes.json()
+      const oeBlockRes = await fetch('/api/constraint-matrices/oe-block-matrix')
+      if (!oeBlockRes.ok) throw new Error(`GET oe-block-matrix ${oeBlockRes.status}`)
+      const oeBlock: MatrixResp = await oeBlockRes.json()
 
       const g: Grid[] = [
         {
@@ -102,23 +61,15 @@ export default function MatrixPage() {
           cols: foaOe.cols,
           rows: foaOe.rows,
         },
-        ...details.map((d) => ({
-          title: d.matrix.title,
-          desc: d.matrix.description,
-          legend: d.legend,
-          rowHead: d.rowHead,
-          cols: d.cols,
-          rows: d.rows,
-        })),
+        {
+          title: 'Ma trận 2: Obligation Element × Block',
+          desc: 'Block nào được Obligation Element chi phối (governed_by_element_code) — dùng để đối chiếu độ phủ Block khi dựng Pattern. Nguồn duy nhất: block.governed_by_element_code.',
+          legend: oeBlock.legend,
+          rowHead: oeBlock.rowHead,
+          cols: oeBlock.cols,
+          rows: oeBlock.rows,
+        },
       ]
-      g.push({
-        title: 'Ma trận 4: Pattern × Block (độ phủ)',
-        desc: 'Độ phủ Block thực tế của từng Pattern — đối chiếu với ma trận OTF để phát hiện Block thiếu/thừa. (Suy diễn từ OTF của Pattern × ma trận 3.)',
-        legend: cov.legend,
-        rowHead: cov.rowHead,
-        cols: cov.cols,
-        rows: cov.rows,
-      })
       setTabs(g)
     }
     load()
