@@ -27,6 +27,13 @@ interface TypeRow {
   productCount: number
 }
 
+interface ActivationRule {
+  triggerElementCode: string
+  triggerElementName: string
+  activatedOtCoreCode: string
+  activatedOtCoreName: string
+}
+
 interface Detail {
   archetype: Archetype
   typeCount: number
@@ -34,6 +41,7 @@ interface Detail {
   productCount: number
   elementRows: ElementRow[]
   typeRows: TypeRow[]
+  activationRules: ActivationRule[]
 }
 
 const HEAD_BG: Record<string, string> = {
@@ -209,6 +217,27 @@ export default function ArchetypeDetailPage() {
             ))}
           </div>
         </div>
+
+        {data.activationRules.length > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginTop: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Quy tắc kích hoạt Obligation Type phụ trợ</div>
+            <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
+              Độc lập với Archetype — chỉ do lựa chọn Obligation Element quyết định (Giai đoạn 51).
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {data.activationRules.map((r) => (
+                <div
+                  key={r.triggerElementCode + r.activatedOtCoreCode}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: '#41524A' }}
+                >
+                  <span style={{ fontWeight: 600, color: '#243A30' }}>{r.triggerElementName}</span>
+                  <Icon name="arrow" size={13} color="#A7B5AC" />
+                  <span style={{ fontWeight: 700, color: '#0B7349' }}>{r.activatedOtCoreName} → BẬT</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

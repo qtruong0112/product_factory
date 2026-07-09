@@ -3,14 +3,22 @@ import { getList, type Page } from '../../infrastructure/api/client'
 import ListScreen, { type ListColumn } from '../components/ListScreen'
 import { StatusChip } from '../components/StatusChip'
 
-// Obligation Type — làm giàu: familyName/archetypeName (join), elementCount (đếm obligation_type_composition).
+// Obligation Type Family (OTF) — làm giàu: archetypeName (join), elementCount (đếm obligation_type_composition).
+// Giai đoạn 51: bỏ familyName (obligation_family đã gộp bỏ, trùng 1:1 với archetype).
 interface ObTypeRow {
   code: string
   name: string
-  familyName: string
   archetypeName: string
   elementCount: number
   status: string
+}
+
+// Obligation Type lõi (OT) — Giai đoạn 51, tập đóng 7 mã cố định.
+interface ObTypeCoreRow {
+  code: string
+  name: string
+  groupKind: string
+  description: string | null
 }
 
 // Obligation Element — làm giàu: elementTypeName (join), isIdentify (join obligation_element_type).
@@ -94,10 +102,11 @@ function BoolChip({ value }: { value: boolean }) {
   )
 }
 
-const TABS = ['Obligation Type', 'Obligation Element', 'Element Type']
+const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Element Type']
 
 export default function ObligationPage() {
   const [types, setTypes] = useState<Page<ObTypeRow> | null>(null)
+  const [typeCores, setTypeCores] = useState<Page<ObTypeCoreRow> | null>(null)
   const [elements, setElements] = useState<Page<ObElementRow> | null>(null)
   const [elementTypes, setElementTypes] = useState<Page<ObElementTypeRow> | null>(null)
   const [tab, setTab] = useState(0)
@@ -107,11 +116,13 @@ export default function ObligationPage() {
   useEffect(() => {
     Promise.all([
       getList<ObTypeRow>('obligation-types', 0, 200),
+      getList<ObTypeCoreRow>('obligation-type-cores', 0, 200),
       getList<ObElementRow>('obligation-elements', 0, 200),
       getList<ObElementTypeRow>('obligation-element-types', 0, 200),
     ])
-      .then(([t, e, et]) => {
+      .then(([t, tc, e, et]) => {
         setTypes(t)
+        setTypeCores(tc)
         setElements(e)
         setElementTypes(et)
       })
@@ -135,9 +146,8 @@ export default function ObligationPage() {
   if (tab === 0) {
     columns = [
       { label: 'Mã', width: '230px' },
-      { label: 'Obligation Type' },
-      { label: 'Archetype', width: '160px' },
-      { label: 'Family', width: '190px' },
+      { label: 'Obligation Type Family' },
+      { label: 'Archetype (FOA)', width: '160px' },
       { label: 'Element', width: '100px', align: 'center' },
       { label: 'Trạng thái', width: '130px' },
     ]
@@ -145,13 +155,27 @@ export default function ObligationPage() {
       mono(t.code),
       <span style={{ fontWeight: 600, color: '#122019' }}>{t.name}</span>,
       <ArchetypeChip label={t.archetypeName} />,
-      <span style={{ color: '#8A998F' }}>{t.familyName}</span>,
       <span style={{ color: '#41524A' }}>{t.elementCount}</span>,
       <StatusChip status={t.status} />,
     ])
     searchPlaceholder = 'Tìm trong thư viện nghĩa vụ…'
     actionLabel = 'Thêm mục'
   } else if (tab === 1) {
+    columns = [
+      { label: 'Mã', width: '210px' },
+      { label: 'Obligation Type (lõi)' },
+      { label: 'Nhóm', width: '140px' },
+      { label: 'Mô tả' },
+    ]
+    rows = (typeCores?.content ?? []).map((t) => [
+      mono(t.code),
+      <span style={{ fontWeight: 600, color: '#122019' }}>{t.name}</span>,
+      <NeutralChip label={t.groupKind === 'core' ? 'Cốt lõi' : 'Phụ trợ'} />,
+      <span style={{ color: '#8A998F' }}>{t.description ?? '—'}</span>,
+    ])
+    searchPlaceholder = 'Tìm trong 7 Obligation Type lõi…'
+    actionLabel = 'Thêm mục'
+  } else if (tab === 2) {
     columns = [
       { label: 'Mã', width: '360px' },
       { label: 'Obligation Element' },
