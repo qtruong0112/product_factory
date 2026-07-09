@@ -14,7 +14,8 @@ import BlockDetailPage from './presentation/pages/block/BlockDetailPage'
 import MatrixPage from './presentation/pages/MatrixPage'
 import AttributePage from './presentation/pages/attribute/AttributePage'
 import AttributeUsageDetailPage from './presentation/pages/attribute/AttributeUsageDetailPage'
-import ObligationPage from './presentation/pages/ObligationPage'
+import ObligationPage from './presentation/pages/obligation/ObligationPage'
+import ObligationTypeDetailPage from './presentation/pages/obligation/ObligationTypeDetailPage'
 import ArchetypePage from './presentation/pages/archetype/ArchetypePage'
 import ArchetypeDetailPage from './presentation/pages/archetype/ArchetypeDetailPage'
 import DomainPage from './presentation/pages/domain/DomainPage'
@@ -101,6 +102,7 @@ function App() {
             <Route path="/variant/:code" element={<ProductVariantDetailPage />} />
             <Route path="/release/:variantCode" element={<ReleasePage />} />
             <Route path="/activity/:id" element={<ActivityDetailPage />} />
+            <Route path="/obligation-type/:code" element={<ObligationTypeDetailPage />} />
             <Route path="/:view" element={<GenericView />} />
           </Routes>
         </Layout>

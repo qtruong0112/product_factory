@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getList, type Page } from '../../infrastructure/api/client'
-import ListScreen, { type ListColumn } from '../components/ListScreen'
-import { StatusChip } from '../components/StatusChip'
+import { useNavigate } from 'react-router-dom'
+import { getList, type Page } from '../../../infrastructure/api/client'
+import ListScreen, { type ListColumn } from '../../components/ListScreen'
+import { StatusChip } from '../../components/StatusChip'
 
 // Obligation Type Family (OTF) — làm giàu: archetypeName (join), elementCount (đếm obligation_type_composition).
 // Giai đoạn 51: bỏ familyName (obligation_family đã gộp bỏ, trùng 1:1 với archetype).
@@ -105,6 +106,7 @@ function BoolChip({ value }: { value: boolean }) {
 const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
 
 export default function ObligationPage() {
+  const navigate = useNavigate()
   const [types, setTypes] = useState<Page<ObTypeRow> | null>(null)
   const [typeCores, setTypeCores] = useState<Page<ObTypeCoreRow> | null>(null)
   const [elements, setElements] = useState<Page<ObElementRow> | null>(null)
@@ -142,6 +144,7 @@ export default function ObligationPage() {
   let rows: React.ReactNode[][]
   let searchPlaceholder: string
   let actionLabel: string
+  let onRowClick: ((index: number) => void) | undefined
 
   if (tab === 0) {
     columns = [
@@ -160,6 +163,10 @@ export default function ObligationPage() {
     ])
     searchPlaceholder = 'Tìm trong thư viện nghĩa vụ…'
     actionLabel = 'Thêm mục'
+    onRowClick = (i) => {
+      const code = types?.content[i]?.code
+      if (code) navigate(`/obligation-type/${code}`)
+    }
   } else if (tab === 1) {
     columns = [
       { label: 'Mã', width: '210px' },
@@ -237,6 +244,7 @@ export default function ObligationPage() {
         searchPlaceholder={searchPlaceholder}
         filters={['Trạng thái']}
         actionLabel={actionLabel}
+        onRowClick={onRowClick}
       />
     </div>
   )
