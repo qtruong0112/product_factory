@@ -1,9 +1,8 @@
 package com.f88.productfactory.application.service.pipeline;
 
 import com.f88.productfactory.domain.model.attribute.Attribute;
-import com.f88.productfactory.domain.model.governance.ConstraintMatrix;
-import com.f88.productfactory.domain.model.governance.MatrixCell;
 import com.f88.productfactory.domain.model.ontology.ObligationType;
+import com.f88.productfactory.domain.model.ontology.ObligationTypeComposition;
 import com.f88.productfactory.domain.model.pipeline.PatternBlock;
 import com.f88.productfactory.domain.model.pipeline.PatternObligationType;
 import com.f88.productfactory.domain.model.pipeline.ProductPattern;
@@ -11,9 +10,8 @@ import com.f88.productfactory.domain.model.structure.AnswerSlot;
 import com.f88.productfactory.domain.model.structure.Block;
 import com.f88.productfactory.domain.model.structure.DataType;
 import com.f88.productfactory.domain.repository.attribute.AttributeRepository;
-import com.f88.productfactory.domain.repository.governance.ConstraintMatrixRepository;
-import com.f88.productfactory.domain.repository.governance.MatrixCellRepository;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationTypeCompositionRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeRepository;
 import com.f88.productfactory.domain.repository.pipeline.PatternBlockRepository;
 import com.f88.productfactory.domain.repository.pipeline.PatternObligationTypeRepository;
@@ -46,11 +44,6 @@ import java.util.Set;
 @Service
 public class ProductPatternService {
 
-    // 6 block "cover" của ma trận 3 (OBLIGATIONTYPE_X_BLOCK) — trùng COVER_BLOCKS của
-    // ConstraintMatrixService, dùng để tính độ phủ builder theo obligation type đã gán.
-    private static final List<String> COVER_BLOCKS = List.of(
-            "BLK_COUNTERPARTY", "BLK_INTEREST", "BLK_COLLATERAL", "BLK_REPAYMENT", "BLK_LIMIT", "BLK_PENALTY");
-
     private final ProductPatternRepository repo;
     private final PatternBlockRepository blockRepo;
     private final PatternObligationTypeRepository obligationRepo;
@@ -61,8 +54,7 @@ public class ProductPatternService {
     private final AnswerSlotRepository slotRepo;
     private final AttributeRepository attributeRepo;
     private final DataTypeRepository dataTypeRepo;
-    private final ConstraintMatrixRepository matrixRepo;
-    private final MatrixCellRepository matrixCellRepo;
+    private final ObligationTypeCompositionRepository compositionRepo;
 
     public ProductPatternService(ProductPatternRepository repo,
                                  PatternBlockRepository blockRepo,
@@ -74,8 +66,7 @@ public class ProductPatternService {
                                  AnswerSlotRepository slotRepo,
                                  AttributeRepository attributeRepo,
                                  DataTypeRepository dataTypeRepo,
-                                 ConstraintMatrixRepository matrixRepo,
-                                 MatrixCellRepository matrixCellRepo) {
+                                 ObligationTypeCompositionRepository compositionRepo) {
         this.repo = repo;
         this.blockRepo = blockRepo;
         this.obligationRepo = obligationRepo;
@@ -86,8 +77,7 @@ public class ProductPatternService {
         this.slotRepo = slotRepo;
         this.attributeRepo = attributeRepo;
         this.dataTypeRepo = dataTypeRepo;
-        this.matrixRepo = matrixRepo;
-        this.matrixCellRepo = matrixCellRepo;
+        this.compositionRepo = compositionRepo;
     }
 
     /** Tên obligation_type từ code (fallback về chính code nếu chưa có bản ghi). */
@@ -104,13 +94,6 @@ public class ProductPatternService {
                 .flatMap(archetypeRepo::findById)
                 .map(a -> a.getName())
                 .orElse(null);
-    }
-
-    private static int rank(String v) {
-        return switch (v) { case "req" -> 2; case "pos" -> 1; default -> 0; };
-    }
-    private static String unrank(int r) {
-        return r == 2 ? "req" : r == 1 ? "pos" : "na";
     }
 
     /**
@@ -221,34 +204,28 @@ public class ProductPatternService {
             }
             body.put("blocks", blocks);
 
-            // Độ phủ (coverage) — ma trận 3 OBLIGATIONTYPE_X_BLOCK, gộp mức mạnh nhất (na<pos<req)
-            // trên các obligation type đã gán, cho 6 block "cover". Cùng logic ConstraintMatrixService.
+            // Độ phủ (coverage) — Giai đoạn 58: derived từ Obligation Element × Block thật
+            // (block.governed_by_element_code, Giai đoạn 53b) thay vì ma trận OTF × Block cũ.
+            // Gom mọi Obligation Element dùng trong composition của các OTF đã gán cho pattern,
+            // rồi tìm Block nào được 1 trong các OE đó chi phối — Block đó verdict="req".
             Set<String> canvasBlockIds = new LinkedHashSet<>();
             for (PatternBlock pb : blockRepo.findByPatternCodeOrderByPosition(code)) canvasBlockIds.add(pb.getBlockId());
 
-            Long m3Id = matrixRepo.findAllByOrderByIdAsc().stream()
-                    .filter(m -> "OBLIGATIONTYPE_X_BLOCK".equals(m.getKind()))
-                    .map(ConstraintMatrix::getId)
-                    .findFirst().orElse(null);
-            Map<String, String> otBlockVerdict = new LinkedHashMap<>();
-            if (m3Id != null) {
-                for (MatrixCell c : matrixCellRepo.findByMatrixId(m3Id)) {
-                    otBlockVerdict.put(c.getRowCode() + "" + c.getColCode(), c.getVerdict());
+            Set<String> patternElementCodes = new LinkedHashSet<>();
+            for (PatternObligationType ot : patternOts) {
+                for (ObligationTypeComposition c : compositionRepo.findByObligationTypeCode(ot.getObligationTypeCode())) {
+                    patternElementCodes.add(c.getElementCode());
                 }
             }
 
             List<Map<String, Object>> coverage = new ArrayList<>();
-            for (String blockId : COVER_BLOCKS) {
-                int best = 0; // na
-                for (PatternObligationType ot : patternOts) {
-                    String v = otBlockVerdict.get(ot.getObligationTypeCode() + "" + blockId);
-                    if (v != null) best = Math.max(best, rank(v));
-                }
+            for (Block b : libBlockRepo.findAll()) {
+                if (b.getGovernedByElementCode() == null || !patternElementCodes.contains(b.getGovernedByElementCode())) continue;
                 Map<String, Object> m = new LinkedHashMap<>();
-                m.put("blockId", blockId);
-                m.put("label", libBlockRepo.findById(blockId).map(Block::getName).orElse(blockId));
-                m.put("verdict", unrank(best));
-                m.put("inCanvas", canvasBlockIds.contains(blockId));
+                m.put("blockId", b.getId());
+                m.put("label", b.getName());
+                m.put("verdict", "req");
+                m.put("inCanvas", canvasBlockIds.contains(b.getId()));
                 coverage.add(m);
             }
             body.put("coverage", coverage);

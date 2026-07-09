@@ -7,10 +7,6 @@ import { StatusChip } from '../../components/StatusChip'
 interface Archetype {
   code: string
   name: string
-  nature: string | null
-  natureDesc: string | null
-  valueStructure: string | null
-  valueDesc: string | null
 }
 
 interface ElementRow {
@@ -153,23 +149,6 @@ export default function ArchetypeDetailPage() {
           <StatCard label="Obligation Type Family (OTF)" value={data.typeCount} />
           <StatCard label="Element" value={data.elementCount} />
           <StatCard label="Product" value={data.productCount} />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 20 }}>
-          <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.4px', color: '#8A998F', textTransform: 'uppercase', marginBottom: 6 }}>
-              Obligation Nature
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 6 }}>{a.nature ?? '—'}</div>
-            <div style={{ fontSize: 12.5, color: '#5E6F66', lineHeight: 1.55 }}>{a.natureDesc ?? '—'}</div>
-          </div>
-          <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.4px', color: '#8A998F', textTransform: 'uppercase', marginBottom: 6 }}>
-              Value Structure
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 6 }}>{a.valueStructure ?? '—'}</div>
-            <div style={{ fontSize: 12.5, color: '#5E6F66', lineHeight: 1.55 }}>{a.valueDesc ?? '—'}</div>
-          </div>
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginBottom: 20 }}>

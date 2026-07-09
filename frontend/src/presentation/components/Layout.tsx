@@ -65,11 +65,6 @@ export default function Layout({ children }: { children: ReactNode }) {
         })
         .catch(() => {})
     })
-    // /api/constraint-matrices trả mảng thô (không phân trang) — đếm .length riêng.
-    fetch('/api/constraint-matrices')
-      .then((res) => res.json())
-      .then((arr) => !cancelled && setCounts((prev) => ({ ...prev, matrix: Array.isArray(arr) ? arr.length : 0 })))
-      .catch(() => {})
     return () => { cancelled = true }
   }, [])
 

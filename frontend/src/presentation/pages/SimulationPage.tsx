@@ -242,6 +242,103 @@ export default function SimulationPage() {
     URL.revokeObjectURL(url)
   }
 
+  // Xuất PDF: dựng file PDF thật ngay trên trình duyệt bằng jsPDF (nhúng font Be Vietnam Pro — cùng
+  // font thương hiệu của UI — vì 14 font chuẩn của PDF như Helvetica dùng WinAnsiEncoding, không đủ
+  // ký tự có dấu tiếng Việt) rồi `doc.save()` — tải file .pdf về máy ngay lập tức, không qua hộp
+  // thoại In nào (giống hệt hành vi "Xuất CSV" cạnh nó). Import động (jsPDF + font base64 ~500KB)
+  // để không tăng bundle chính cho mọi màn khác — chỉ tải khi thật sự bấm "Xuất PDF".
+  const [pdfExporting, setPdfExporting] = useState(false)
+  const handleExportPdf = async () => {
+    if (!form || !result) return
+    setPdfExporting(true)
+    const [{ default: jsPDF }, { default: autoTable }, { BE_VIETNAM_PRO_REGULAR_BASE64, BE_VIETNAM_PRO_BOLD_BASE64 }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+      import('../../infrastructure/fonts/beVietnamPro'),
+    ])
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    doc.addFileToVFS('BeVietnamPro-Regular.ttf', BE_VIETNAM_PRO_REGULAR_BASE64)
+    doc.addFont('BeVietnamPro-Regular.ttf', 'BeVietnamPro', 'normal')
+    doc.addFileToVFS('BeVietnamPro-Bold.ttf', BE_VIETNAM_PRO_BOLD_BASE64)
+    doc.addFont('BeVietnamPro-Bold.ttf', 'BeVietnamPro', 'bold')
+    doc.setFont('BeVietnamPro', 'bold')
+
+    doc.setTextColor('#0B7349')
+    doc.setFontSize(16)
+    doc.text('Lịch trả nợ (Amortization Schedule)', 40, 42)
+    doc.setFont('BeVietnamPro', 'normal')
+    doc.setFontSize(9.5)
+    doc.setTextColor('#5E6F66')
+    doc.text(`Product Factory · ${currentVariant?.name ?? form.variantCode} (${form.variantCode}) · xuất ngày ${new Date().toLocaleDateString('vi-VN')}`, 40, 58)
+
+    const summaryRows: [string, string][] = [
+      ['Mã Variant / Config', `${form.variantCode} / ${form.configCode}`],
+      ['Số tiền vay', vnd(form.amount)],
+      ['Kỳ hạn', `${form.months} tháng`],
+      ['Ngày bắt đầu kỳ đầu tiên', form.startDate],
+      ['Lãi suất Base Rate', `${fmt2(form.baseRatePct)}%/tháng`],
+      ['Lãi suất hiệu dụng', `${fmt2(result.effectiveRatePct)}%/tháng`],
+      ['Phân khúc khách hàng', SEGMENTS.find((s) => s.code === form.segmentCode)?.label ?? form.segmentCode],
+      ['Kỳ trả định kỳ', vnd(result.monthlyPayment)],
+      ['Tổng gốc', vnd(result.totalPrincipal)],
+      ['Tổng lãi', vnd(result.totalInterest)],
+      ['Tổng phí', vnd(result.totalFee)],
+      ['Tổng phạt trễ hạn + tất toán sớm', vnd(result.totalPenalty + result.totalEarlyPenalty)],
+      ['Tổng phải trả', vnd(result.totalPayment)],
+      ['Số kỳ thực trả', `${result.periodsUsed}/${form.months}`],
+      ['Tỷ lệ LTV', result.ltvPct != null ? `${fmt1(result.ltvPct)}%` : '—'],
+      ['Điểm hòa vốn', result.breakevenPeriod != null ? `Kỳ ${result.breakevenPeriod}` : '—'],
+      ['Trạng thái ràng buộc', result.valid ? 'Hợp lệ' : 'Có cảnh báo'],
+    ]
+    autoTable(doc, {
+      startY: 70,
+      body: summaryRows,
+      theme: 'plain',
+      styles: { font: 'BeVietnamPro', fontSize: 9, cellPadding: { top: 2, bottom: 2, left: 0, right: 6 }, textColor: '#122019' },
+      columnStyles: { 0: { textColor: '#5E6F66', cellWidth: 190 }, 1: { font: 'BeVietnamPro', fontStyle: 'bold' } },
+      margin: { left: 40, right: 40 },
+    })
+
+    const afterSummaryY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY
+
+    autoTable(doc, {
+      startY: afterSummaryY + 14,
+      head: [['Kỳ', 'Từ ngày', 'Đến ngày', 'Dư đầu kỳ', 'Gốc', 'Lãi', 'Phí', 'Phạt', 'Kỳ trả', 'Dư cuối kỳ', 'Ghi chú']],
+      body: result.schedule.map((r) => [
+        r.periodNo,
+        r.periodStart,
+        r.periodEnd,
+        vnd(r.openingBalance),
+        vnd(r.principal),
+        vnd(r.interest),
+        vnd(r.fee),
+        vnd(r.penalty),
+        vnd(r.payment),
+        vnd(r.closingBalance),
+        r.hasTag ? r.tagText ?? '' : '',
+      ]),
+      styles: { font: 'BeVietnamPro', fontSize: 7.5, cellPadding: 4, textColor: '#122019', lineColor: '#E6ECE8', lineWidth: 0.5 },
+      headStyles: { font: 'BeVietnamPro', fontStyle: 'bold', fillColor: '#F4F7F5', textColor: '#41524A', lineColor: '#E6ECE8' },
+      columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' }, 8: { halign: 'right' }, 9: { halign: 'right' } },
+      didParseCell: (data) => {
+        if (data.section === 'body' && result.schedule[data.row.index]?.hasTag) {
+          data.cell.styles.fillColor = result.schedule[data.row.index].rowBg || '#FFF7E6'
+        }
+      },
+      margin: { left: 40, right: 40 },
+      didDrawPage: () => {
+        const pageCount = doc.getNumberOfPages()
+        doc.setFont('BeVietnamPro', 'normal')
+        doc.setFontSize(8)
+        doc.setTextColor('#A7B5AC')
+        doc.text(`Trang ${doc.getCurrentPageInfo().pageNumber}/${pageCount}`, doc.internal.pageSize.getWidth() - 60, doc.internal.pageSize.getHeight() - 20)
+      },
+    })
+
+    doc.save(`lich-tra-no_${form.variantCode}_${form.startDate}.pdf`)
+    setPdfExporting(false)
+  }
+
   if (loading || !form) return <div style={{ padding: '22px 26px', color: '#5E6F66' }}>Đang tải dữ liệu…</div>
   if (error && !result)
     return <div style={{ padding: '22px 26px', color: '#B23B3B' }}>Lỗi: {error}. Kiểm tra backend đã chạy chưa.</div>
@@ -434,7 +531,12 @@ export default function SimulationPage() {
               title={result ? 'Xuất lịch trả nợ ra file CSV (mở được bằng Excel)' : undefined}
               style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: result ? '#0B7349' : '#41524A', background: '#fff', cursor: result ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
             >Xuất CSV</button>
-            <button title="read-only" style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: '#41524A', background: '#fff', cursor: 'not-allowed', fontFamily: 'inherit' }}>Xuất PDF</button>
+            <button
+              onClick={handleExportPdf}
+              disabled={!result || pdfExporting}
+              title={result ? 'Xuất lịch trả nợ ra file PDF (tải về máy)' : undefined}
+              style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: result && !pdfExporting ? '#0B7349' : '#41524A', background: '#fff', cursor: result && !pdfExporting ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
+            >{pdfExporting ? 'Đang xuất…' : 'Xuất PDF'}</button>
           </div>
 
           {pinned.length > 0 && (

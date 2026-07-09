@@ -76,19 +76,37 @@ INSERT INTO "financial_obligation_archetype" ("code", "name", "nature", "nature_
 -- ===== 4. foa_element — Element gắn Archetype kèm requirement (archDetail.elementRows)
 -- Giai đoạn 52: bỏ 3 dòng nature-tautology (vd FOA_TERM_LOAN→TERM_LOAN_OBLIGATION required) —
 -- trùng lặp hiển nhiên (FOA nào cũng "required" đúng nature của chính nó), làm nhiễu ma trận FOA×OE
--- (foaOeMatrix() derive thẳng từ bảng này) =====
+-- (foaOeMatrix() derive thẳng từ bảng này).
+-- Giai đoạn 58b: đối chiếu tài liệu "Ví dụ xuyên suốt: Ma Trận FOA × OE..." (Mục 1) phát hiện lệch —
+-- thêm 9 ô "possible"/"required" còn thiếu cho 5 OE đã có (mỗi OE thật ra có nhiều mức theo từng
+-- FOA, không chỉ 1 cột "required" duy nhất) + thêm mới 2 OE hoàn toàn vắng mặt dù có trong bảng
+-- Mục 1 (OE_VAL_PRINCIPAL_SINGLE_DECREASE "bullet", OE_REC_UNSECURED "Tín chấp") =====
 INSERT INTO "foa_element" ("archetype_code", "element_code", "requirement") VALUES
   ('FOA_TERM_LOAN', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'possible'),
+  ('FOA_TERM_LOAN', 'OE_VAL_PRINCIPAL_SINGLE_DECREASE', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_VAL_PRINCIPAL_SINGLE_DECREASE', 'possible'),
   ('FOA_TERM_LOAN', 'OE_ACT_ON_DISBURSEMENT', 'required'),
+  ('FOA_REVOLVING', 'OE_ACT_ON_DISBURSEMENT', 'possible'),
   ('FOA_TERM_LOAN', 'OE_FUL_INSTALLMENT', 'required'),
+  ('FOA_REVOLVING', 'OE_FUL_INSTALLMENT', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_FUL_INSTALLMENT', 'possible'),
   ('FOA_TERM_LOAN', 'OE_REC_ASSET_PLEDGE', 'possible'),
+  ('FOA_TERM_LOAN', 'OE_REC_UNSECURED', 'possible'),
+  ('FOA_REVOLVING', 'OE_REC_UNSECURED', 'possible'),
+  ('FOA_CONDITIONAL', 'OE_REC_UNSECURED', 'possible'),
   ('FOA_TERM_LOAN', 'OE_TIME_CYCLE_DEADLINE', 'required'),
+  ('FOA_REVOLVING', 'OE_TIME_CYCLE_DEADLINE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_TIME_CYCLE_DEADLINE', 'possible'),
   ('FOA_REVOLVING', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', 'required'),
   ('FOA_REVOLVING', 'OE_ACT_FACILITY_OPEN', 'required'),
+  ('FOA_TERM_LOAN', 'OE_FUL_STATEMENT_CYCLE', 'possible'),
   ('FOA_REVOLVING', 'OE_FUL_STATEMENT_CYCLE', 'required'),
+  ('FOA_CONDITIONAL', 'OE_FUL_STATEMENT_CYCLE', 'possible'),
   ('FOA_REVOLVING', 'OE_REC_ASSET_PLEDGE', 'possible'),
   ('FOA_REVOLVING', 'OE_TIME_CYCLE_STATEMENT', 'required'),
   ('FOA_CONDITIONAL', 'OE_VAL_BY_EVENT', 'required'),
+  ('FOA_REVOLVING', 'OE_ACT_CONDITIONAL_TRIGGER', 'possible'),
   ('FOA_CONDITIONAL', 'OE_ACT_CONDITIONAL_TRIGGER', 'required'),
   ('FOA_CONDITIONAL', 'OE_FUL_ON_CONDITION', 'required'),
   ('FOA_CONDITIONAL', 'OE_REC_ASSET_PLEDGE', 'possible'),
@@ -499,6 +517,23 @@ INSERT INTO "attribute" ("code", "name", "group_code", "data_type_code", "is_req
   ('stmt_cycle', 'Chu kỳ sao kê', 'GRP_BILLING', 'DT_ENUM', false, 'Hàng tháng', NULL),
   ('billing_day', 'Ngày chốt sao kê', 'GRP_BILLING', 'DT_INT', false, 'Ngày 5', NULL);
 
+-- ===== 12b. attribute — Giai đoạn 61: mỗi Block thêm đúng 1 Attribute mới (làm giàu thư viện nền
+-- tảng theo yêu cầu user, KHÔNG tạo Block/nhóm mới — tái dùng nguyên group_code/domain đã có của
+-- từng Block). Toàn bộ is_required=false (an toàn, không phá completeness của Pattern/Config hiện có).
+INSERT INTO "attribute" ("code", "name", "group_code", "data_type_code", "is_required", "default_value", "unit") VALUES
+  ('co_borrower_allowed', 'Cho phép đồng vay', 'GRP_PARTY', 'DT_BOOL', false, 'Tắt', NULL),
+  ('dispute_resolution', 'Cơ chế giải quyết tranh chấp', 'GRP_LEGAL', 'DT_ENUM', false, 'Toà án nơi cư trú của Bên vay', NULL),
+  ('reference_index', 'Chỉ số lãi suất tham chiếu', 'GRP_PRICING', 'DT_ENUM', false, 'Không áp dụng (lãi suất cố định)', NULL),
+  ('fee_collection_time', 'Thời điểm thu phí', 'GRP_FEE', 'DT_ENUM', false, 'Khi giải ngân', NULL),
+  ('repay_channel', 'Kênh nhận trả nợ', 'GRP_REPAYMENT', 'DT_ENUM', false, 'Chuyển khoản', NULL),
+  ('insurance_required', 'Yêu cầu bảo hiểm tài sản', 'GRP_COLLATERAL', 'DT_BOOL', false, 'Tắt', NULL),
+  ('penalty_base', 'Cơ sở tính phạt', 'GRP_PENALTY', 'DT_ENUM', false, 'Trên số tiền chậm trả', NULL),
+  ('review_cycle', 'Chu kỳ tái xét hạn mức', 'GRP_LIMIT', 'DT_ENUM', false, '12 tháng', NULL),
+  ('rounding_rule', 'Quy tắc làm tròn', 'GRP_VALUE', 'DT_ENUM', false, 'Làm tròn đến nghìn đồng', NULL),
+  ('disb_timing', 'Thời điểm giải ngân', 'GRP_DISBURSEMENT', 'DT_ENUM', false, 'Ngay sau ký hợp đồng', NULL),
+  ('credit_history_required', 'Yêu cầu lịch sử tín dụng', 'GRP_ELIGIBILITY', 'DT_ENUM', false, 'Không nợ xấu nhóm 3-5', NULL),
+  ('stmt_channel', 'Kênh gửi sao kê', 'GRP_BILLING', 'DT_ENUM', false, 'SMS', NULL);
+
 -- ===== 13. attribute_constraint — từ cột RÀNG BUỘC + cfgValidate() =====
 INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_value", "step_value", "expression", "depends_on_attribute_code", "message") VALUES
   ('base_rate', 'regulatory', NULL, 1.65, NULL, '≤ 1,65%/tháng (trần NHNN)', NULL, 'Vượt trần 1,65%/tháng'),
@@ -509,7 +544,7 @@ INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_
   ('limit_amount', 'dependency', NULL, NULL, NULL, 'limit_amount ≤ ltv × asset_value', 'ltv', 'Vượt hạn mức theo LTV'),
   ('installment_count', 'range', 1, 18, 1, '1 – 18', NULL, 'Số kỳ ngoài khoảng 1–18'),
   ('penalty_rate', 'regulatory', NULL, 150, NULL, '≤ 150% lãi trong hạn', NULL, 'Vượt trần lãi phạt'),
-  ('asset_type', 'enum', NULL, NULL, NULL, 'TwoWheels / Car / Gold…', NULL, NULL),
+  ('asset_type', 'enum', NULL, NULL, NULL, 'TwoWheels / Car / Gold / Electronics…', NULL, NULL),
   ('age', 'range', 18, 60, NULL, 'MIN 18', NULL, 'Ngoài độ tuổi cho phép'),
   ('min_income', 'range', 0, NULL, NULL, '≥ 0', NULL, NULL),
   ('billing_day', 'range', 1, 28, 1, '1–28', NULL, 'Ngày chốt ngoài 1–28'),
@@ -517,17 +552,30 @@ INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_
   ('compliance', 'required', NULL, NULL, NULL, 'by-default', NULL, NULL),
   ('capacity_range', 'required', NULL, NULL, NULL, 'HAS_CAPACITY', NULL, NULL);
 
+-- ===== 13b. attribute_constraint — Giai đoạn 61: ví dụ Dependency đúng nguyên văn tài liệu "Lớp vỏ
+-- thương mại" (mục Constraint, loại Dependency: "Rate_type = 'Thả nổi' → bắt buộc có Reference Index").
+-- Hiện DB chưa Config nào dùng rate_type='Thả nổi' nên reference_index vẫn để "Không áp dụng" ở mọi
+-- Template — constraint này mô tả ĐÚNG quy tắc sẽ áp dụng khi có sản phẩm thả nổi sau này. =====
+INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_value", "step_value", "expression", "depends_on_attribute_code", "message") VALUES
+  ('reference_index', 'dependency', NULL, NULL, NULL, 'Rate_type = ''Thả nổi'' → bắt buộc có Reference Index', 'rate_type', 'Lãi suất thả nổi phải khai báo chỉ số tham chiếu');
+
 -- ===== 14. attribute_enum_value =====
 INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VALUES
   ('asset_type', 1, 'Xe máy (TwoWheels)'),
   ('asset_type', 2, 'Ô tô (Car)'),
   ('asset_type', 3, 'Vàng (Gold)'),
+  -- Giai đoạn 63: thêm giá trị thứ 4 — CFG-0021 (laptop cầm cố) đã dùng thật giá trị này ở fragment
+  -- từ trước nhưng catalog chưa có, phát hiện qua đối chiếu fragment.value với attribute_enum_value.
+  ('asset_type', 4, 'Thiết bị điện tử (Laptop)'),
   ('rate_type', 1, 'Cố định'),
   ('rate_type', 2, 'Thả nổi'),
   ('occupation', 1, 'Nhân viên văn phòng'),
   ('occupation', 2, 'Công nhân'),
   ('occupation', 3, 'Kinh doanh tự do'),
   ('occupation', 4, 'Giáo viên / Công chức'),
+  -- Giai đoạn 63: TPL-003/TPL-006 đã dùng thật giá trị này (nghĩa "không ràng buộc nghề nghiệp cụ
+  -- thể") nhưng catalog chưa có — thêm để đóng catalog, khớp đúng dữ liệu template_frame hiện có.
+  ('occupation', 5, 'Không giới hạn'),
   ('repay_method', 1, 'Trả góp nhiều kỳ'),
   ('repay_method', 2, 'Trả 1 lần (Bullet)'),
   ('borrower_type', 1, 'Cá nhân'),
@@ -543,6 +591,46 @@ INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VAL
   ('principal_base', 1, 'Gốc vay'),
   ('disb_method', 1, 'Chuyển khoản'),
   ('disb_method', 2, 'Tiền mặt');
+
+-- ===== 14b. attribute_enum_value — Giai đoạn 61: catalog đóng cho 10 Attribute mới thuộc DT_ENUM
+-- (2 Attribute còn lại — co_borrower_allowed/insurance_required — là DT_BOOL, không cần enum). =====
+INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VALUES
+  ('dispute_resolution', 1, 'Toà án nơi cư trú của Bên vay'),
+  ('dispute_resolution', 2, 'Trọng tài thương mại'),
+  ('reference_index', 1, 'Không áp dụng (lãi suất cố định)'),
+  ('reference_index', 2, 'Lãi suất tiết kiệm 12 tháng BQ 4 NHTM Nhà nước'),
+  ('fee_collection_time', 1, 'Khi giải ngân'),
+  ('fee_collection_time', 2, 'Hàng kỳ'),
+  ('fee_collection_time', 3, 'Khi tất toán'),
+  ('repay_channel', 1, 'Chuyển khoản'),
+  ('repay_channel', 2, 'Tiền mặt tại PGD'),
+  ('repay_channel', 3, 'Trích nợ tự động'),
+  ('penalty_base', 1, 'Trên số tiền chậm trả'),
+  ('penalty_base', 2, 'Trên dư nợ gốc quá hạn'),
+  ('review_cycle', 1, '6 tháng'),
+  ('review_cycle', 2, '12 tháng'),
+  ('rounding_rule', 1, 'Làm tròn đến nghìn đồng'),
+  ('rounding_rule', 2, 'Không làm tròn'),
+  ('disb_timing', 1, 'Ngay sau ký hợp đồng'),
+  ('disb_timing', 2, 'Sau thẩm định tài sản'),
+  ('credit_history_required', 1, 'Không nợ xấu nhóm 3-5'),
+  ('credit_history_required', 2, 'Không yêu cầu'),
+  ('stmt_channel', 1, 'SMS'),
+  ('stmt_channel', 2, 'Email'),
+  ('stmt_channel', 3, 'Thông báo trong App');
+
+-- ===== 14c. attribute_enum_value — Giai đoạn 63: catalog "giá trị kèm theo" cho 3 Attribute DT_BOOL
+-- (co_borrower_allowed/compliance/insurance_required) — trước đây DT_BOOL không có dòng nào trong
+-- bảng này (chỉ DT_ENUM mới có), nhưng thực chất Bool cũng là 1 tập giá trị đóng 2 phần tử. Thêm để
+-- mọi Attribute (không riêng DT_ENUM) đều có sẵn "giá trị kèm theo" ngay từ khi khởi tạo — mục đích:
+-- khi điền Template/Config sau này không cần gõ tay, chỉ cần lấy đúng từ danh mục này (user yêu cầu). =====
+INSERT INTO "attribute_enum_value" ("attribute_code", "sort_order", "value") VALUES
+  ('co_borrower_allowed', 1, 'Bật'),
+  ('co_borrower_allowed', 2, 'Tắt'),
+  ('compliance', 1, 'Bật'),
+  ('compliance', 2, 'Tắt'),
+  ('insurance_required', 1, 'Bật'),
+  ('insurance_required', 2, 'Tắt');
 
 -- ===== 15. block — 12 block (BLOCKS) =====
 INSERT INTO "block" ("id", "code", "name", "biz_group", "governed_by_element_code", "governed_by_aspect", "status") VALUES
@@ -587,13 +675,29 @@ INSERT INTO "answer_slot" ("block_id", "code", "name", "attribute_code", "is_req
   ('BLK_REPAYMENT', 'repay_method', 'Repayment Method', 'repay_method', true, 'Trả góp nhiều kỳ', 'MULTISTEP'),
   ('BLK_REPAYMENT', 'installment_count', 'Số kỳ', 'installment_count', true, '1 – 18', NULL),
   ('BLK_REPAYMENT', 'schedule', 'Lịch trả', 'schedule', true, 'Hàng tháng', 'HAS_CYCLE'),
-  ('BLK_COLLATERAL', 'asset_type', 'Asset Type', 'asset_type', true, 'Xe máy', 'OE_REC_ASSET_PLEDGE'),
+  ('BLK_COLLATERAL', 'asset_type', 'Asset Type', 'asset_type', true, 'Xe máy (TwoWheels)', 'OE_REC_ASSET_PLEDGE'),
   ('BLK_COLLATERAL', 'asset_valuation', 'Asset Valuation Formula', 'asset_valuation', true, '70% giá trị', 'LTV ≤ 80%'),
   ('BLK_COLLATERAL', 'ltv', 'LTV tối đa', 'ltv', true, '80%', '≤ 80%'),
   ('BLK_PENALTY', 'penalty_rate', 'Penalty Rate', 'penalty_rate', true, '150% lãi', '≤ 150%'),
   ('BLK_PENALTY', 'grace', 'Grace Period', 'grace', false, '5 ngày', NULL),
   ('BLK_BILLING', 'stmt_cycle', 'Statement Cycle', 'stmt_cycle', false, 'Hàng tháng', NULL),
   ('BLK_BILLING', 'billing_day', 'Billing Day', 'billing_day', false, 'Ngày 5', '1–28');
+
+-- ===== 16b. answer_slot — Giai đoạn 61: mỗi Block (12/12) thêm đúng 1 Answer Slot mới ứng với
+-- Attribute mới thêm ở mục 12b — làm giàu "chiều sâu" theo yêu cầu user, không tạo Block mới. =====
+INSERT INTO "answer_slot" ("block_id", "code", "name", "attribute_code", "is_required", "default_value", "rule_text") VALUES
+  ('BLK_COUNTERPARTY', 'co_borrower_allowed', 'Co-borrower Allowed', 'co_borrower_allowed', false, 'Tắt', NULL),
+  ('BLK_REGULATORY', 'dispute_resolution', 'Dispute Resolution', 'dispute_resolution', false, 'Toà án nơi cư trú của Bên vay', NULL),
+  ('BLK_INTEREST', 'reference_index', 'Reference Index', 'reference_index', false, 'Không áp dụng (lãi suất cố định)', 'rate_type=Thả nổi → bắt buộc'),
+  ('BLK_FEE', 'fee_collection_time', 'Fee Collection Time', 'fee_collection_time', false, 'Khi giải ngân', NULL),
+  ('BLK_REPAYMENT', 'repay_channel', 'Repayment Channel', 'repay_channel', false, 'Chuyển khoản', NULL),
+  ('BLK_COLLATERAL', 'insurance_required', 'Insurance Required', 'insurance_required', false, 'Tắt', NULL),
+  ('BLK_PENALTY', 'penalty_base', 'Penalty Base', 'penalty_base', false, 'Trên số tiền chậm trả', NULL),
+  ('BLK_LIMIT', 'review_cycle', 'Limit Review Cycle', 'review_cycle', false, '12 tháng', NULL),
+  ('BLK_VALUEBASE', 'rounding_rule', 'Rounding Rule', 'rounding_rule', false, 'Làm tròn đến nghìn đồng', NULL),
+  ('BLK_DISBURSEMENT', 'disb_timing', 'Disbursement Timing', 'disb_timing', false, 'Ngay sau ký hợp đồng', NULL),
+  ('BLK_ELIGIBILITY', 'credit_history_required', 'Credit History Required', 'credit_history_required', false, 'Không nợ xấu nhóm 3-5', NULL),
+  ('BLK_BILLING', 'stmt_channel', 'Statement Channel', 'stmt_channel', false, 'SMS', NULL);
 
 -- ===== 17. selector_scope — priority: people > place > time > default (CFG_PRIORITY) =====
 INSERT INTO "selector_scope" ("code", "name", "priority") VALUES
@@ -733,6 +837,11 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   -- Giai đoạn 48: bổ sung Block "Hạn mức" — Pattern gốc thiếu sót từ đầu (CFG-0021/0040/0043
   -- đóng gói từ TPL-001 đều có product_variant.limit_range thật nhưng chưa từng đi qua Answer Slot).
   ('PT-001', 'BLK_LIMIT', 8, 'active'),
+  -- Giai đoạn 60: bổ sung 2 Block còn thiếu theo ma trận OE×Block derived (Giai đoạn 58/59) — Pattern
+  -- đã published mà OTF gán vào (OT_PLEDGE_INSTALLMENT) có OE_VAL_PRINCIPAL_MULTI_DECREASE/OE_ACT_ON_DISBURSEMENT
+  -- trong composition nhưng Block tương ứng (BLK_VALUEBASE/BLK_DISBURSEMENT) chưa từng được gán vào canvas.
+  ('PT-001', 'BLK_VALUEBASE', 9, 'active'),
+  ('PT-001', 'BLK_DISBURSEMENT', 10, 'active'),
   ('PT-002', 'BLK_ELIGIBILITY', 1, 'active'),
   ('PT-002', 'BLK_COUNTERPARTY', 2, 'active'),
   ('PT-002', 'BLK_REGULATORY', 3, 'active'),
@@ -748,6 +857,9 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   ('PT-003', 'BLK_INTEREST', 4, 'active'),
   ('PT-003', 'BLK_COLLATERAL', 5, 'active'),
   ('PT-003', 'BLK_PENALTY', 6, 'active'),
+  -- Giai đoạn 60: BLK_DISBURSEMENT đã có sẵn từ đầu; chỉ thiếu BLK_VALUEBASE (OTF OT_PLEDGE_BULLET
+  -- vẫn có OE_VAL_PRINCIPAL_MULTI_DECREASE trong composition dù là Bullet — đúng dữ liệu thật hiện có).
+  ('PT-003', 'BLK_VALUEBASE', 7, 'active'),
   ('PT-004', 'BLK_COUNTERPARTY', 1, 'active'),
   ('PT-004', 'BLK_REGULATORY', 2, 'active'),
   ('PT-004', 'BLK_LIMIT', 3, 'active'),
@@ -761,13 +873,17 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   ('PT-005', 'BLK_INTEREST', 3, 'active'),
   ('PT-005', 'BLK_REPAYMENT', 4, 'active'),
   ('PT-005', 'BLK_PENALTY', 5, 'active'),
+  ('PT-005', 'BLK_VALUEBASE', 6, 'active'),
+  ('PT-005', 'BLK_DISBURSEMENT', 7, 'active'),
   ('PT-006', 'BLK_COUNTERPARTY', 1, 'active'),
   ('PT-006', 'BLK_REGULATORY', 2, 'active'),
   ('PT-006', 'BLK_INTEREST', 3, 'active'),
   ('PT-006', 'BLK_FEE', 4, 'active'),
   ('PT-006', 'BLK_REPAYMENT', 5, 'active'),
   ('PT-006', 'BLK_COLLATERAL', 6, 'active'),
-  ('PT-006', 'BLK_PENALTY', 7, 'active');
+  ('PT-006', 'BLK_PENALTY', 7, 'active'),
+  ('PT-006', 'BLK_VALUEBASE', 8, 'active'),
+  ('PT-006', 'BLK_DISBURSEMENT', 9, 'active');
 
 -- ===== 25. pattern_obligation_type =====
 INSERT INTO "pattern_obligation_type" ("pattern_code", "obligation_type_code", "role") VALUES
@@ -810,7 +926,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-003', 'BLK_INTEREST', 'rate_type', 'Cố định'),
   ('TPL-003', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
   ('TPL-003', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-003', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-003', 'BLK_COLLATERAL', 'asset_type', 'Xe máy (TwoWheels)'),
   ('TPL-003', 'BLK_COLLATERAL', 'ltv', '75%'),
   ('TPL-003', 'BLK_BILLING', 'stmt_cycle', 'Hàng tháng');
 
@@ -833,7 +949,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-001', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-001', 'BLK_REPAYMENT', 'installment_count', '1 – 18'),
   ('TPL-001', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy'),
+  ('TPL-001', 'BLK_COLLATERAL', 'asset_type', 'Xe máy (TwoWheels)'),
   ('TPL-001', 'BLK_COLLATERAL', 'asset_valuation', '80% giá trị'),
   ('TPL-001', 'BLK_COLLATERAL', 'ltv', '80%'),
   ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -851,7 +967,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-002', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-002', 'BLK_REPAYMENT', 'installment_count', '6 – 24'),
   ('TPL-002', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-002', 'BLK_COLLATERAL', 'asset_type', 'Ô tô (Car)'),
   ('TPL-002', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -868,7 +984,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-004', 'BLK_REPAYMENT', 'repay_method', 'Trả góp nhiều kỳ'),
   ('TPL-004', 'BLK_REPAYMENT', 'installment_count', '6 – 36'),
   ('TPL-004', 'BLK_REPAYMENT', 'schedule', 'Hàng tháng'),
-  ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô'),
+  ('TPL-004', 'BLK_COLLATERAL', 'asset_type', 'Ô tô (Car)'),
   ('TPL-004', 'BLK_COLLATERAL', 'asset_valuation', '70% giá trị'),
   ('TPL-004', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-004', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -881,7 +997,7 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-005', 'BLK_INTEREST', 'interest_calc', 'Lãi hàng tháng, gốc cuối kỳ (Bullet)'),
   ('TPL-005', 'BLK_INTEREST', 'base_rate', '1,3%/tháng'),
   ('TPL-005', 'BLK_INTEREST', 'rate_type', 'Cố định'),
-  ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng'),
+  ('TPL-005', 'BLK_COLLATERAL', 'asset_type', 'Vàng (Gold)'),
   ('TPL-005', 'BLK_COLLATERAL', 'asset_valuation', '85% giá trị'),
   ('TPL-005', 'BLK_COLLATERAL', 'ltv', '85%'),
   ('TPL-005', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
@@ -946,6 +1062,111 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-006', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
   ('TPL-006', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
   ('TPL-006', 'BLK_PENALTY', 'grace', '5 ngày');
+
+-- ===== 28e. template_frame — Giai đoạn 60: giá trị khung cho 2 Block mới gán vào PT-001/003/005/006
+-- (BLK_VALUEBASE/BLK_DISBURSEMENT, xem mục 24 pattern_block). decrease_method/principal_base chỉ có
+-- đúng 1 giá trị enum đóng trong attribute_enum_value ("Giảm dần theo gốc"/"Gốc vay") — dùng thẳng,
+-- không có lựa chọn nào khác kể cả cho PT-003 (Bullet), vì catalog thật của DB chỉ có 1 giá trị.
+-- disb_method/disb_syntax/transfer_content lấy đúng giá trị đã dùng cho TPL-005 (block này TPL-005 đã
+-- có sẵn từ trước) để nhất quán giữa các Template dùng chung block, không suy diễn giá trị mới. =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 (PT-001)
+  ('TPL-001', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-001', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-002 (PT-001, doanh nghiệp)
+  ('TPL-002', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-002', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-004 (PT-006)
+  ('TPL-004', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-004', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-005 (PT-003) — BLK_DISBURSEMENT đã có sẵn từ trước, chỉ thiếu BLK_VALUEBASE
+  ('TPL-005', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-005', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  -- TPL-006 (PT-005)
+  ('TPL-006', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-006', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88');
+
+-- ===== 28f. template_frame — Giai đoạn 61: giá trị khung cho 12 Answer Slot mới (mục 16b) trên cả 6
+-- Template hiện có — mỗi Template chỉ nhận slot của Block nó thực có (theo pattern_block của Pattern
+-- gốc). Giá trị chủ yếu dùng đúng default_value ở answer_slot, có chủ đích khác biệt vài chỗ cho hợp
+-- bối cảnh thật của từng Template (không bịa số liệu định lượng, chỉ chọn đúng phương án enum có sẵn):
+-- TPL-002 (doanh nghiệp) → dispute_resolution "Trọng tài thương mại" thay vì toà án cá nhân, fee_collection_time
+-- "Hàng kỳ" khớp đúng fee_type "Phí quản lý" đã có sẵn (khác "Phí thẩm định" 1 lần của TPL-001/004);
+-- TPL-002/004 (ô tô, giá trị cao) → insurance_required "Bật"; TPL-001/002/004/005 (cầm cố có tài sản
+-- vật lý) → disb_timing "Sau thẩm định tài sản", riêng TPL-006 (tín chấp lương, không tài sản) →
+-- "Ngay sau ký hợp đồng"; TPL-006 (vay lương cá nhân) → co_borrower_allowed "Bật", repay_channel
+-- "Trích nợ tự động" (khớp đặc thù trả lương qua tài khoản). =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 (PT-001: COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY/LIMIT/VALUEBASE/DISBURSEMENT)
+  ('TPL-001', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Tắt'),
+  ('TPL-001', 'BLK_REGULATORY', 'dispute_resolution', 'Toà án nơi cư trú của Bên vay'),
+  ('TPL-001', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-001', 'BLK_FEE', 'fee_collection_time', 'Khi giải ngân'),
+  ('TPL-001', 'BLK_REPAYMENT', 'repay_channel', 'Chuyển khoản'),
+  ('TPL-001', 'BLK_COLLATERAL', 'insurance_required', 'Tắt'),
+  ('TPL-001', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-001', 'BLK_LIMIT', 'review_cycle', '12 tháng'),
+  ('TPL-001', 'BLK_VALUEBASE', 'rounding_rule', 'Làm tròn đến nghìn đồng'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'disb_timing', 'Sau thẩm định tài sản'),
+  -- TPL-002 (PT-001, doanh nghiệp/ô tô)
+  ('TPL-002', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Tắt'),
+  ('TPL-002', 'BLK_REGULATORY', 'dispute_resolution', 'Trọng tài thương mại'),
+  ('TPL-002', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-002', 'BLK_FEE', 'fee_collection_time', 'Hàng kỳ'),
+  ('TPL-002', 'BLK_REPAYMENT', 'repay_channel', 'Chuyển khoản'),
+  ('TPL-002', 'BLK_COLLATERAL', 'insurance_required', 'Bật'),
+  ('TPL-002', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-002', 'BLK_LIMIT', 'review_cycle', '12 tháng'),
+  ('TPL-002', 'BLK_VALUEBASE', 'rounding_rule', 'Làm tròn đến nghìn đồng'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'disb_timing', 'Sau thẩm định tài sản'),
+  -- TPL-003 (PT-002: ELIGIBILITY/COUNTERPARTY/REGULATORY/LIMIT/INTEREST/REPAYMENT/COLLATERAL/PENALTY/BILLING)
+  ('TPL-003', 'BLK_ELIGIBILITY', 'credit_history_required', 'Không nợ xấu nhóm 3-5'),
+  ('TPL-003', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Tắt'),
+  ('TPL-003', 'BLK_REGULATORY', 'dispute_resolution', 'Toà án nơi cư trú của Bên vay'),
+  ('TPL-003', 'BLK_LIMIT', 'review_cycle', '12 tháng'),
+  ('TPL-003', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-003', 'BLK_REPAYMENT', 'repay_channel', 'Chuyển khoản'),
+  ('TPL-003', 'BLK_COLLATERAL', 'insurance_required', 'Tắt'),
+  ('TPL-003', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-003', 'BLK_BILLING', 'stmt_channel', 'SMS'),
+  -- TPL-004 (PT-006: COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY/VALUEBASE/DISBURSEMENT)
+  ('TPL-004', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Tắt'),
+  ('TPL-004', 'BLK_REGULATORY', 'dispute_resolution', 'Toà án nơi cư trú của Bên vay'),
+  ('TPL-004', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-004', 'BLK_FEE', 'fee_collection_time', 'Khi giải ngân'),
+  ('TPL-004', 'BLK_REPAYMENT', 'repay_channel', 'Chuyển khoản'),
+  ('TPL-004', 'BLK_COLLATERAL', 'insurance_required', 'Bật'),
+  ('TPL-004', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-004', 'BLK_VALUEBASE', 'rounding_rule', 'Làm tròn đến nghìn đồng'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'disb_timing', 'Sau thẩm định tài sản'),
+  -- TPL-005 (PT-003: COUNTERPARTY/REGULATORY/DISBURSEMENT/INTEREST/COLLATERAL/PENALTY/VALUEBASE)
+  ('TPL-005', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Tắt'),
+  ('TPL-005', 'BLK_REGULATORY', 'dispute_resolution', 'Toà án nơi cư trú của Bên vay'),
+  ('TPL-005', 'BLK_DISBURSEMENT', 'disb_timing', 'Sau thẩm định tài sản'),
+  ('TPL-005', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-005', 'BLK_COLLATERAL', 'insurance_required', 'Tắt'),
+  ('TPL-005', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-005', 'BLK_VALUEBASE', 'rounding_rule', 'Làm tròn đến nghìn đồng'),
+  -- TPL-006 (PT-005: ELIGIBILITY/COUNTERPARTY/INTEREST/REPAYMENT/PENALTY/VALUEBASE/DISBURSEMENT)
+  ('TPL-006', 'BLK_ELIGIBILITY', 'credit_history_required', 'Không nợ xấu nhóm 3-5'),
+  ('TPL-006', 'BLK_COUNTERPARTY', 'co_borrower_allowed', 'Bật'),
+  ('TPL-006', 'BLK_INTEREST', 'reference_index', 'Không áp dụng (lãi suất cố định)'),
+  ('TPL-006', 'BLK_REPAYMENT', 'repay_channel', 'Trích nợ tự động'),
+  ('TPL-006', 'BLK_PENALTY', 'penalty_base', 'Trên số tiền chậm trả'),
+  ('TPL-006', 'BLK_VALUEBASE', 'rounding_rule', 'Làm tròn đến nghìn đồng'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'disb_timing', 'Ngay sau ký hợp đồng');
 
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
 -- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra
@@ -1110,6 +1331,27 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0041', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 36', false, 'Hợp lệ'),
   ('CFG-0041', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
 
+-- ===== 30b2. fragment — Giai đoạn 62: CFG-0041/CFG-0042 (cả 2 published, cùng ← TPL-003/PT-002)
+-- thiếu Fragment cho 6 slot bắt buộc của 3 Block ELIGIBILITY/REGULATORY (age/min_income/compliance/
+-- legal_form) + rate_type/schedule — cả 2 Config có `template_frame` đủ (kế thừa được ở màn builder)
+-- nhưng chưa từng có Fragment thật nào cho các slot này (sót lại từ trước Giai đoạn 21c khi TPL-003
+-- mới bổ sung 3 Block này) nên completeness báo thiếu dù giá trị "nhìn thấy" trên UI vẫn đủ. Giá trị
+-- dùng đúng `template_frame` đã có sẵn của TPL-003 — không có căn cứ nào cho thấy 2 Config này cần
+-- khác biệt so với khung Template (không bịa số liệu mới). =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  ('CFG-0041', 'BLK_ELIGIBILITY', 'age', 'default', NULL, '18 – 60', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_ELIGIBILITY', 'min_income', 'default', NULL, '5.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_ELIGIBILITY', 'age', 'default', NULL, '18 – 60', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_ELIGIBILITY', 'min_income', 'default', NULL, '5.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ');
+
 -- ===== 30c. fragment — CFG-0043 'Vay xe máy mùa tựu trường' (Giai đoạn 41) ← TPL-001/PT-001,
 -- cùng khuôn Block với CFG-0040 (xe máy KH thân thiết) — khác ở 2 Fragment ưu đãi thời vụ:
 -- base_rate scope people 'Học sinh, sinh viên' + scope time 'Mùa tựu trường' (01/08–30/09).
@@ -1135,6 +1377,43 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   -- Giai đoạn 48: khớp đúng product_variant.limit_range thật của VAR-108 ("3tr – 40tr").
   ('CFG-0043', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '3.000.000đ – 40.000.000đ', false, 'Hợp lệ'),
   ('CFG-0043', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ');
+
+-- ===== 30d. fragment — Giai đoạn 60: fragment scope=default cho 2 slot bắt buộc của 2 Block mới gán
+-- vào PT-001/003/005/006 (BLK_VALUEBASE.decrease_method+principal_base, BLK_DISBURSEMENT.disb_method)
+-- — hoàn thiện thân bất biến "mỗi (config, slot bắt buộc) phải có ≥1 fragment" (mục 30b) cho các Config
+-- đang dùng 4 Pattern này, để completeness lên đúng 100% thay vì báo thiếu dù Template đã có khung.
+-- CFG-0039 đã có sẵn disb_method từ trước (TPL-005/PT-003 vốn có BLK_DISBURSEMENT từ đầu) nên chỉ
+-- thiếu BLK_VALUEBASE. decrease_method/principal_base dùng đúng giá trị enum đóng duy nhất trong DB
+-- (không có lựa chọn khác); disb_method dùng "Chuyển khoản" khớp CFG-0039 đã có sẵn (Giai đoạn 41). =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  -- CFG-0021 (retired) ← TPL-001/PT-001
+  ('CFG-0021', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0037 (review) ← TPL-002/PT-001
+  ('CFG-0037', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- Giai đoạn 60: BLK_LIMIT có sẵn từ PT-001 (Giai đoạn 48) nhưng CFG-0037 chưa từng có fragment —
+  -- khớp đúng product_variant.limit_range thật của VAR-107 ("100tr – 2 tỷ"), lỗ hổng sót từ Giai đoạn 48
+  -- (đợt đó chỉ backfill 3 Config của TPL-001, bỏ sót CFG-0037 của TPL-002).
+  ('CFG-0037', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '100.000.000đ – 2.000.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
+  -- CFG-0038 (review) ← TPL-006/PT-005
+  ('CFG-0038', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0039 (approved) ← TPL-005/PT-003 — disb_method đã có sẵn, chỉ thiếu BLK_VALUEBASE
+  ('CFG-0039', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  -- CFG-0040 (published) ← TPL-001/PT-001
+  ('CFG-0040', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0043 (published) ← TPL-001/PT-001
+  ('CFG-0043', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ');
 
 -- ===== 31. product_variant — 8 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
@@ -1173,76 +1452,15 @@ INSERT INTO "catalog_listing" ("catalog_id", "variant_code", "published_date", "
   (1, 'VAR-108', '2026-07-07', 'published'),
   (2, 'VAR-108', '2026-07-07', 'published');
 
--- ===== 34. constraint_matrix — 3 ma trận (matrixDefs; Ma trận 4 Pattern×Block ngoài phạm vi v3) =====
--- Giai đoạn 51: bỏ hẳn matrix id=1 (ARCHETYPE_X_ELEMENT) — trùng lặp dữ liệu với foa_element
--- (đều lưu FOA × Obligation Element requirement). Từ nay foa_element là NGUỒN DUY NHẤT;
--- tab "FOA × Obligation Element" ở màn Ma trận ràng buộc tự dựng từ foa_element (derived,
--- giống patternCoverage() đã làm cho tab "Pattern × Block"), không qua constraint_matrix nữa.
-INSERT INTO "constraint_matrix" ("id", "kind", "title", "description") VALUES
-  (2, 'ELEMENTTYPE_X_ELEMENTTYPE', 'Ma trận 2: OET × OET (tương thích)', 'Kiểm tra tính tương thích giữa các nhóm OET khi ghép vào một OT lõi — tránh cấu hình mâu thuẫn.'),
-  (3, 'OBLIGATIONTYPE_X_BLOCK', 'Ma trận 3: OTF × Block', 'Block nào bắt buộc / tùy chọn / không dùng cho từng OTF. Dùng để dựng khung Block khi tạo Pattern.');
-
-SELECT setval(pg_get_serial_sequence('constraint_matrix','id'), 3);
-
--- ===== 35. matrix_cell — verdict 'no' của UI quy đổi thành 'na'
--- Giai đoạn 52: bỏ hàng/cột OET_NATURE khỏi Matrix 2 (ELEMENTTYPE_X_ELEMENTTYPE) — không còn là
--- 1 trong 6 OET chuẩn, ma trận co từ 6×6 (36 ô) còn đúng 5×5 (25 ô) =====
-INSERT INTO "matrix_cell" ("matrix_id", "row_code", "col_code", "verdict", "is_override") VALUES
-  (2, 'OET_VALUE', 'OET_VALUE', 'req', false),
-  (2, 'OET_VALUE', 'OET_ACTIVATION', 'pos', false),
-  (2, 'OET_VALUE', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_VALUE', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_VALUE', 'OET_TIME', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_VALUE', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_ACTIVATION', 'req', false),
-  (2, 'OET_ACTIVATION', 'OET_FULFILLMENT', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_RECOVERY', 'na', false),
-  (2, 'OET_ACTIVATION', 'OET_TIME', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_VALUE', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_ACTIVATION', 'pos', false),
-  (2, 'OET_FULFILLMENT', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_FULFILLMENT', 'OET_TIME', 'req', false),
-  (2, 'OET_RECOVERY', 'OET_VALUE', 'pos', false),
-  (2, 'OET_RECOVERY', 'OET_ACTIVATION', 'na', false),
-  (2, 'OET_RECOVERY', 'OET_FULFILLMENT', 'pos', false),
-  (2, 'OET_RECOVERY', 'OET_RECOVERY', 'req', false),
-  (2, 'OET_RECOVERY', 'OET_TIME', 'pos', false),
-  (2, 'OET_TIME', 'OET_VALUE', 'pos', false),
-  (2, 'OET_TIME', 'OET_ACTIVATION', 'req', false),
-  (2, 'OET_TIME', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_TIME', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_TIME', 'OET_TIME', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_REPAYMENT', 'na', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_FACILITY', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_COLLATERAL', 'pos', false),
-  (3, 'OT_FACILITY', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_LIMIT', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_UNSECURED', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_COLLATERAL', 'na', false),
-  (3, 'OT_UNSECURED', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_UNSECURED', 'BLK_PENALTY', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_PENALTY', 'pos', false);
+-- ===== 34-35. constraint_matrix / matrix_cell — Giai đoạn 58: BỎ HẲN, không còn dùng =====
+-- Màn Ma trận giờ chỉ còn đúng 2 ma trận, cả 2 đều PHÁI SINH (không lưu bảng này):
+--   "FOA × Obligation Element" (derived từ foa_element, từ Giai đoạn 51) và
+--   "Obligation Element × Block" (derived từ block.governed_by_element_code, Giai đoạn 58).
+-- 2 kind cũ ELEMENTTYPE_X_ELEMENTTYPE ("OET × OET") và OBLIGATIONTYPE_X_BLOCK ("OTF × Block") đã
+-- bỏ khỏi màn Ma trận theo yêu cầu user; banner độ phủ ở Pattern builder (trước đọc từ
+-- OBLIGATIONTYPE_X_BLOCK) cũng đổi sang đọc trực tiếp Obligation Element × Block — xem
+-- ProductPatternService#detail. Bảng constraint_matrix/matrix_cell vẫn giữ trong schema (có thể
+-- dùng lại cho ma trận thật khác sau này) nhưng seed để trống, không còn dữ liệu nào.
 
 -- ===== 36. maker_checker_process + process_step + checklist (releaseSteps; done=4, đang ở bước 5) =====
 INSERT INTO "maker_checker_process" ("id", "variant_code", "product_name", "done_count") VALUES
@@ -1264,9 +1482,9 @@ INSERT INTO "process_step_checklist" ("process_id", "step_no", "sort_order", "it
   (1, 1, 1, 'Xác định mục tiêu & KPI kinh doanh', true),
   (1, 1, 2, 'Chọn Financial Obligation Archetype', true),
   (1, 1, 3, 'Khoanh vùng tệp khách hàng mục tiêu', true),
-  (1, 2, 1, 'Gán Obligation Nature định danh', true),
-  (1, 2, 2, 'Khai báo Obligation Element nền', true),
-  (1, 2, 3, 'Đối chiếu Ma trận FOA × Element', true),
+  (1, 2, 1, 'Điền OE cho 3 OT lõi Cốt lõi (Giải ngân / Hoàn trả gốc / Trả lãi)', true),
+  (1, 2, 2, 'Bật/tắt OT lõi Phụ trợ theo bảng kích hoạt', true),
+  (1, 2, 3, 'Điền OE cho OT lõi Phụ trợ đã bật để hoàn thành OTF', true),
   (1, 3, 1, 'Gán Obligation Type cho khuôn', true),
   (1, 3, 2, 'Kéo-thả Block bắt buộc/tùy chọn', true),
   (1, 3, 3, 'Khai báo Answer Slot cho từng Block', true),
