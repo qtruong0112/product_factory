@@ -1312,6 +1312,27 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   ('CFG-0041', 'BLK_REPAYMENT', 'installment_count', 'default', NULL, '6 – 36', false, 'Hợp lệ'),
   ('CFG-0041', 'BLK_PENALTY', 'penalty_rate', 'default', NULL, '150% lãi suất trong hạn', false, 'Hợp lệ');
 
+-- ===== 30b2. fragment — Giai đoạn 62: CFG-0041/CFG-0042 (cả 2 published, cùng ← TPL-003/PT-002)
+-- thiếu Fragment cho 6 slot bắt buộc của 3 Block ELIGIBILITY/REGULATORY (age/min_income/compliance/
+-- legal_form) + rate_type/schedule — cả 2 Config có `template_frame` đủ (kế thừa được ở màn builder)
+-- nhưng chưa từng có Fragment thật nào cho các slot này (sót lại từ trước Giai đoạn 21c khi TPL-003
+-- mới bổ sung 3 Block này) nên completeness báo thiếu dù giá trị "nhìn thấy" trên UI vẫn đủ. Giá trị
+-- dùng đúng `template_frame` đã có sẵn của TPL-003 — không có căn cứ nào cho thấy 2 Config này cần
+-- khác biệt so với khung Template (không bịa số liệu mới). =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  ('CFG-0041', 'BLK_ELIGIBILITY', 'age', 'default', NULL, '18 – 60', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_ELIGIBILITY', 'min_income', 'default', NULL, '5.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0041', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_ELIGIBILITY', 'age', 'default', NULL, '18 – 60', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_ELIGIBILITY', 'min_income', 'default', NULL, '5.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REGULATORY', 'compliance', 'default', NULL, 'Bật', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REGULATORY', 'legal_form', 'default', NULL, 'Giấy nhận nợ', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_INTEREST', 'rate_type', 'default', NULL, 'Cố định', false, 'Hợp lệ'),
+  ('CFG-0042', 'BLK_REPAYMENT', 'schedule', 'default', NULL, 'Hàng tháng', false, 'Hợp lệ');
+
 -- ===== 30c. fragment — CFG-0043 'Vay xe máy mùa tựu trường' (Giai đoạn 41) ← TPL-001/PT-001,
 -- cùng khuôn Block với CFG-0040 (xe máy KH thân thiết) — khác ở 2 Fragment ưu đãi thời vụ:
 -- base_rate scope people 'Học sinh, sinh viên' + scope time 'Mùa tựu trường' (01/08–30/09).
