@@ -137,7 +137,7 @@ export default function OntologyPage() {
     { label: 'Obligation Element Type (OET)', count: elementTypeList.length, color: '#0B7349' },
     { label: 'Obligation Element', count: elementList.length, color: '#2F73C4' },
     { label: 'Obligation Type (lõi)', count: typeCoreList.length, color: '#9A6B00' },
-    { label: 'OTF', count: typeList.length, color: '#7A3FA0' },
+    { label: 'Obligation Type Family (OTF)', count: typeList.length, color: '#7A3FA0' },
   ]
 
   return (

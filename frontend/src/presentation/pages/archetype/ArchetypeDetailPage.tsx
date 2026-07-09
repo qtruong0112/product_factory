@@ -150,7 +150,7 @@ export default function ArchetypeDetailPage() {
 
       <div style={{ padding: '22px 26px', maxWidth: 1100 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 20 }}>
-          <StatCard label="OTF" value={data.typeCount} />
+          <StatCard label="Obligation Type Family (OTF)" value={data.typeCount} />
           <StatCard label="Element" value={data.elementCount} />
           <StatCard label="Product" value={data.productCount} />
         </div>
@@ -197,7 +197,7 @@ export default function ArchetypeDetailPage() {
 
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>OTF thuộc Archetype này</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>Obligation Type Family (OTF) thuộc Archetype này</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>
               {data.typeRows.length}
             </span>

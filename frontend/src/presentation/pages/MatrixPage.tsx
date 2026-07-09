@@ -25,7 +25,7 @@ const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
 const TAB_LABELS = [
   'FOA × Obligation Element',
   'OET × OET',
-  'OTF × Block',
+  'Obligation Type Family (OTF) × Block',
   'Pattern × Block (độ phủ)',
 ]
 

@@ -304,7 +304,7 @@ export default function ProductPatternDetailPage() {
           ) : (
             <>
               <div style={{ padding: '0 16px 10px', flex: 'none' }}>
-                <div style={{ fontSize: 11, color: '#A7B5AC', margin: '4px 2px 0', fontWeight: 600, letterSpacing: '.3px' }}>GÁN OBLIGATION TYPE VÀO KHUÔN</div>
+                <div style={{ fontSize: 11, color: '#A7B5AC', margin: '4px 2px 0', fontWeight: 600, letterSpacing: '.3px' }}>GÁN OBLIGATION TYPE FAMILY VÀO KHUÔN</div>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {(data.assignedOTs ?? []).map((o) => {
@@ -333,7 +333,7 @@ export default function ProductPatternDetailPage() {
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '22px 26px', background: '#F4F7F5' }}>
           {/* assigned OT zone */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.6px', color: '#8A998F', marginBottom: 9 }}>OBLIGATION TYPE ĐÃ GÁN</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.6px', color: '#8A998F', marginBottom: 9 }}>OBLIGATION TYPE FAMILY ĐÃ GÁN</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9 }}>
               {(data.assignedOTs ?? []).map((a) => (
                 <div key={a.code} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: '1px solid #B7E6CE', borderRadius: 10, padding: '9px 11px 9px 13px', boxShadow: '0 1px 2px rgba(11,59,46,.04)' }}>

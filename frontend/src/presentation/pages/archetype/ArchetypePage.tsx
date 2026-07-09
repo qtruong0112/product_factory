@@ -110,7 +110,7 @@ export default function ArchetypePage() {
               <div style={{ display: 'flex', gap: 16, borderTop: '1px solid #F1F5F2', paddingTop: 12 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#122019' }}>{a.typeCount}</div>
-                  <div style={{ fontSize: 10.5, color: '#8A998F' }}>OTF</div>
+                  <div style={{ fontSize: 10.5, color: '#8A998F' }}>Obligation Type Family (OTF)</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#122019' }}>{a.elementCount}</div>

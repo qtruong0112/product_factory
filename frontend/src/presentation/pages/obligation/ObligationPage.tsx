@@ -103,7 +103,7 @@ function BoolChip({ value }: { value: boolean }) {
   )
 }
 
-const TABS = ['OTF', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
+const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
 
 export default function ObligationPage() {
   const navigate = useNavigate()

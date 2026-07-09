@@ -136,7 +136,7 @@ export default function ObligationTypeDetailPage() {
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Cấu trúc OTF</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Cấu trúc Obligation Type Family (OTF)</div>
           <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
             1 OTF = tổ hợp nhiều Obligation Type lõi, mỗi OT lõi đủ 6 OET (Party/Value/Activation/Time/Fulfillment/Recovery).
           </div>
@@ -216,7 +216,7 @@ export default function ObligationTypeDetailPage() {
 
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>Product Pattern dùng OTF này</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>Product Pattern dùng Obligation Type Family (OTF) này</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>
               {data.patterns.length}
             </span>

@@ -30,8 +30,8 @@ const FOUNDATIONS = [
 const RELATIONS: { source: string; verb: string; target: string; card: string }[] = [
   { source: 'Obligation Element Type', verb: 'phân loại', target: 'Obligation Element', card: '1:N' },
   { source: 'Obligation Element', verb: 'cấu thành', target: 'Obligation Type (lõi)', card: 'N:1' },
-  { source: 'Obligation Type (lõi)', verb: 'gộp thành', target: 'OTF', card: 'N:1' },
-  { source: 'OTF', verb: 'thuộc', target: 'Financial Obligation Archetype', card: 'N:1' },
+  { source: 'Obligation Type (lõi)', verb: 'gộp thành', target: 'Obligation Type Family (OTF)', card: 'N:1' },
+  { source: 'Obligation Type Family (OTF)', verb: 'thuộc', target: 'Financial Obligation Archetype', card: 'N:1' },
   { source: 'Financial Obligation Archetype', verb: 'quy định', target: 'Obligation Element', card: 'N:N' },
   { source: 'Domain', verb: 'sở hữu', target: 'Attribute Group', card: '1:N' },
   { source: 'Attribute Group', verb: 'sở hữu', target: 'Attribute', card: '1:N' },
@@ -41,7 +41,7 @@ const RELATIONS: { source: string; verb: string; target: string; card: string }[
   { source: 'Constraint Matrix', verb: 'chứa', target: 'Matrix Cell', card: '1:N' },
   { source: 'Lifecycle', verb: 'có', target: 'Lifecycle State', card: '1:N' },
   { source: 'Business Intent', verb: 'định hướng', target: 'Product Intent', card: '1:N' },
-  { source: 'Product Pattern', verb: 'gán', target: 'OTF', card: 'N:N' },
+  { source: 'Product Pattern', verb: 'gán', target: 'Obligation Type Family (OTF)', card: 'N:N' },
   { source: 'Product Pattern', verb: 'chứa', target: 'Block', card: 'N:N' },
 ]
 

@@ -119,7 +119,7 @@ export default function DashboardPage() {
     ['Pattern đang dựng', data.patterns, `${data.patternsReview} chờ duyệt`, 'gold', 'pattern'],
     ['Config chờ phê duyệt', data.configsReview, 'maker–checker', 'review', 'config'],
     ['Kênh phân phối', data.channelCount, `${data.catalogs} sản phẩm`, 'green', 'variant'],
-    ['OTF', data.obligationTypes, `${data.families.length} FOA`, 'neutral', 'obligation'],
+    ['Obligation Type Family (OTF)', data.obligationTypes, `${data.families.length} FOA`, 'neutral', 'obligation'],
   ]
 
   const pdef: [string, number, string][] = [
