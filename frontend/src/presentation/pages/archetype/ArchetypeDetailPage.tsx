@@ -150,7 +150,7 @@ export default function ArchetypeDetailPage() {
 
       <div style={{ padding: '22px 26px', maxWidth: 1100 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 20 }}>
-          <StatCard label="Obligation Type" value={data.typeCount} />
+          <StatCard label="OTF" value={data.typeCount} />
           <StatCard label="Element" value={data.elementCount} />
           <StatCard label="Product" value={data.productCount} />
         </div>
@@ -197,7 +197,7 @@ export default function ArchetypeDetailPage() {
 
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>Obligation Type thuộc Archetype này</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>OTF thuộc Archetype này</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>
               {data.typeRows.length}
             </span>
@@ -220,7 +220,7 @@ export default function ArchetypeDetailPage() {
 
         {data.activationRules.length > 0 && (
           <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '18px 20px', marginTop: 20 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Quy tắc kích hoạt Obligation Type phụ trợ</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Quy tắc kích hoạt OT lõi phụ trợ</div>
             <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
               Độc lập với Archetype — chỉ do lựa chọn Obligation Element quyết định (Giai đoạn 51).
             </div>

@@ -52,7 +52,7 @@ export default function ArchetypePage() {
       <div style={{ maxWidth: 680, marginBottom: 20 }}>
         <div style={{ fontSize: 13, color: '#5E6F66', lineHeight: 1.55 }}>
           {list.length} <b style={{ color: '#0B7349' }}>Financial Obligation Archetype</b> — khuôn nghĩa vụ gốc, quy định
-          Element nào Bắt buộc/Possible cho từng Obligation Type con.
+          Element nào Bắt buộc/Possible cho từng OTF con.
         </div>
       </div>
 
@@ -110,7 +110,7 @@ export default function ArchetypePage() {
               <div style={{ display: 'flex', gap: 16, borderTop: '1px solid #F1F5F2', paddingTop: 12 }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#122019' }}>{a.typeCount}</div>
-                  <div style={{ fontSize: 10.5, color: '#8A998F' }}>Obligation Type</div>
+                  <div style={{ fontSize: 10.5, color: '#8A998F' }}>OTF</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#122019' }}>{a.elementCount}</div>

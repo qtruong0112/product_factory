@@ -119,7 +119,7 @@ export default function DashboardPage() {
     ['Pattern đang dựng', data.patterns, `${data.patternsReview} chờ duyệt`, 'gold', 'pattern'],
     ['Config chờ phê duyệt', data.configsReview, 'maker–checker', 'review', 'config'],
     ['Kênh phân phối', data.channelCount, `${data.catalogs} sản phẩm`, 'green', 'variant'],
-    ['Obligation Types', data.obligationTypes, `${data.families.length} FOA`, 'neutral', 'obligation'],
+    ['OTF', data.obligationTypes, `${data.families.length} FOA`, 'neutral', 'obligation'],
   ]
 
   const pdef: [string, number, string][] = [
@@ -224,7 +224,7 @@ export default function DashboardPage() {
         {/* archetype distribution — Giai đoạn 51: thay Family (đã gộp bỏ) bằng FOA */}
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '20px 22px' }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Phân bố theo Financial Obligation Archetype</div>
-          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>Số Obligation Type Family (OTF) theo FOA</div>
+          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>Số OTF theo FOA</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {data.families.map((f, i) => {
               const pct = Math.round((f.count / famTotal) * 100)

@@ -25,7 +25,7 @@ const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
 const TAB_LABELS = [
   'FOA × Obligation Element',
   'OET × OET',
-  'Obligation Type × Block',
+  'OTF × Block',
   'Pattern × Block (độ phủ)',
 ]
 
@@ -113,7 +113,7 @@ export default function MatrixPage() {
       ]
       g.push({
         title: 'Ma trận 4: Pattern × Block (độ phủ)',
-        desc: 'Độ phủ Block thực tế của từng Pattern — đối chiếu với ma trận Obligation Type để phát hiện Block thiếu/thừa. (Suy diễn từ obligation type của Pattern × ma trận 3.)',
+        desc: 'Độ phủ Block thực tế của từng Pattern — đối chiếu với ma trận OTF để phát hiện Block thiếu/thừa. (Suy diễn từ OTF của Pattern × ma trận 3.)',
         legend: cov.legend,
         rowHead: cov.rowHead,
         cols: cov.cols,

@@ -107,7 +107,7 @@ export const TABLES: TableDef[] = [
   {
     key: 'obligation-types',
     resource: 'obligation-types',
-    title: 'Obligation Type Family (OTF)',
+    title: 'OTF',
     subtitle: 'Khuôn nghĩa vụ hoàn chỉnh — obligation_type_code không đổi (Giai đoạn 51 bỏ family_code)',
     layer: 'I',
     columns: [
@@ -120,7 +120,7 @@ export const TABLES: TableDef[] = [
   {
     key: 'obligation-type-compositions',
     resource: 'obligation-type-compositions',
-    title: 'Obligation Type Composition',
+    title: 'OTF Composition',
     subtitle: 'Tổ hợp Element cho mỗi OT lõi trong 1 OTF (Giai đoạn 51: thêm ot_core_code/leg)',
     layer: 'I',
     columns: [

@@ -19,7 +19,7 @@ const TYPE_ICON: Record<string, string> = {
   'Product Template': 'template',
   'Product Config': 'config',
   'Product Variant': 'variant',
-  'Obligation Type': 'obligation',
+  OTF: 'obligation',
   'Financial Obligation Archetype': 'layers',
   Block: 'block',
   Attribute: 'tag',

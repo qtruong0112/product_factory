@@ -137,7 +137,7 @@ export default function OntologyPage() {
     { label: 'Obligation Element Type (OET)', count: elementTypeList.length, color: '#0B7349' },
     { label: 'Obligation Element', count: elementList.length, color: '#2F73C4' },
     { label: 'Obligation Type (lõi)', count: typeCoreList.length, color: '#9A6B00' },
-    { label: 'Obligation Type Family (OTF)', count: typeList.length, color: '#7A3FA0' },
+    { label: 'OTF', count: typeList.length, color: '#7A3FA0' },
   ]
 
   return (
@@ -146,7 +146,7 @@ export default function OntologyPage() {
       <Card style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 3 }}>Chuỗi khái niệm Ontology nghĩa vụ</div>
         <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>
-          OET phân loại Element; Element cấu thành nên Obligation Type (lõi); nhiều Obligation Type lõi gộp thành 1 Obligation Type Family (OTF).
+          OET phân loại Element; Element cấu thành nên Obligation Type (lõi); nhiều Obligation Type lõi gộp thành 1 OTF.
         </div>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
           {concepts.map((c, i) => (

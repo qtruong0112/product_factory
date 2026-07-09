@@ -4,7 +4,7 @@ import { getList, type Page } from '../../../infrastructure/api/client'
 import ListScreen, { type ListColumn } from '../../components/ListScreen'
 import { StatusChip } from '../../components/StatusChip'
 
-// Obligation Type Family (OTF) — làm giàu: archetypeName (join), elementCount (đếm obligation_type_composition).
+// OTF — làm giàu: archetypeName (join), elementCount (đếm obligation_type_composition).
 // Giai đoạn 51: bỏ familyName (obligation_family đã gộp bỏ, trùng 1:1 với archetype).
 interface ObTypeRow {
   code: string
@@ -103,7 +103,7 @@ function BoolChip({ value }: { value: boolean }) {
   )
 }
 
-const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
+const TABS = ['OTF', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
 
 export default function ObligationPage() {
   const navigate = useNavigate()
@@ -149,7 +149,7 @@ export default function ObligationPage() {
   if (tab === 0) {
     columns = [
       { label: 'Mã', width: '230px' },
-      { label: 'Obligation Type Family' },
+      { label: 'OTF' },
       { label: 'Archetype (FOA)', width: '160px' },
       { label: 'Element', width: '100px', align: 'center' },
       { label: 'Trạng thái', width: '130px' },
