@@ -1179,8 +1179,8 @@ INSERT INTO "catalog_listing" ("catalog_id", "variant_code", "published_date", "
 -- tab "FOA × Obligation Element" ở màn Ma trận ràng buộc tự dựng từ foa_element (derived,
 -- giống patternCoverage() đã làm cho tab "Pattern × Block"), không qua constraint_matrix nữa.
 INSERT INTO "constraint_matrix" ("id", "kind", "title", "description") VALUES
-  (2, 'ELEMENTTYPE_X_ELEMENTTYPE', 'Ma trận 2: Element Type × Element Type (tương thích)', 'Kiểm tra tính tương thích giữa các nhóm Element Type khi ghép vào một Obligation Type — tránh cấu hình mâu thuẫn.'),
-  (3, 'OBLIGATIONTYPE_X_BLOCK', 'Ma trận 3: Obligation Type × Block', 'Block nào bắt buộc / tùy chọn / không dùng cho từng Obligation Type. Dùng để dựng khung Block khi tạo Pattern.');
+  (2, 'ELEMENTTYPE_X_ELEMENTTYPE', 'Ma trận 2: OET × OET (tương thích)', 'Kiểm tra tính tương thích giữa các nhóm OET khi ghép vào một OT lõi — tránh cấu hình mâu thuẫn.'),
+  (3, 'OBLIGATIONTYPE_X_BLOCK', 'Ma trận 3: OTF × Block', 'Block nào bắt buộc / tùy chọn / không dùng cho từng OTF. Dùng để dựng khung Block khi tạo Pattern.');
 
 SELECT setval(pg_get_serial_sequence('constraint_matrix','id'), 3);
 
