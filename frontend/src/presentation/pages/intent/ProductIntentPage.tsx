@@ -9,7 +9,6 @@ interface ProductIntent {
   code: string | null
   name: string
   businessIntentId: number
-  natureElementCode: string
   archetypeCode: string
   status: string
 }
@@ -73,7 +72,6 @@ export default function ProductIntentPage() {
     { label: 'Mã', width: '120px' },
     { label: 'Tên Product Intent' },
     { label: 'Archetype', width: '150px' },
-    { label: 'Obligation nature', width: '230px' },
     { label: 'Trạng thái', width: '130px' },
   ]
 
@@ -83,7 +81,6 @@ export default function ProductIntentPage() {
     mono(pi.code ?? `PI-${String(pi.id).padStart(3, '0')}`),
     <span style={{ fontWeight: 600, color: '#122019' }}>{pi.name}</span>,
     <ArchetypeChip code={pi.archetypeCode} />,
-    mono(pi.natureElementCode),
     <StatusChip status={pi.status} />,
   ])
 
