@@ -37,7 +37,7 @@ public class ReleaseProcessService {
     /** Copy mô tả tĩnh của quy trình chuẩn (không có cột DB — không đổi theo instance). */
     private static final String[] DESC = {
             "Khởi nguồn từ định hướng kinh doanh: xác định mục tiêu, tệp khách hàng và Financial Obligation Archetype phù hợp.",
-            "Cụ thể hóa ý định sản phẩm: gắn Obligation Nature (is_identify) và bản chất nghĩa vụ tài chính.",
+            "Cụ thể hóa ý định sản phẩm: chọn Financial Obligation Archetype và điền Obligation Element (OE) cho các OT lõi để hình thành Obligation Type Family (OTF).",
             "Vẽ khuôn sản phẩm: kéo-thả Block vào cấu trúc và gán Obligation Type cho khuôn.",
             "Cụ thể hóa Pattern cho một đối tượng khách hàng (cá nhân/doanh nghiệp) và bối cảnh bán.",
             "Điền giá trị cho Answer Slot, tạo Config Fragment có thể giới hạn theo Selector Scope.",
@@ -47,8 +47,8 @@ public class ReleaseProcessService {
     };
     private static final String[] TIP = {
             "1 Business Intent có thể dẫn xuất nhiều Product Intent.",
-            "Ma trận ràng buộc sẽ suy diễn Family hợp lệ cho Intent.",
-            "Đối chiếu Ma trận Obligation Type × Block để không thiếu Block.",
+            "Ma trận FOA × Obligation Element sẽ giới hạn OE hợp lệ theo Archetype đã chọn.",
+            "Đối chiếu Ma trận Obligation Type Family (OTF) × Block để không thiếu Block.",
             "Template thừa kế cấu trúc Block từ Pattern nguồn.",
             "Mỗi Fragment gán 1 giá trị, có thể chồng theo Selector Scope.",
             "Verdict \"Hợp lệ\" là điều kiện cần để gửi duyệt.",
