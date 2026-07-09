@@ -24,7 +24,7 @@ const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
 // Nhãn tab ngắn (UI chrome — trích nguyên prototype `labels`).
 const TAB_LABELS = [
   'FOA × Obligation Element',
-  'Element Type × Element Type',
+  'OET × OET',
   'Obligation Type × Block',
   'Pattern × Block (độ phủ)',
 ]

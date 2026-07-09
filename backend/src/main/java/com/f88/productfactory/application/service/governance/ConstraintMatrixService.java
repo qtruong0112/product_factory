@@ -109,7 +109,7 @@ public class ConstraintMatrixService {
     /** rowHead (nhãn cột đầu) theo kind. */
     private String rowHeadOf(String kind) {
         return switch (kind) {
-            case "ELEMENTTYPE_X_ELEMENTTYPE" -> "Element Type";
+            case "ELEMENTTYPE_X_ELEMENTTYPE" -> "OET";
             default -> "Obligation Type";
         };
     }

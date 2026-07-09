@@ -134,7 +134,7 @@ export default function OntologyPage() {
     )
 
   const concepts = [
-    { label: 'Obligation Element Type', count: elementTypeList.length, color: '#0B7349' },
+    { label: 'Obligation Element Type (OET)', count: elementTypeList.length, color: '#0B7349' },
     { label: 'Obligation Element', count: elementList.length, color: '#2F73C4' },
     { label: 'Obligation Type (lõi)', count: typeCoreList.length, color: '#9A6B00' },
     { label: 'Obligation Type Family (OTF)', count: typeList.length, color: '#7A3FA0' },
@@ -146,7 +146,7 @@ export default function OntologyPage() {
       <Card style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 3 }}>Chuỗi khái niệm Ontology nghĩa vụ</div>
         <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>
-          Element Type phân loại Element; Element cấu thành nên Obligation Type (lõi); nhiều Obligation Type lõi gộp thành 1 Obligation Type Family (OTF).
+          OET phân loại Element; Element cấu thành nên Obligation Type (lõi); nhiều Obligation Type lõi gộp thành 1 Obligation Type Family (OTF).
         </div>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
           {concepts.map((c, i) => (
@@ -227,7 +227,7 @@ export default function OntologyPage() {
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8A998F' }}>{selectedType}</span>
           </div>
           <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
-            1 OTF = tổ hợp nhiều Obligation Type lõi, mỗi OT lõi đủ 6 Element Type (Party/Value/Activation/Time/Fulfillment/Recovery).
+            1 OTF = tổ hợp nhiều Obligation Type lõi, mỗi OT lõi đủ 6 OET (Party/Value/Activation/Time/Fulfillment/Recovery).
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {decomposition.map((g) => (
@@ -262,9 +262,9 @@ export default function OntologyPage() {
         </Card>
       </div>
 
-      {/* Khối 3: từ vựng Element Type -> Element (accordion) */}
+      {/* Khối 3: từ vựng OET -> Element (accordion) */}
       <Card>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 14 }}>Từ vựng Ontology (Element Type → Element)</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 14 }}>Từ vựng Ontology (OET → Element)</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {elementTypeList.map((et) => {
             const open = openVocab === et.code

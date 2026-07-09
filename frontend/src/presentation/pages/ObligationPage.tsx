@@ -29,7 +29,7 @@ interface ObElementRow {
   isIdentify: boolean
 }
 
-// Element Type — làm giàu: elementCount (đếm obligation_element).
+// OET (Obligation Element Type) — làm giàu: elementCount (đếm obligation_element).
 interface ObElementTypeRow {
   code: string
   name: string
@@ -102,7 +102,7 @@ function BoolChip({ value }: { value: boolean }) {
   )
 }
 
-const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Element Type']
+const TABS = ['Obligation Type Family (OTF)', 'Obligation Type (lõi)', 'Obligation Element', 'Obligation Element Type (OET)']
 
 export default function ObligationPage() {
   const [types, setTypes] = useState<Page<ObTypeRow> | null>(null)
@@ -179,7 +179,7 @@ export default function ObligationPage() {
     columns = [
       { label: 'Mã', width: '360px' },
       { label: 'Obligation Element' },
-      { label: 'Element Type', width: '210px' },
+      { label: 'OET', width: '210px' },
       { label: 'Is_identify', width: '120px' },
     ]
     rows = (elements?.content ?? []).map((e) => [
@@ -193,7 +193,7 @@ export default function ObligationPage() {
   } else {
     columns = [
       { label: 'Mã', width: '210px' },
-      { label: 'Element Type' },
+      { label: 'OET' },
       { label: 'Mô tả' },
       { label: 'Số Element', width: '120px' },
     ]

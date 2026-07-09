@@ -32,8 +32,8 @@ export const TABLES: TableDef[] = [
   {
     key: 'obligation-element-types',
     resource: 'obligation-element-types',
-    title: 'Obligation Element Type',
-    subtitle: 'Các chiều phân loại nghĩa vụ (6+1 chiều)',
+    title: 'Obligation Element Type (OET)',
+    subtitle: 'Các chiều phân loại nghĩa vụ (6 chiều chuẩn)',
     layer: 'I',
     columns: [
       { key: 'code', label: 'Code', mono: true },
@@ -126,7 +126,7 @@ export const TABLES: TableDef[] = [
     columns: [
       { key: 'obligationTypeCode', label: 'OTF', mono: true },
       { key: 'otCoreCode', label: 'OT lõi', mono: true },
-      { key: 'elementTypeCode', label: 'Element Type', mono: true },
+      { key: 'elementTypeCode', label: 'OET', mono: true },
       { key: 'elementCode', label: 'Element', mono: true },
       { key: 'leg', label: 'Leg', mono: true },
     ],
