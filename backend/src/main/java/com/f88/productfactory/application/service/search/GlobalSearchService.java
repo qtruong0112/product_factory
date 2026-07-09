@@ -116,7 +116,7 @@ public class GlobalSearchService {
                 ProductVariant::getName, ProductVariant::getCode, ProductVariant::getStatus,
                 v -> "/variant/" + v.getCode());
 
-        addMatches(out, needle, "OTF", obligationTypeRepo.findAll(),
+        addMatches(out, needle, "Obligation Type Family (OTF)", obligationTypeRepo.findAll(),
                 ObligationType::getName, ObligationType::getCode, ObligationType::getStatus,
                 ot -> "/obligation-type/" + ot.getCode());
 

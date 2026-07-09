@@ -110,7 +110,7 @@ public class ConstraintMatrixService {
     private String rowHeadOf(String kind) {
         return switch (kind) {
             case "ELEMENTTYPE_X_ELEMENTTYPE" -> "OET";
-            default -> "OTF";
+            default -> "Obligation Type Family (OTF)";
         };
     }
 
