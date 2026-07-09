@@ -1,0 +1,1181 @@
+Date: Wed, 8 Jul 2026 14:52:42 +0000 (UTC)
+Message-ID: <1114055603.7.1783522362302@fd5c202e5dad>
+Subject: Exported From Confluence
+MIME-Version: 1.0
+Content-Type: multipart/related; 
+	boundary="----=_Part_6_125658055.1783522362302"
+
+------=_Part_6_125658055.1783522362302
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///C:/exported.html
+
+<html xmlns:o=3D'urn:schemas-microsoft-com:office:office'
+      xmlns:w=3D'urn:schemas-microsoft-com:office:word'
+      xmlns:v=3D'urn:schemas-microsoft-com:vml'
+      xmlns=3D'urn:w3-org-ns:HTML'>
+<head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <title>V=C3=AD d=E1=BB=A5 xuy=C3=AAn su=E1=BB=91t: Ma Tr=E1=BA=ADn FOA =
+=C3=97 OE v=C3=A0 M=C3=B4 Ph=E1=BB=8Fng X=C3=A2y D=E1=BB=B1ng OTF</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:TargetScreenSize>1024x640</o:TargetScreenSize>
+            <o:PixelsPerInch>72</o:PixelsPerInch>
+            <o:AllowPNG/>
+        </o:OfficeDocumentSettings>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>90</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+                <!--
+        @page Section1 {
+            size: 8.5in 11.0in;
+            margin: 1.0in;
+            mso-header-margin: .5in;
+            mso-footer-margin: .5in;
+            mso-paper-source: 0;
+        }
+
+        table {
+            border: solid 1px;
+            border-collapse: collapse;
+        }
+
+        table td, table th {
+            border: solid 1px;
+            padding: 5px;
+        }
+
+        td {
+            page-break-inside: avoid;
+        }
+
+        tr {
+            page-break-after: avoid;
+        }
+
+        div.Section1 {
+            page: Section1;
+        }
+
+        /* Confluence print stylesheet. Common to all themes for print medi=
+a */
+/* Full of !important until we improve batching for print CSS */
+
+@media print {
+    #main {
+        padding-bottom: 1em !important; /* The default padding of 6em is to=
+o much for printouts */
+    }
+
+    body {
+        font: var(--ds-font-body-small, Arial, Helvetica, FreeSans, sans-se=
+rif);
+    }
+
+    body, #full-height-container, #main, #page, #content, .has-personal-sid=
+ebar #content {
+        background: var(--ds-surface, #fff) !important;
+        color: var(--ds-text, #000) !important;
+        border: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    a, a:link, a:visited, a:focus, a:hover, a:active {
+        color: var(--ds-text, #000);
+    }
+
+    #content h1,
+    #content h2,
+    #content h3,
+    #content h4,
+    #content h5,
+    #content h6 {
+        page-break-after: avoid;
+    }
+
+    pre {
+        font: var(--ds-font-code, Monaco, "Courier New", monospace);
+    }
+
+    #header,
+    .aui-header-inner,
+    #navigation,
+    #sidebar,
+    .sidebar,
+    #personal-info-sidebar,
+    .ia-fixed-sidebar,
+    .page-actions,
+    .navmenu,
+    .ajs-menu-bar,
+    .noprint,
+    .inline-control-link,
+    .inline-control-link a,
+    a.show-labels-editor,
+    .global-comment-actions,
+    .comment-actions,
+    .quick-comment-container,
+    #addcomment {
+        display: none !important;
+    }
+
+    /* CONF-28544 cannot print multiple pages in IE */
+    #splitter-content {
+        position: relative !important;
+    }
+
+    .comment .date::before {
+        content: none !important; /* remove middot for print view */
+    }
+
+    h1.pagetitle img {
+        height: auto;
+        width: auto;
+    }
+
+    .print-only {
+        display: block;
+    }
+
+    #footer {
+        position: relative !important; /* CONF-17506 Place the footer at en=
+d of the content */
+        margin: 0;
+        padding: 0;
+        background: none;
+        clear: both;
+    }
+
+    #poweredby {
+        border-top: none;
+        background: none;
+    }
+
+    #poweredby li.print-only {
+        display: list-item;
+        font-style: italic;
+    }
+
+    #poweredby li.noprint {
+        display: none;
+    }
+
+    /* no width controls in print */
+    .wiki-content .table-wrap,
+    .wiki-content p,
+    .panel .codeContent,
+    .panel .codeContent pre,
+    .image-wrap {
+        overflow: visible !important;
+    }
+
+    /* TODO - should this work? */
+    #children-section,
+    #comments-section .comment,
+    #comments-section .comment .comment-body,
+    #comments-section .comment .comment-content,
+    #comments-section .comment p {
+        page-break-inside: avoid;
+    }
+
+    #page-children a {
+        text-decoration: none;
+    }
+
+    /**
+     hide twixies
+
+     the specificity here is a hack because print styles
+     are getting loaded before the base styles. */
+    #comments-section.pageSection .section-header,
+    #comments-section.pageSection .section-title,
+    #children-section.pageSection .section-header,
+    #children-section.pageSection .section-title,
+    .children-show-hide {
+        padding-left: 0;
+        margin-left: 0;
+    }
+
+    .children-show-hide.icon {
+        display: none;
+    }
+
+    /* personal sidebar */
+    .has-personal-sidebar #content {
+        margin-right: 0px;
+    }
+
+    .has-personal-sidebar #content .pageSection {
+        margin-right: 0px;
+    }
+
+    .no-print, .no-print * {
+        display: none !important;
+    }
+}
+-->
+    </style>
+</head>
+<body>
+    <h1>V=C3=AD d=E1=BB=A5 xuy=C3=AAn su=E1=BB=91t: Ma Tr=E1=BA=ADn FOA =C3=
+=97 OE v=C3=A0 M=C3=B4 Ph=E1=BB=8Fng X=C3=A2y D=E1=BB=B1ng OTF</h1>
+    <div class=3D"Section1">
+        <h2 local-id=3D"ed6acf4bf8ee" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=
+=E1=BB=91t:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=
+=BB=B1ngOTF-1.Matr=E1=BA=ADnFOA=C3=97OE">1. Ma tr=E1=BA=ADn FOA =C3=97 OE</=
+h2>
+<p local-id=3D"8877b6ffd62c"><strong>Vai tr=C3=B2 c=E1=BB=A7a ma tr=E1=BA=
+=ADn:</strong> =C4=91=C3=A2y l=C3=A0 "menu" m=C3=A0 FOA m=E1=BB=9F ra =E2=
+=80=94 v=E1=BB=9Bi m=E1=BB=97i OE, ma tr=E1=BA=ADn tr=E1=BA=A3 l=E1=BB=9Di =
+B=E1=BA=AET BU=E1=BB=98C / CHO PH=C3=89P / KH=C3=94NG CHO PH=C3=89P theo t=
+=E1=BB=ABng archetype. Ma tr=E1=BA=ADn <strong>kh=C3=B4ng</strong> =C3=A1p =
+d=E1=BB=A5ng cho Party (Party g=E1=BA=AFn theo c=E1=BA=A5u tr=C3=BAc OT, kh=
+=C3=B4ng =C4=91=E1=BB=95i theo FOA) v=C3=A0 kh=C3=B4ng =C3=A1p d=E1=BB=A5ng=
+ =C4=91=E1=BB=81u cho m=E1=BB=8Di OET c=E1=BB=A7a OT Gi=E1=BA=A3i ng=C3=A2n=
+ (xem L=C6=B0u =C3=BD cu=E1=BB=91i m=E1=BB=A5c).</p>
+<p local-id=3D"ecdd86b9cf54"><strong>K=C3=BD hi=E1=BB=87u:</strong> <code>B=
+B</code> =3D b=E1=BA=AFt bu=E1=BB=99c (req) =C2=B7 <code>CP</code> =3D cho =
+ph=C3=A9p, t=E1=BB=B1 ch=E1=BB=8Dn (pos) =C2=B7 <code>KO</code> =3D kh=C3=
+=B4ng cho ph=C3=A9p (no)</p>
+<h3 local-id=3D"4c017a2209ea" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-OET_VALUE=E2=80=94ValueStructure">OET_VALUE =E2=80=94 Value Structure</h3=
+>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"d9=
+0d5f92-1069-4c75-a3c4-b253618761c8" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"1d235f78-0075-45f4-a2cc-ff16d8199518">
+<th data-local-id=3D"3dfa6a4d-8c7f-4937-837d-3db0fc983633" class=3D"conflue=
+nceTh">
+<p local-id=3D"4ba8c910d7b4">OE</p></th>
+<th data-local-id=3D"5d713845-1cce-45af-9123-5bbf1748c589" class=3D"conflue=
+nceTh">
+<p local-id=3D"f8e8ec27a780">Term Loan</p></th>
+<th data-local-id=3D"349caa51-1a54-4915-92a9-60ff95ed9cc6" class=3D"conflue=
+nceTh">
+<p local-id=3D"6738fec1b1a3">Revolving</p></th>
+<th data-local-id=3D"2f6fb970-3c16-4352-938e-3508076620f2" class=3D"conflue=
+nceTh">
+<p local-id=3D"01731f16685c">Conditional</p></th>
+</tr>
+<tr data-local-id=3D"18d6d471-0b16-47b3-a20b-e06de4409258">
+<td data-local-id=3D"d1636239-0dce-4fae-85b9-159192c7c30b" class=3D"conflue=
+nceTd">
+<p local-id=3D"a17391e67824">G=E1=BB=91c kh=C3=B4ng t=C4=83ng, gi=E1=BA=A3m=
+ d=E1=BA=A7n nhi=E1=BB=81u k=E1=BB=B3</p></td>
+<td data-local-id=3D"94d115d1-616f-4f51-b347-ce41e6d46327" class=3D"conflue=
+nceTd">
+<p local-id=3D"6897b1367639"><strong>BB</strong></p></td>
+<td data-local-id=3D"9bb0484e-694e-4187-8480-1737d0808efa" class=3D"conflue=
+nceTd">
+<p local-id=3D"51104f3e5a60">KO</p></td>
+<td data-local-id=3D"63f2d79d-c0e2-4ace-90fa-2cad662f4099" class=3D"conflue=
+nceTd">
+<p local-id=3D"1025230121c5">CP</p></td>
+</tr>
+<tr data-local-id=3D"99ac03c5-d7fe-4184-9f4f-8784450b2d4f">
+<td data-local-id=3D"81af4eed-6538-48f9-a646-eb1a387e71ff" class=3D"conflue=
+nceTd">
+<p local-id=3D"be7e91c1afe9">G=E1=BB=91c kh=C3=B4ng t=C4=83ng, gi=E1=BA=A3m=
+ 1 l=E1=BA=A7n (bullet)</p></td>
+<td data-local-id=3D"f65c2356-aa25-437e-962b-66b52a7dc123" class=3D"conflue=
+nceTd">
+<p local-id=3D"b09aa47ca98a">CP</p></td>
+<td data-local-id=3D"272ed8c6-ada7-45f8-9f3e-4cdca6f31a25" class=3D"conflue=
+nceTd">
+<p local-id=3D"9c298d0c7bdd">KO</p></td>
+<td data-local-id=3D"ebea1f38-a845-4a5b-b2c0-da47f03899e0" class=3D"conflue=
+nceTd">
+<p local-id=3D"c9fee54c3d28">CP</p></td>
+</tr>
+<tr data-local-id=3D"41c0fc79-3e6f-4ab6-9370-f42e3c8d5d4f">
+<td data-local-id=3D"c33d6836-b828-47d3-816f-80ebe834f144" class=3D"conflue=
+nceTd">
+<p local-id=3D"3e6eaab875de">H=E1=BA=A1n m=E1=BB=A9c t=C4=83ng/gi=E1=BA=A3m=
+ c=C3=B3 capacity</p></td>
+<td data-local-id=3D"ec50dd25-7c51-43b5-ab12-bbd778f8d8ae" class=3D"conflue=
+nceTd">
+<p local-id=3D"c976f717f8b7">KO</p></td>
+<td data-local-id=3D"d5dff0d2-3d2b-426c-b6bb-4e18ac726725" class=3D"conflue=
+nceTd">
+<p local-id=3D"ed9908f6da78"><strong>BB</strong></p></td>
+<td data-local-id=3D"7f449158-9005-47e3-ad04-271dd6b1a376" class=3D"conflue=
+nceTd">
+<p local-id=3D"57c077d2e59b">KO</p></td>
+</tr>
+<tr data-local-id=3D"46306d0d-faeb-40e9-9ff6-985e7325a3a9">
+<td data-local-id=3D"b4555512-9b2e-4958-b26d-a3ea5f75861c" class=3D"conflue=
+nceTd">
+<p local-id=3D"f0cf5144fd68">Gi=C3=A1 tr=E1=BB=8B theo s=E1=BB=B1 ki=E1=BB=
+=87n k=C3=ADch ho=E1=BA=A1t</p></td>
+<td data-local-id=3D"9e6f91be-b31b-4a6c-979f-2408ebd2e917" class=3D"conflue=
+nceTd">
+<p local-id=3D"be2eb8924720">KO</p></td>
+<td data-local-id=3D"e714160b-03ae-45fc-88f3-65e951898090" class=3D"conflue=
+nceTd">
+<p local-id=3D"1dc10eb7f63a">KO</p></td>
+<td data-local-id=3D"bf2f9353-a209-403a-b00b-4299b5d6618d" class=3D"conflue=
+nceTd">
+<p local-id=3D"c5a3a113be06"><strong>BB</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 local-id=3D"7ca6d0eb1630" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-OET_ACTIVATION=E2=80=94ActivationLogic">OET_ACTIVATION =E2=80=94 Activati=
+on Logic</h3>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"6a=
+4d1686-0637-49da-90ff-e8c1e1a0a34f" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"bfe18a1f-9947-4842-b66e-a5d4410c1ad0">
+<th data-local-id=3D"5f50ed9b-39bb-4d80-b7fc-a60e27f84bc4" class=3D"conflue=
+nceTh">
+<p local-id=3D"384ec0d314d6">OE</p></th>
+<th data-local-id=3D"8ab1ec17-15a3-4839-a348-cb2f15a5a244" class=3D"conflue=
+nceTh">
+<p local-id=3D"cff6df12d386">Term Loan</p></th>
+<th data-local-id=3D"d03b94e8-f845-4357-926c-6d4466dd8cbf" class=3D"conflue=
+nceTh">
+<p local-id=3D"6d8f966edb33">Revolving</p></th>
+<th data-local-id=3D"ba46046a-87ac-4450-9563-71b60199a7aa" class=3D"conflue=
+nceTh">
+<p local-id=3D"e7d8605fa4b2">Conditional</p></th>
+</tr>
+<tr data-local-id=3D"7e956fcc-b7ba-4dcb-ae85-bfb0ac15a987">
+<td data-local-id=3D"02f57111-44f5-499b-9498-c08d3b027ecc" class=3D"conflue=
+nceTd">
+<p local-id=3D"8e765e102ec4">K=C3=ADch ho=E1=BA=A1t khi gi=E1=BA=A3i ng=C3=
+=A2n</p></td>
+<td data-local-id=3D"52e25c7c-5071-48f5-b671-1bd898e2c713" class=3D"conflue=
+nceTd">
+<p local-id=3D"349092027ed5"><strong>BB</strong></p></td>
+<td data-local-id=3D"ec838bb5-9c70-4551-ad17-97f5287d2a71" class=3D"conflue=
+nceTd">
+<p local-id=3D"1eb6b74cee18">CP</p></td>
+<td data-local-id=3D"8ab283db-6eb9-4e1e-9259-fcb97a5e8d0f" class=3D"conflue=
+nceTd">
+<p local-id=3D"fb39e62b5a39">KO</p></td>
+</tr>
+<tr data-local-id=3D"f19107c2-2926-47f6-878b-42dee7d9b3ae">
+<td data-local-id=3D"f30df88d-574d-4472-8c81-1c815ce8b0e4" class=3D"conflue=
+nceTd">
+<p local-id=3D"76b4b9a6ca13">K=C3=ADch ho=E1=BA=A1t khi m=E1=BB=9F h=E1=BA=
+=A1n m=E1=BB=A9c</p></td>
+<td data-local-id=3D"a9273222-5a9f-42a0-b7a9-04fb3c2f1943" class=3D"conflue=
+nceTd">
+<p local-id=3D"e45037ce745b">KO</p></td>
+<td data-local-id=3D"34cddb08-5cfd-4ec7-8f24-4cab090780d6" class=3D"conflue=
+nceTd">
+<p local-id=3D"d1bcddbe32f2"><strong>BB</strong></p></td>
+<td data-local-id=3D"f13001f8-ceb3-4e89-be09-e66b9124e7ac" class=3D"conflue=
+nceTd">
+<p local-id=3D"4b77e24af827">KO</p></td>
+</tr>
+<tr data-local-id=3D"a5b6de40-9e70-4644-bdae-a11b93762195">
+<td data-local-id=3D"7596893f-ae24-4039-88f6-1f3431f205a9" class=3D"conflue=
+nceTd">
+<p local-id=3D"63c2f24ff8b5">K=C3=ADch ho=E1=BA=A1t theo trigger =C4=91i=E1=
+=BB=81u ki=E1=BB=87n</p></td>
+<td data-local-id=3D"9d9a7896-583a-4c91-b34e-f92919798c08" class=3D"conflue=
+nceTd">
+<p local-id=3D"9d81881e2b62">KO</p></td>
+<td data-local-id=3D"70a33a28-1b89-4c25-9113-085d2b5d5639" class=3D"conflue=
+nceTd">
+<p local-id=3D"f855ba6486f1">CP</p></td>
+<td data-local-id=3D"7b6fe429-4aeb-485a-bbc6-2f5b11cd3f71" class=3D"conflue=
+nceTd">
+<p local-id=3D"b884551f203a"><strong>BB</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 local-id=3D"4e7fcfb44b3c" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-OET_FULFILLMENT=E2=80=94FulfillmentLogic">OET_FULFILLMENT =E2=80=94 Fulfi=
+llment Logic</h3>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"95=
+577178-990e-4aa4-bbfc-3e82e44946b2" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"1923eab4-a37e-44d6-a313-06367a8d916f">
+<th data-local-id=3D"5cba5dc3-5214-4ad9-8d3b-f941f18fcb98" class=3D"conflue=
+nceTh">
+<p local-id=3D"19c52be74659">OE</p></th>
+<th data-local-id=3D"0166821f-8385-49bf-95fc-74d305622f3a" class=3D"conflue=
+nceTh">
+<p local-id=3D"d2b58423be52">Term Loan</p></th>
+<th data-local-id=3D"d25c8faa-44ba-450a-be6f-c01757e9e85d" class=3D"conflue=
+nceTh">
+<p local-id=3D"42a176964b01">Revolving</p></th>
+<th data-local-id=3D"a0b503a6-0df5-484f-bbde-79137b41d601" class=3D"conflue=
+nceTh">
+<p local-id=3D"80079256801f">Conditional</p></th>
+</tr>
+<tr data-local-id=3D"8e781834-61fd-4eaa-a8c5-67a1bbacb04b">
+<td data-local-id=3D"cd6caadc-308f-4d7e-a4b1-667bc649a1ed" class=3D"conflue=
+nceTd">
+<p local-id=3D"8cf87f375bee">Tr=E1=BA=A3 g=C3=B3p nhi=E1=BB=81u k=E1=BB=B3<=
+/p></td>
+<td data-local-id=3D"51cf62e1-67cf-4bee-bc4f-f3036014634b" class=3D"conflue=
+nceTd">
+<p local-id=3D"b44e49c6ebe9"><strong>BB</strong></p></td>
+<td data-local-id=3D"ec48cc6b-8f93-4cdb-b73f-281d172fad6c" class=3D"conflue=
+nceTd">
+<p local-id=3D"9caab6b31dfe">CP</p></td>
+<td data-local-id=3D"dc7a10e4-d215-435b-b72a-b77299b5ed41" class=3D"conflue=
+nceTd">
+<p local-id=3D"1efe75d4b1e2">CP</p></td>
+</tr>
+<tr data-local-id=3D"d96e36b5-ab45-407b-94e5-2f9ca366d7af">
+<td data-local-id=3D"a0af186e-c79c-465f-97a6-e980c221c560" class=3D"conflue=
+nceTd">
+<p local-id=3D"7ebcaa613038">Tr=E1=BA=A3 theo sao k=C3=AA chu k=E1=BB=B3</p=
+></td>
+<td data-local-id=3D"9f5b934a-1fff-46fb-93ab-5322a55b886a" class=3D"conflue=
+nceTd">
+<p local-id=3D"fea1a8247026">CP</p></td>
+<td data-local-id=3D"354e4910-791d-472d-b591-fb25a7a76341" class=3D"conflue=
+nceTd">
+<p local-id=3D"137711355637"><strong>BB</strong></p></td>
+<td data-local-id=3D"35d45774-e2c5-4660-bd29-ec4afe8a4621" class=3D"conflue=
+nceTd">
+<p local-id=3D"4c9aa91e9beb">CP</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 local-id=3D"da775687e053" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-OET_RECOVERY=E2=80=94RecoveryAnchor">OET_RECOVERY =E2=80=94 Recovery Anch=
+or</h3>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"7e=
+7b7534-bead-4ced-9337-56367cf917f4" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"5a2d078f-f429-41b3-b5f3-9fc9e6d0b7db">
+<th data-local-id=3D"bf847657-ea77-4a45-bc77-aa367b42884f" class=3D"conflue=
+nceTh">
+<p local-id=3D"5f078f4f2cae">OE</p></th>
+<th data-local-id=3D"deae4b3f-6e48-4afa-9ae0-06d027161d11" class=3D"conflue=
+nceTh">
+<p local-id=3D"a5e1cb34d4e7">Term Loan</p></th>
+<th data-local-id=3D"369c0c3c-143a-462a-b24a-4ce0b34a87a4" class=3D"conflue=
+nceTh">
+<p local-id=3D"539b0deb38ec">Revolving</p></th>
+<th data-local-id=3D"4a990bfb-f890-46fb-b5db-dcb34ba72796" class=3D"conflue=
+nceTh">
+<p local-id=3D"93c5e93846d0">Conditional</p></th>
+</tr>
+<tr data-local-id=3D"922c6cc6-6c01-44b6-9ad7-7821f7d20ea4">
+<td data-local-id=3D"9a92f83e-1a98-47ad-800a-02ac20f72af0" class=3D"conflue=
+nceTd">
+<p local-id=3D"78f8177c3d91">T=C3=A0i s=E1=BA=A3n c=E1=BA=A7m c=E1=BB=91</p=
+></td>
+<td data-local-id=3D"29bf0833-efec-4e1b-ad6a-574838f21f6c" class=3D"conflue=
+nceTd">
+<p local-id=3D"7aeae7e63226">CP</p></td>
+<td data-local-id=3D"4acbc7d8-a78c-4d6f-9b9d-6de376036c12" class=3D"conflue=
+nceTd">
+<p local-id=3D"651732a533d2">CP</p></td>
+<td data-local-id=3D"19fc7a86-3394-49e7-a1a0-5c76767e1043" class=3D"conflue=
+nceTd">
+<p local-id=3D"3a851549ed4e">CP</p></td>
+</tr>
+<tr data-local-id=3D"54154326-db67-4f01-b2b9-c49ffcb8e882">
+<td data-local-id=3D"e5315687-a6bb-4361-9c27-b24228d585ff" class=3D"conflue=
+nceTd">
+<p local-id=3D"a873dc67aa90">T=C3=ADn ch=E1=BA=A5p</p></td>
+<td data-local-id=3D"2956056c-5dcc-438d-b223-57a0a765c54d" class=3D"conflue=
+nceTd">
+<p local-id=3D"3c07a3b34fdc">CP</p></td>
+<td data-local-id=3D"2647b55d-329f-4e23-8fcf-22620e04fffa" class=3D"conflue=
+nceTd">
+<p local-id=3D"5821bd99293f">CP</p></td>
+<td data-local-id=3D"512dbf61-75a1-49c9-a987-12991615d72c" class=3D"conflue=
+nceTd">
+<p local-id=3D"fb5944da91ce">CP</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote local-id=3D"a3e0b6b3-9325-440b-bcab-b5d0d7824b5e">
+<p local-id=3D"5e945314daab">=C4=90=C3=A2y ch=C3=ADnh l=C3=A0 b=E1=BA=B1ng =
+ch=E1=BB=A9ng cho H5: c=E1=BA=A3 3 FOA =C4=91=E1=BB=81u =C4=91=E1=BB=83 Rec=
+overy Anchor =E1=BB=9F m=E1=BB=A9c CP =E2=80=94 FOA kh=C3=B4ng =C3=A9p, ng=
+=C6=B0=E1=BB=9Di d=E1=BB=B1ng s=E1=BA=A3n ph=E1=BA=A9m m=E1=BB=9Bi l=C3=A0 =
+ng=C6=B0=E1=BB=9Di quy=E1=BA=BFt =C4=91=E1=BB=8Bnh.</p>
+</blockquote>
+<h3 local-id=3D"5e58941d4407" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-OET_TIME=E2=80=94TimeStructure">OET_TIME =E2=80=94 Time Structure</h3>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"a4=
+d4ed8d-54b0-4aaa-8e0c-d725a23a653d" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"7fddbafc-bfef-4071-b6ba-3b4da5426473">
+<th data-local-id=3D"61d6162b-83e4-4879-a3e3-be22bd7fc214" class=3D"conflue=
+nceTh">
+<p local-id=3D"b04faceb9f06">OE</p></th>
+<th data-local-id=3D"05533aee-aa15-4d7b-91b7-bbe08d43524e" class=3D"conflue=
+nceTh">
+<p local-id=3D"649f30c5b13e">Term Loan</p></th>
+<th data-local-id=3D"f3c6e81d-831e-4a71-92fe-28e1db9a2ac2" class=3D"conflue=
+nceTh">
+<p local-id=3D"d7e1314b6e37">Revolving</p></th>
+<th data-local-id=3D"826a7e58-2e37-447f-8b92-0c420893fbc1" class=3D"conflue=
+nceTh">
+<p local-id=3D"5093b8d6529b">Conditional</p></th>
+</tr>
+<tr data-local-id=3D"2fb2a6f4-c490-4fc0-ac2c-39d7a1d87513">
+<td data-local-id=3D"5f2273a3-f8c0-44d8-a64e-f774f35a1b04" class=3D"conflue=
+nceTd">
+<p local-id=3D"4ebf476793ea">C=C3=B3 chu k=E1=BB=B3, c=C3=B3 h=E1=BA=A1n ch=
+=C3=B3t</p></td>
+<td data-local-id=3D"73d45642-d43f-43ca-ab5e-1940ac7e90cb" class=3D"conflue=
+nceTd">
+<p local-id=3D"c30dab36f249"><strong>BB</strong></p></td>
+<td data-local-id=3D"1a5fdfd6-aed5-45d9-8c4f-043880b4c878" class=3D"conflue=
+nceTd">
+<p local-id=3D"efd41cf2698c"><strong>BB</strong></p></td>
+<td data-local-id=3D"e79ae6f3-32ee-41fa-8313-b28126178087" class=3D"conflue=
+nceTd">
+<p local-id=3D"bcb33e407de5">CP</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"8bf9d23a3534"><strong>L=C6=B0u =C3=BD quan tr=E1=BB=8Dng (t=
+=C3=ADnh trung th=E1=BB=B1c v=E1=BB=81 ph=E1=BA=A1m vi ma tr=E1=BA=ADn):</s=
+trong> <code>PI_MATRIX</code> trong demo neo v=C3=A0o <strong>Ho=C3=A0n tr=
+=E1=BA=A3 g=E1=BB=91c</strong> v=C3=A0 <strong>Tr=E1=BA=A3 l=C3=A3i</strong=
+> =E2=80=94 hai OT c=C3=B3 OE bi=E1=BA=BFn thi=C3=AAn r=C3=B5 theo archetyp=
+e. OT Gi=E1=BA=A3i ng=C3=A2n l=E1=BA=A1i c=C3=B3 OE kh=C3=A1 c=E1=BB=91 =C4=
+=91=E1=BB=8Bnh (Activation =3D "h=E1=BB=A3p =C4=91=E1=BB=93ng hi=E1=BB=87u =
+l=E1=BB=B1c", Time =3D "m=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m") v=C3=
+=AC b=E1=BA=A3n th=C3=A2n h=C3=A0nh vi gi=E1=BA=A3i ng=C3=A2n kh=C3=B4ng c=
+=E1=BA=A7n ma tr=E1=BA=ADn ph=C3=A2n x=E1=BB=AD =E2=80=94 =C4=91=C3=A2y l=
+=C3=A0 suy di=E1=BB=85n h=E1=BB=A3p l=C3=BD , <strong>kh=C3=B4ng</strong> p=
+h=E1=BA=A3i v=C3=AC ma tr=E1=BA=ADn c=C3=B3 l=E1=BB=97 h=E1=BB=95ng.</p>
+<hr local-id=3D"c82efb15-25ba-43a5-b583-2ff6eee3cfd7">
+<h2 local-id=3D"f48676286e63" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-2.M=C3=B4ph=E1=BB=8Fngt=E1=BB=ABngb=C6=B0=E1=BB=9Bc=E2=80=94V=C3=ADd=E1=
+=BB=A5:&quot;Vayc=E1=BA=A7mc=E1=BB=91tr=E1=BA=A3g=C3=B3p&quot;">2. M=C3=B4 =
+ph=E1=BB=8Fng t=E1=BB=ABng b=C6=B0=E1=BB=9Bc =E2=80=94 V=C3=AD d=E1=BB=A5: =
+"Vay c=E1=BA=A7m c=E1=BB=91 tr=E1=BA=A3 g=C3=B3p"</h2>
+<p local-id=3D"f99ce4120fa9"><em>(=C4=90=E1=BB=91i chi=E1=BA=BFu demo: </em=
+><code>OT_PLEDGE_INSTALLMENT</code><em>, family </em><code>FAM_LOAN</code><=
+em>, 8 s=E1=BA=A3n ph=E1=BA=A9m, tr=E1=BA=A1ng th=C3=A1i published =E2=80=
+=94 theo OI-4 s=E1=BA=BD =C4=91=E1=BB=95i t=C3=AAn </em><code>OTF_TERM_PLED=
+GE_INST</code><em>)</em></p>
+<h3 local-id=3D"6407afaa2847" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-B=C6=B0=E1=BB=9Bc1=E2=80=94Ch=E1=BB=8DnFOA">B=C6=B0=E1=BB=9Bc 1 =E2=80=94=
+ Ch=E1=BB=8Dn FOA</h3>
+<p local-id=3D"88704ae1aa91"><strong>B=C3=A0i to=C3=A1n nghi=E1=BB=87p v=E1=
+=BB=A5:</strong> s=E1=BA=A3n ph=E1=BA=A9m c=C3=B3 l=E1=BB=8Bch tr=E1=BA=A3 =
+n=E1=BB=A3 c=E1=BB=91 =C4=91=E1=BB=8Bnh so=E1=BA=A1n s=E1=BA=B5n ngay khi k=
+=C3=BD h=E1=BB=A3p =C4=91=E1=BB=93ng; kh=C3=A1ch kh=C3=B4ng t=E1=BB=B1 r=C3=
+=BAt/tr=E1=BA=A3 t=C3=B9y =C3=BD; kh=C3=B4ng ch=E1=BB=9D s=E1=BB=B1 ki=E1=
+=BB=87n =C4=91i=E1=BB=81u ki=E1=BB=87n b=C3=AAn ngo=C3=A0i k=C3=ADch ho=E1=
+=BA=A1t.</p>
+<p local-id=3D"9aafd9e243f1">=E2=86=92 C=C3=A2u tr=E1=BA=A3 l=E1=BB=9Di cho=
+ "ai ki=E1=BB=83m so=C3=A1t ngh=C4=A9a v=E1=BB=A5" =3D <em>l=E1=BB=8Bch tr=
+=E1=BA=A3 n=E1=BB=A3 c=E1=BB=91 =C4=91=E1=BB=8Bnh theo h=E1=BB=A3p =C4=91=
+=E1=BB=93ng</em> =E2=86=92 <strong>ch=E1=BB=8Dn </strong><code>FOA_TERM_LOA=
+N</code>.</p>
+<p local-id=3D"e18ba9e0dad0">=E2=86=92 H=E1=BB=87 qu=E1=BA=A3: c=E1=BB=99t =
+<strong>Term Loan</strong> trong ma tr=E1=BA=ADn =E1=BB=9F M=E1=BB=A5c 1 tr=
+=E1=BB=9F th=C3=A0nh menu OE h=E1=BB=A3p l=E1=BB=87 duy nh=E1=BA=A5t =C4=91=
+=C6=B0=E1=BB=A3c d=C3=B9ng cho c=C3=A1c b=C6=B0=E1=BB=9Bc sau.</p>
+<h3 local-id=3D"ceb115a62e11" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-B=C6=B0=E1=BB=9Bc2=E2=80=94Ch=E1=BB=8DnOEcho3OTc=E1=BB=91tl=C3=B5i(quamat=
+r=E1=BA=ADn)">B=C6=B0=E1=BB=9Bc 2 =E2=80=94 Ch=E1=BB=8Dn OE cho 3 OT c=E1=
+=BB=91t l=C3=B5i (qua ma tr=E1=BA=ADn)</h3>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"8f=
+a371d3-121a-46aa-8fb7-4dfa9eeff7bd" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"30aa2fbf-76a7-479a-8192-54b55bfe2137">
+<th data-local-id=3D"4f21ca6d-eecf-4a60-a2df-08105b45dc43" class=3D"conflue=
+nceTh">
+<p local-id=3D"0398db4f19d6">OT</p></th>
+<th data-local-id=3D"d66bd29c-7aa5-435b-a502-a133b5b44291" class=3D"conflue=
+nceTh">
+<p local-id=3D"019668cf2c93">OET</p></th>
+<th data-local-id=3D"def64811-c0a4-4fd0-afdf-6382a86713cb" class=3D"conflue=
+nceTh">
+<p local-id=3D"84ef7bd54c14">OE ch=E1=BB=8Dn</p></th>
+<th data-local-id=3D"cba4b6ae-388a-4dc0-bd8c-6b857dd4c0a1" class=3D"conflue=
+nceTh">
+<p local-id=3D"efdede7621dc">V=C3=AC sao (=C4=91=E1=BB=91i chi=E1=BA=BFu ma=
+ tr=E1=BA=ADn)</p></th>
+</tr>
+<tr data-local-id=3D"da0c6e65-d108-47dc-b18e-2c1b162ffc83">
+<td data-local-id=3D"d0009875-effb-4d44-b9b8-a1db29fa4d64" class=3D"conflue=
+nceTd">
+<p local-id=3D"4cd8d576d0c0"><strong>Gi=E1=BA=A3i ng=C3=A2n</strong></p></t=
+d>
+<td data-local-id=3D"adb45c79-fd97-4999-99dd-fe08b0fbda5a" class=3D"conflue=
+nceTd">
+<p local-id=3D"60a0d21e58ac">Activation</p></td>
+<td data-local-id=3D"64e4d27d-e5c0-4a3c-be11-17d05c4a0460" class=3D"conflue=
+nceTd">
+<p local-id=3D"666f4d2cbbe4">H=C4=90 hi=E1=BB=87u l=E1=BB=B1c</p></td>
+<td data-local-id=3D"14ab0e91-1677-4dec-906a-c855082e0eb2" class=3D"conflue=
+nceTd">
+<p local-id=3D"a1175fa89845">Kh=C3=B4ng n=E1=BA=B1m trong ma tr=E1=BA=ADn (=
+xem L=C6=B0u =C3=BD M=E1=BB=A5c 1) =E2=80=94 c=E1=BB=91 =C4=91=E1=BB=8Bnh c=
+ho m=E1=BB=8Di FOA</p></td>
+</tr>
+<tr data-local-id=3D"12612766-869d-4ee9-ad1d-3a5e136deb17">
+<td data-local-id=3D"4fc37d57-621a-4aa4-b9b7-772226e58424" class=3D"conflue=
+nceTd">
+<p local-id=3D"0513909db817"></p></td>
+<td data-local-id=3D"00178deb-5a49-48fb-b072-b9ab15473ae2" class=3D"conflue=
+nceTd">
+<p local-id=3D"205778264506">Value</p></td>
+<td data-local-id=3D"65443439-b2ec-4fd6-b534-827b535184b0" class=3D"conflue=
+nceTd">
+<p local-id=3D"a2bd571d43b0">C=E1=BB=91 =C4=91=E1=BB=8Bnh, 1 l=E1=BA=A7n</p=
+></td>
+<td data-local-id=3D"0fe0f718-7d02-4838-88a0-12678da5be83" class=3D"conflue=
+nceTd">
+<p local-id=3D"94023b6c2396">Gi=E1=BA=A3i ng=C3=A2n 1 l=E1=BA=A7n tr=E1=BB=
+=8Dn s=E1=BB=91 ti=E1=BB=81n vay, kh=C3=B4ng n=E1=BA=B1m trong ma tr=E1=BA=
+=ADn</p></td>
+</tr>
+<tr data-local-id=3D"fa6becf9-128c-4aae-a656-87cbc2dc2eea">
+<td data-local-id=3D"e4feadac-9109-486a-8bf7-05f1f12fba14" class=3D"conflue=
+nceTd">
+<p local-id=3D"ded195824183"></p></td>
+<td data-local-id=3D"0b9fe7af-c5d8-4cc9-8a82-d030fa7a73c8" class=3D"conflue=
+nceTd">
+<p local-id=3D"58254e1612ca">Time</p></td>
+<td data-local-id=3D"0eb2c431-282a-4b18-b660-6ca7ab53ac5b" class=3D"conflue=
+nceTd">
+<p local-id=3D"1a592ec1c892">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+<td data-local-id=3D"c93293f5-5812-4758-9cd2-9f366c649827" class=3D"conflue=
+nceTd">
+<p local-id=3D"138a4be86321">C=E1=BB=91 =C4=91=E1=BB=8Bnh, kh=C3=B4ng n=E1=
+=BA=B1m trong ma tr=E1=BA=ADn</p></td>
+</tr>
+<tr data-local-id=3D"687dbf2c-ef1a-448a-9598-8e178461d0b9">
+<td data-local-id=3D"64ba9034-ce2b-493c-b371-086f296eb5eb" class=3D"conflue=
+nceTd">
+<p local-id=3D"ddc9a52bac81"><strong>Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91c</str=
+ong></p></td>
+<td data-local-id=3D"ffd8543b-1768-4959-bfbd-9e3a3669f8d0" class=3D"conflue=
+nceTd">
+<p local-id=3D"58a0fd705c1f">Value</p></td>
+<td data-local-id=3D"81592aad-0e17-4de0-84d8-d3e468395ae1" class=3D"conflue=
+nceTd">
+<p local-id=3D"3510e69d7515">G=E1=BB=91c gi=E1=BA=A3m d=E1=BA=A7n nhi=E1=BB=
+=81u k=E1=BB=B3</p></td>
+<td data-local-id=3D"07498973-bd22-4057-bc59-e78766285f53" class=3D"conflue=
+nceTd">
+<p local-id=3D"9367e79d2b93">C=E1=BB=99t Term Loan =3D <strong>BB</strong> =
+=E2=86=92 b=E1=BA=AFt bu=E1=BB=99c ch=E1=BB=8Dn, kh=C3=B4ng c=C3=B3 l=E1=BB=
+=B1a ch=E1=BB=8Dn kh=C3=A1c</p></td>
+</tr>
+<tr data-local-id=3D"4b3b053c-2470-45cc-b973-d9e8d24f57b9">
+<td data-local-id=3D"6111dad4-cbfe-4da6-af01-96ca9a11ec97" class=3D"conflue=
+nceTd">
+<p local-id=3D"bcca19634d93"></p></td>
+<td data-local-id=3D"37ade033-9228-4347-aec0-bb0a5fe5d4d3" class=3D"conflue=
+nceTd">
+<p local-id=3D"7ac2a884f98f">Activation</p></td>
+<td data-local-id=3D"25216c84-e563-44fe-ad18-5a4b54b97368" class=3D"conflue=
+nceTd">
+<p local-id=3D"0336e3846890">Khi gi=E1=BA=A3i ng=C3=A2n</p></td>
+<td data-local-id=3D"4bad99b5-9d6c-4d86-8277-6d9c7f7a97ea" class=3D"conflue=
+nceTd">
+<p local-id=3D"cbfd65f2afb7">C=E1=BB=99t Term Loan =3D <strong>BB</strong> =
+=E2=86=92 b=E1=BA=AFt bu=E1=BB=99c</p></td>
+</tr>
+<tr data-local-id=3D"574327ab-f419-4c6d-849d-57d3d07aa525">
+<td data-local-id=3D"f7773f37-3eb4-41a2-9a0e-70b32c57b956" class=3D"conflue=
+nceTd">
+<p local-id=3D"5982c5430f78"></p></td>
+<td data-local-id=3D"53e6f51d-0171-4f3c-b34e-efee59c12e57" class=3D"conflue=
+nceTd">
+<p local-id=3D"42c3224c59cd">Fulfillment</p></td>
+<td data-local-id=3D"beb59fc6-4890-42a3-978a-9b755213efb5" class=3D"conflue=
+nceTd">
+<p local-id=3D"257b918a8d93">Tr=E1=BA=A3 g=C3=B3p nhi=E1=BB=81u k=E1=BB=B3<=
+/p></td>
+<td data-local-id=3D"b6bf3c5b-bf76-4913-8e91-faacfe20084d" class=3D"conflue=
+nceTd">
+<p local-id=3D"c3da0e94c8ff">C=E1=BB=99t Term Loan =3D <strong>BB</strong>.=
+ (L=C6=B0u =C3=BD: "Tr=E1=BA=A3 theo sao k=C3=AA chu k=E1=BB=B3" c=C5=A9ng =
+l=C3=A0 CP v=E1=BB=9Bi Term Loan =E2=80=94 nh=C6=B0ng v=C3=AC =C4=91=C3=A3 =
+c=C3=B3 1 l=E1=BB=B1a ch=E1=BB=8Dn BB th=E1=BB=8Fa m=C3=A3n OET n=C3=A0y, c=
+h=E1=BB=8Dn th=C3=AAm CP s=E1=BA=BD t=E1=BA=A1o ra m=E1=BB=99t <strong>OTF =
+kh=C3=A1c</strong>, kh=C3=B4ng ph=E1=BA=A3i c=C3=B9ng OTF n=C3=A0y)</p></td=
+>
+</tr>
+<tr data-local-id=3D"4120fed6-14ab-4198-b9a9-aa8082849d64">
+<td data-local-id=3D"a77d815a-f4b4-4ddd-a349-36cc062272f2" class=3D"conflue=
+nceTd">
+<p local-id=3D"903af30546a3"></p></td>
+<td data-local-id=3D"079121c0-1fe6-4cf2-bec2-866aa8e12e6c" class=3D"conflue=
+nceTd">
+<p local-id=3D"4e33459f8507">Time</p></td>
+<td data-local-id=3D"92ababf9-b57a-4ac8-8483-5370d74b0ab0" class=3D"conflue=
+nceTd">
+<p local-id=3D"643b26c71431">C=C3=B3 chu k=E1=BB=B3, c=C3=B3 h=E1=BA=A1n ch=
+=C3=B3t</p></td>
+<td data-local-id=3D"9982f76d-21ca-409d-91ee-be4ba5ade7eb" class=3D"conflue=
+nceTd">
+<p local-id=3D"072327ddc672">C=E1=BB=99t Term Loan =3D <strong>BB</strong><=
+/p></td>
+</tr>
+<tr data-local-id=3D"ae4d4ed6-82a5-4956-94bf-93c0845b90f2">
+<td data-local-id=3D"de4328db-27e1-4d74-be61-ec0f7d6bf6c3" class=3D"conflue=
+nceTd">
+<p local-id=3D"7a71d60b1c8a"></p></td>
+<td data-local-id=3D"f567ecef-f78b-40d2-af30-7c35c1bef1b0" class=3D"conflue=
+nceTd">
+<p local-id=3D"41fb38076c98">Recovery</p></td>
+<td data-local-id=3D"64248926-1f46-4e31-8fd7-3881b4ca5a80" class=3D"conflue=
+nceTd">
+<p local-id=3D"6e0eae40351f"><em>(ch=C6=B0a ch=E1=BB=8Dn =E2=80=94 xem B=C6=
+=B0=E1=BB=9Bc 3)</em></p></td>
+<td data-local-id=3D"423fdd52-55bf-4137-b86a-0c9be718cfe7" class=3D"conflue=
+nceTd">
+<p local-id=3D"a60d5dcf0afe">C=E1=BB=99t Term Loan =3D CP cho c=E1=BA=A3 2 =
+gi=C3=A1 tr=E1=BB=8B =E2=86=92 =C4=91=C3=A2y l=C3=A0 l=E1=BB=B1a ch=E1=BB=
+=8Dn t=E1=BB=B1 do, kh=C3=B4ng b=E1=BB=8B ma tr=E1=BA=ADn =C3=A9p</p></td>
+</tr>
+<tr data-local-id=3D"bd708308-072a-433e-a073-9656abca136d">
+<td data-local-id=3D"51a0bc3d-54ac-4e11-951e-c7474b32464b" class=3D"conflue=
+nceTd">
+<p local-id=3D"82acf40f0358"><strong>Tr=E1=BA=A3 l=C3=A3i</strong></p></td>
+<td data-local-id=3D"b14a932a-4eef-4df9-99f1-8b3d1dd7ae47" class=3D"conflue=
+nceTd">
+<p local-id=3D"8207de4dcce0">Activation / Fulfillment / Time</p></td>
+<td data-local-id=3D"1b39b886-caa2-4345-bd69-a7fb44cd1300" class=3D"conflue=
+nceTd">
+<p local-id=3D"d0560a1930c4">Gi=E1=BB=91ng Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91=
+c</p></td>
+<td data-local-id=3D"4aba86d0-051b-4399-8852-dcdcbf33e16b" class=3D"conflue=
+nceTd">
+<p local-id=3D"3e314dece8c6">=C4=90=E1=BB=93ng b=E1=BB=99 theo c=C3=B9ng l=
+=E1=BB=8Bch tr=E1=BA=A3 n=E1=BB=A3</p></td>
+</tr>
+<tr data-local-id=3D"5a8e8d4f-82ca-481b-baf7-715cce26fffe">
+<td data-local-id=3D"419176ce-4ae1-42a7-84c1-818c9c36d0ba" class=3D"conflue=
+nceTd">
+<p local-id=3D"59d6924adad6"></p></td>
+<td data-local-id=3D"c2d9c354-63fa-4059-a743-a4dd1e040e47" class=3D"conflue=
+nceTd">
+<p local-id=3D"f479848adc89">Value</p></td>
+<td data-local-id=3D"af90c00d-bf5c-4255-8f37-65931102abf7" class=3D"conflue=
+nceTd">
+<p local-id=3D"78cae66e9189">T=C3=ADch l=C5=A9y theo d=C6=B0 n=E1=BB=A3 =C3=
+=97 th=E1=BB=9Di gian</p></td>
+<td data-local-id=3D"26382c63-b3d8-4fa6-9b8e-163e2a2158e7" class=3D"conflue=
+nceTd">
+<p local-id=3D"6824c0f59df8"><strong>Kh=C3=B4ng c=C3=B3 trong </strong><cod=
+e>PI_MATRIX</code> =E2=80=94 =C4=91=C3=A2y l=C3=A0 kho=E1=BA=A3ng tr=E1=BB=
+=91ng catalog do demo g=E1=BB=99p OTF th=C3=A0nh 1 b=E1=BB=99 OE ph=E1=BA=
+=B3ng (xem Ph=E1=BA=A3n bi=E1=BB=87n, M=E1=BB=A5c 4) =E2=86=92 [BA =C4=91=
+=E1=BB=81 xu=E1=BA=A5t b=E1=BB=95 sung]</p></td>
+</tr>
+<tr data-local-id=3D"9b8744b9-4eea-432b-9c17-6f2a1ab2b670">
+<td data-local-id=3D"f22a87e0-1ee5-4130-a6a6-e4d40429c8f1" class=3D"conflue=
+nceTd">
+<p local-id=3D"00a75491ad63"></p></td>
+<td data-local-id=3D"939008ac-90c3-47b8-a15f-b44d61431cec" class=3D"conflue=
+nceTd">
+<p local-id=3D"a3a0621d11f2">Recovery</p></td>
+<td data-local-id=3D"016a242a-9c59-46b8-8e66-5bacf586772a" class=3D"conflue=
+nceTd">
+<p local-id=3D"73b3493ba426"><em>(r=C3=A0ng bu=E1=BB=99c C1 =E2=80=94 xem B=
+=C6=B0=E1=BB=9Bc 3)</em></p></td>
+<td data-local-id=3D"8e76e722-87a2-43cd-ab34-a89e4d81bc84" class=3D"conflue=
+nceTd">
+<p local-id=3D"e3a8c29ebf09"></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 local-id=3D"91e709d6f061" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-B=C6=B0=E1=BB=9Bc3=E2=80=94Quy=E1=BA=BFt=C4=91=E1=BB=8BnhOEc=C3=B2nthi=E1=
+=BA=BFu+b=E1=BA=ADt/t=E1=BA=AFtOTph=E1=BB=A5tr=E1=BB=A3">B=C6=B0=E1=BB=9Bc =
+3 =E2=80=94 Quy=E1=BA=BFt =C4=91=E1=BB=8Bnh OE c=C3=B2n thi=E1=BA=BFu + b=
+=E1=BA=ADt/t=E1=BA=AFt OT ph=E1=BB=A5 tr=E1=BB=A3</h3>
+<p local-id=3D"a765cbed9c4b"><strong>3a. Ch=E1=BB=8Dn Recovery Anchor cho H=
+o=C3=A0n tr=E1=BA=A3 g=E1=BB=91c:</strong> v=C3=AC =C4=91=C3=A2y l=C3=A0 s=
+=E1=BA=A3n ph=E1=BA=A9m "c=E1=BA=A7m c=E1=BB=91" theo y=C3=AAu c=E1=BA=A7u =
+nghi=E1=BB=87p v=E1=BB=A5 =E2=86=92 ch=E1=BB=8Dn <strong>"T=C3=A0i s=E1=BA=
+=A3n c=E1=BA=A7m c=E1=BB=91"</strong> (h=E1=BB=A3p l=E1=BB=87 v=C3=AC ma tr=
+=E1=BA=ADn cho ph=C3=A9p CP).</p>
+<p local-id=3D"879710501992"><strong>3b. =C3=81p r=C3=A0ng bu=E1=BB=99c C1:=
+</strong> Recovery Anchor c=E1=BB=A7a Tr=E1=BA=A3 l=C3=A3i ph=E1=BA=A3i =C4=
+=91=E1=BB=93ng nh=E1=BA=A5t v=E1=BB=9Bi Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91c t=
+rong c=C3=B9ng h=E1=BB=A3p =C4=91=E1=BB=93ng =E2=86=92 Tr=E1=BA=A3 l=C3=A3i=
+ c=C5=A9ng nh=E1=BA=ADn <strong>"T=C3=A0i s=E1=BA=A3n c=E1=BA=A7m c=E1=BB=
+=91"</strong>.</p>
+<p local-id=3D"3f95e10815b6"><strong>3c. Tra b=E1=BA=A3ng k=C3=ADch ho=E1=
+=BA=A1t OT ph=E1=BB=A5 tr=E1=BB=A3 (B5, =C4=91=E1=BB=99c l=E1=BA=ADp v=E1=
+=BB=9Bi FOA):</strong></p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"26=
+c38ff7-f1f4-4fe5-9986-f9a09eb8fea4" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"5a82ec3e-0192-4615-9ee9-f846035af951">
+<th data-local-id=3D"736e7034-7420-4669-a0df-964722222a3b" class=3D"conflue=
+nceTh">
+<p local-id=3D"900b4a0eb36c">=C4=90i=E1=BB=81u ki=E1=BB=87n =C4=91=C3=A3 ch=
+=E1=BB=8Dn</p></th>
+<th data-local-id=3D"f9f8f2e4-e601-4d0f-b99d-ad6a564e0000" class=3D"conflue=
+nceTh">
+<p local-id=3D"c0f727cb4bcc">OT ph=E1=BB=A5 tr=E1=BB=A3</p></th>
+<th data-local-id=3D"1d006959-0fa9-4b38-88b5-39feb9619e4e" class=3D"conflue=
+nceTh">
+<p local-id=3D"205fc35dd289">Tr=E1=BA=A1ng th=C3=A1i</p></th>
+</tr>
+<tr data-local-id=3D"d3db2591-2d22-4b22-b302-a85191c34f05">
+<td data-local-id=3D"21f6c7d3-8063-4757-bdc8-50de2b0e70dd" class=3D"conflue=
+nceTd">
+<p local-id=3D"fc778254b6c8">Recovery Anchor =3D T=C3=A0i s=E1=BA=A3n c=E1=
+=BA=A7m c=E1=BB=91</p></td>
+<td data-local-id=3D"a9612f2f-20c3-4a99-aeec-517cc5bda8ca" class=3D"conflue=
+nceTd">
+<p local-id=3D"74601e984fcb"><code>OT_ASSET_HANDOVER</code></p></td>
+<td data-local-id=3D"adb4ddb5-76bc-48cd-9038-27d6aa761bc0" class=3D"conflue=
+nceTd">
+<p local-id=3D"1f0843d5ce37"><strong>B=E1=BA=ACT</strong> (2 chi=E1=BB=81u:=
+ nh=E1=BA=ADn l=C3=BAc gi=E1=BA=A3i ng=C3=A2n, ho=C3=A0n tr=E1=BA=A3 l=C3=
+=BAc t=E1=BA=A5t to=C3=A1n)</p></td>
+</tr>
+<tr data-local-id=3D"1cf2da37-b7c3-48a2-80d7-5eb43eeccca8">
+<td data-local-id=3D"060d6987-810e-40c9-be5b-81cf04b9b6f1" class=3D"conflue=
+nceTd">
+<p local-id=3D"6f077d049be1">Kh=C3=B4ng y=C3=AAu c=E1=BA=A7u b=E1=BA=A3o hi=
+=E1=BB=83m</p></td>
+<td data-local-id=3D"08e2beba-120a-4407-a69b-076e7880a0d7" class=3D"conflue=
+nceTd">
+<p local-id=3D"6f91223d62a3"><code>OT_INSURANCE</code></p></td>
+<td data-local-id=3D"57d4f231-77d2-4375-a453-9fa670af83cf" class=3D"conflue=
+nceTd">
+<p local-id=3D"c791bee55280">T=E1=BA=AET</p></td>
+</tr>
+<tr data-local-id=3D"30d1b7f8-b2ad-4eda-9dca-56b11ac35366">
+<td data-local-id=3D"eb8de80a-5a9c-45e2-9ac0-ef13da4a50de" class=3D"conflue=
+nceTd">
+<p local-id=3D"fbff03423225">Kh=C3=B4ng c=C3=B3 l=C3=A3i ph=E1=BA=A1t tr=E1=
+=BB=85 h=E1=BA=A1n =E1=BB=9F l=C3=B5i</p></td>
+<td data-local-id=3D"b7258cd5-4751-402e-80b5-059f94406c55" class=3D"conflue=
+nceTd">
+<p local-id=3D"7a31efc95c3b"><code>OT_PENALTY</code></p></td>
+<td data-local-id=3D"90e81b0a-8a93-4e23-9913-763c9848baf0" class=3D"conflue=
+nceTd">
+<p local-id=3D"96ff6141103c">T=E1=BA=AET (c=C3=B3 th=E1=BB=83 b=E1=BA=ADt =
+=E1=BB=9F bi=E1=BA=BFn th=E1=BB=83/Product kh=C3=A1c)</p></td>
+</tr>
+<tr data-local-id=3D"ad8d6442-b1b7-4e5b-80f8-4e8ac000c234">
+<td data-local-id=3D"01682757-e70b-4909-b074-1f0468c79ac4" class=3D"conflue=
+nceTd">
+<p local-id=3D"91d2232975fd">Kh=C3=B4ng c=C3=B3 ph=C3=AD =E1=BB=9F l=C3=B5i=
+</p></td>
+<td data-local-id=3D"da2546b1-4b50-454d-918d-48fe2e557d0c" class=3D"conflue=
+nceTd">
+<p local-id=3D"b8f92f037508"><code>OT_FEE</code></p></td>
+<td data-local-id=3D"95220e10-fe3f-4ff8-97a6-e278fd5c7c3a" class=3D"conflue=
+nceTd">
+<p local-id=3D"0952869feeac">T=E1=BA=AET</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"6ce4314a139e"><strong>3d. =C4=90i=E1=BB=81n n=E1=BB=91t OE c=
+ho OT v=E1=BB=ABa b=E1=BA=ADt (</strong><code>OT_ASSET_HANDOVER</code><stro=
+ng>, 2 d=C3=B2ng):</strong></p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"f8=
+834faf-2187-4ab0-a3b9-728e6be2c8d9" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"eebe0f0b-93de-4f50-866f-be7012d60422">
+<th data-local-id=3D"93c76ee5-e029-4eed-b476-ae283f6e4dd0" class=3D"conflue=
+nceTh">
+<p local-id=3D"a6ef262708d6">Chi=E1=BB=81u</p></th>
+<th data-local-id=3D"a27e0954-9464-44dc-8e56-dcd2934c3402" class=3D"conflue=
+nceTh">
+<p local-id=3D"913e898a3306">B=C3=A0n giao TS (nh=E1=BA=ADn)</p></th>
+<th data-local-id=3D"15e84eb4-d5ed-493d-bb27-fccb9b39b823" class=3D"conflue=
+nceTh">
+<p local-id=3D"29564e4bad4d">B=C3=A0n giao TS (tr=E1=BA=A3)</p></th>
+</tr>
+<tr data-local-id=3D"857dccba-4bcd-4ef9-8efb-cb3dbe42f37d">
+<td data-local-id=3D"2b82e473-ad26-4d7a-ac3b-5227fdd28393" class=3D"conflue=
+nceTd">
+<p local-id=3D"6b3cb9fc96d3">Party</p></td>
+<td data-local-id=3D"9c020082-2008-44e7-afdb-835e16b58748" class=3D"conflue=
+nceTd">
+<p local-id=3D"544271443f04">Borrower =E2=86=92 Lender (custody)</p></td>
+<td data-local-id=3D"2202ee88-6fe8-47bf-9050-cd60e2b5ad20" class=3D"conflue=
+nceTd">
+<p local-id=3D"d3c39caa0235">Lender =E2=86=92 Borrower (release)</p></td>
+</tr>
+<tr data-local-id=3D"16419607-4cb1-4723-85f2-a59974d038b0">
+<td data-local-id=3D"42fbf3c5-885b-49bf-8a44-2c37bb4d8001" class=3D"conflue=
+nceTd">
+<p local-id=3D"a9ee451caa2b">Value</p></td>
+<td data-local-id=3D"db179f16-e377-49e7-a2fc-730b35fd9090" class=3D"conflue=
+nceTd">
+<p local-id=3D"b396722966f7">Gi=C3=A1 tr=E1=BB=8B =C4=91=E1=BB=8Bnh gi=C3=
+=A1, 1 l=E1=BA=A7n</p></td>
+<td data-local-id=3D"d2b4785f-3fce-47f4-b7e7-9596e6e08eff" class=3D"conflue=
+nceTd">
+<p local-id=3D"28f1f6187981">Gi=C3=A1 tr=E1=BB=8B =C4=91=E1=BB=8Bnh gi=C3=
+=A1, 1 l=E1=BA=A7n</p></td>
+</tr>
+<tr data-local-id=3D"ed61630c-24b8-4bc7-b7a7-52f1050112ee">
+<td data-local-id=3D"f9167b1f-b401-4491-8a41-a110ebd6a8c2" class=3D"conflue=
+nceTd">
+<p local-id=3D"42c91374b93d">Activation</p></td>
+<td data-local-id=3D"a5ccef13-383b-4157-acc3-975ae67787bc" class=3D"conflue=
+nceTd">
+<p local-id=3D"a31bc8230f1a">H=C4=90 hi=E1=BB=87u l=E1=BB=B1c</p></td>
+<td data-local-id=3D"fb913ce7-3f9c-43db-91fa-689308f80489" class=3D"conflue=
+nceTd">
+<p local-id=3D"a4e53f4a56a8">Trigger: t=E1=BA=A5t to=C3=A1n</p></td>
+</tr>
+<tr data-local-id=3D"7d0c9b6f-793e-4fb1-9bc6-9433df1f52e7">
+<td data-local-id=3D"e0cafb76-029c-47a8-891d-118bafc19c46" class=3D"conflue=
+nceTd">
+<p local-id=3D"b110b76f7c32">Time</p></td>
+<td data-local-id=3D"011aabf3-c871-428e-a93a-5de82c794e9b" class=3D"conflue=
+nceTd">
+<p local-id=3D"cacacabbd7d4">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+<td data-local-id=3D"c1ef5cda-5236-4715-9a7f-3ab3cad6a662" class=3D"conflue=
+nceTd">
+<p local-id=3D"29d596f79d9b">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+</tr>
+<tr data-local-id=3D"b68771de-b785-44bc-9601-f5bf9ea48eb6">
+<td data-local-id=3D"d2f6ea57-bb98-4b7d-a7a5-ea09b55c46e2" class=3D"conflue=
+nceTd">
+<p local-id=3D"5e47413d36dc">Fulfillment</p></td>
+<td data-local-id=3D"7c95589f-e5a3-4b5b-be17-590e084fc1aa" class=3D"conflue=
+nceTd">
+<p local-id=3D"f0a8da60103c">1 l=E1=BA=A7n</p></td>
+<td data-local-id=3D"49798fcd-4180-4702-9f17-55c28437099e" class=3D"conflue=
+nceTd">
+<p local-id=3D"010374daca6d">1 l=E1=BA=A7n</p></td>
+</tr>
+<tr data-local-id=3D"23c80d73-1813-4a77-8dcb-d4c4bdcee298">
+<td data-local-id=3D"bde7d1b8-5026-45cd-b4ba-02772ece6db9" class=3D"conflue=
+nceTd">
+<p local-id=3D"14b47072e704">Recovery</p></td>
+<td data-local-id=3D"4d02f2d1-b06b-48ac-83c6-0ae992ee29f5" class=3D"conflue=
+nceTd">
+<p local-id=3D"71c7e8998e8d">N/A</p></td>
+<td data-local-id=3D"88d516c1-56b3-421e-a8ef-68d9af118a84" class=3D"conflue=
+nceTd">
+<p local-id=3D"9a218e5221c4">N/A</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 local-id=3D"1ab7b59cf8a2" id=3D"V=C3=ADd=E1=BB=A5xuy=C3=AAnsu=E1=BB=91t=
+:MaTr=E1=BA=ADnFOA=C3=97OEv=C3=A0M=C3=B4Ph=E1=BB=8FngX=C3=A2yD=E1=BB=B1ngOT=
+F-B=C6=B0=E1=BB=9Bc4=E2=80=94H=C3=ACnhth=C3=A0nhOTF">B=C6=B0=E1=BB=9Bc 4 =
+=E2=80=94 H=C3=ACnh th=C3=A0nh OTF</h3>
+<p local-id=3D"f7771dd581f9"><code>OTF_TERM_PLEDGE_INST</code><strong> =E2=
+=80=94 Vay c=E1=BA=A7m c=E1=BB=91 tr=E1=BA=A3 g=C3=B3p</strong></p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"d4=
+68754d-cdcd-4903-a506-16de185149ad" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"449c6058-c9d8-454d-995d-db54b803b4c9">
+<th data-local-id=3D"56864f2e-9a85-4823-8d9e-365799da153b" class=3D"conflue=
+nceTh">
+<p local-id=3D"213850e39026">OT</p></th>
+<th data-local-id=3D"7099efd0-dc91-4986-939a-c64b33d3c985" class=3D"conflue=
+nceTh">
+<p local-id=3D"0e7de1219dc0">Party</p></th>
+<th data-local-id=3D"755f7f1f-c7a5-42a2-9875-f11764baf917" class=3D"conflue=
+nceTh">
+<p local-id=3D"7ada35e3a106">Value Structure</p></th>
+<th data-local-id=3D"1ce59758-87d8-4013-bb90-b36b33bef5dd" class=3D"conflue=
+nceTh">
+<p local-id=3D"f6fa28e512c7">Activation</p></th>
+<th data-local-id=3D"48122a1b-1fea-4650-a5d2-e0fb8f65b432" class=3D"conflue=
+nceTh">
+<p local-id=3D"96c43dddfbe3">Time</p></th>
+<th data-local-id=3D"a0f055d6-4752-422d-b261-43632f060796" class=3D"conflue=
+nceTh">
+<p local-id=3D"aa577a1071cc">Fulfillment</p></th>
+<th data-local-id=3D"99d777ec-f729-456e-941e-863da4ae2f4c" class=3D"conflue=
+nceTh">
+<p local-id=3D"b3419bfbfc46">Recovery</p></th>
+</tr>
+<tr data-local-id=3D"6b0db173-61c7-4d7b-80cb-45f7ea1136e9">
+<td data-local-id=3D"e32ee124-0599-4236-93c0-aab370e6e723" class=3D"conflue=
+nceTd">
+<p local-id=3D"88b4df7a1a35">Gi=E1=BA=A3i ng=C3=A2n</p></td>
+<td data-local-id=3D"f0503636-0dd1-4793-af63-a7d785202f63" class=3D"conflue=
+nceTd">
+<p local-id=3D"58b6ac4f15e6">Lender =E2=86=92 Borrower</p></td>
+<td data-local-id=3D"e2ce6815-0b69-4ee4-831c-25234cab4b50" class=3D"conflue=
+nceTd">
+<p local-id=3D"683f6382b0e9">C=E1=BB=91 =C4=91=E1=BB=8Bnh, 1 l=E1=BA=A7n</p=
+></td>
+<td data-local-id=3D"cf338ca8-b060-46d3-b48b-07931941d982" class=3D"conflue=
+nceTd">
+<p local-id=3D"0c24911f5895">H=C4=90 hi=E1=BB=87u l=E1=BB=B1c</p></td>
+<td data-local-id=3D"5e203cc2-ce05-44c1-93c9-d54411966f88" class=3D"conflue=
+nceTd">
+<p local-id=3D"e748015084f2">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+<td data-local-id=3D"9cd01e7b-ecc1-4614-bfb6-d9c5e0aa282b" class=3D"conflue=
+nceTd">
+<p local-id=3D"71dc2a922287">1 l=E1=BA=A7n</p></td>
+<td data-local-id=3D"c0d5a374-9896-4490-8110-38701a7cdb40" class=3D"conflue=
+nceTd">
+<p local-id=3D"c7a45fdbfff8">N/A</p></td>
+</tr>
+<tr data-local-id=3D"549e30f7-380f-427e-82f7-7e638ff0c94f">
+<td data-local-id=3D"101c4873-5f79-40b3-aea4-b85ea97b0e1a" class=3D"conflue=
+nceTd">
+<p local-id=3D"bbb2c669b751">Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91c</p></td>
+<td data-local-id=3D"dcbbd2a9-9230-4913-ac6e-8262ba521d5a" class=3D"conflue=
+nceTd">
+<p local-id=3D"b2828e7a934d">Borrower =E2=86=92 Lender</p></td>
+<td data-local-id=3D"0da460c8-1914-4532-ab54-7fc0bdbb5ca1" class=3D"conflue=
+nceTd">
+<p local-id=3D"4fb6dd17576a">G=E1=BB=91c gi=E1=BA=A3m d=E1=BA=A7n nhi=E1=BB=
+=81u k=E1=BB=B3</p></td>
+<td data-local-id=3D"ea5ae298-5ee7-47a5-9e71-14c7cc9d8b54" class=3D"conflue=
+nceTd">
+<p local-id=3D"92544e380895">Khi gi=E1=BA=A3i ng=C3=A2n</p></td>
+<td data-local-id=3D"d702f9e5-7fe1-42e6-8de6-f582e085751a" class=3D"conflue=
+nceTd">
+<p local-id=3D"1286921ff87c">Chu k=E1=BB=B3 + h=E1=BA=A1n ch=C3=B3t</p></td=
+>
+<td data-local-id=3D"19c5894e-bf7e-43e0-9790-74ee07933752" class=3D"conflue=
+nceTd">
+<p local-id=3D"bbf5ab2a8d07">Tr=E1=BA=A3 g=C3=B3p nhi=E1=BB=81u k=E1=BB=B3<=
+/p></td>
+<td data-local-id=3D"06b5383c-bc22-40f8-898a-6b30ac5e9b4b" class=3D"conflue=
+nceTd">
+<p local-id=3D"0728c55d7707"><strong>T=C3=A0i s=E1=BA=A3n c=E1=BA=A7m c=E1=
+=BB=91</strong></p></td>
+</tr>
+<tr data-local-id=3D"07b036e8-aa7b-4969-82d6-613da62cf07d">
+<td data-local-id=3D"80c44379-4a5f-4fde-81ef-2b08202bf46e" class=3D"conflue=
+nceTd">
+<p local-id=3D"e4e856b495c9">Tr=E1=BA=A3 l=C3=A3i</p></td>
+<td data-local-id=3D"06f4858f-9026-4df2-80ed-e81a56fe1c58" class=3D"conflue=
+nceTd">
+<p local-id=3D"d2ba5a2c963c">Borrower =E2=86=92 Lender</p></td>
+<td data-local-id=3D"d9a11f12-daad-4039-b3e6-20f542e3d6e8" class=3D"conflue=
+nceTd">
+<p local-id=3D"054bd15b8071">T=C3=ADch l=C5=A9y theo d=C6=B0 n=E1=BB=A3</p>=
+</td>
+<td data-local-id=3D"f5eef754-185e-4c62-875a-a3d9ce4a418e" class=3D"conflue=
+nceTd">
+<p local-id=3D"38fcd881018b">Khi gi=E1=BA=A3i ng=C3=A2n</p></td>
+<td data-local-id=3D"a36b983e-750a-4d75-b1c9-ed373bfce289" class=3D"conflue=
+nceTd">
+<p local-id=3D"fe37d26e3639">Chu k=E1=BB=B3 + h=E1=BA=A1n ch=C3=B3t</p></td=
+>
+<td data-local-id=3D"a5e66289-7db6-4151-b027-408134101930" class=3D"conflue=
+nceTd">
+<p local-id=3D"c89b83e7503b">Tr=E1=BA=A3 g=C3=B3p nhi=E1=BB=81u k=E1=BB=B3<=
+/p></td>
+<td data-local-id=3D"5c141a70-71e2-4005-a87c-6060f6e8e87a" class=3D"conflue=
+nceTd">
+<p local-id=3D"9eb7388197ca"><strong>T=C3=A0i s=E1=BA=A3n c=E1=BA=A7m c=E1=
+=BB=91 (C1)</strong></p></td>
+</tr>
+<tr data-local-id=3D"c5fb7cf1-5f9d-406d-9eba-ebae1241a816">
+<td data-local-id=3D"266455c8-e6a6-439e-975f-0d42f72a3590" class=3D"conflue=
+nceTd">
+<p local-id=3D"d387e6350873">B=C3=A0n giao TS (nh=E1=BA=ADn)</p></td>
+<td data-local-id=3D"0e2ea06b-8452-4831-ac60-3f4d86f08b38" class=3D"conflue=
+nceTd">
+<p local-id=3D"6255dae543a9">Borrower =E2=86=92 Lender</p></td>
+<td data-local-id=3D"607c8502-4e16-44d0-ae11-b9ae26c80076" class=3D"conflue=
+nceTd">
+<p local-id=3D"24214936dc55">=C4=90=E1=BB=8Bnh gi=C3=A1, 1 l=E1=BA=A7n</p><=
+/td>
+<td data-local-id=3D"e02fa7fc-004d-4179-9be6-da24323a5db5" class=3D"conflue=
+nceTd">
+<p local-id=3D"57055356ba4d">H=C4=90 hi=E1=BB=87u l=E1=BB=B1c</p></td>
+<td data-local-id=3D"59cf72f1-b20a-4f8c-87ff-d51199ee776a" class=3D"conflue=
+nceTd">
+<p local-id=3D"66eafc969a1b">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+<td data-local-id=3D"b1a7ac99-878d-48d8-97ad-9cd86d2d311b" class=3D"conflue=
+nceTd">
+<p local-id=3D"65a1912fbe2e">1 l=E1=BA=A7n</p></td>
+<td data-local-id=3D"6c37c219-d066-4259-9f45-85cd49beab6b" class=3D"conflue=
+nceTd">
+<p local-id=3D"ad2bca2167ee">N/A</p></td>
+</tr>
+<tr data-local-id=3D"37b482b3-5bd6-489f-be5a-7e13434c5503">
+<td data-local-id=3D"b5dc12dd-d278-4766-936f-01352342b6ef" class=3D"conflue=
+nceTd">
+<p local-id=3D"5c945846fd48">B=C3=A0n giao TS (tr=E1=BA=A3)</p></td>
+<td data-local-id=3D"2d30342b-96f4-4064-8292-178c890574bd" class=3D"conflue=
+nceTd">
+<p local-id=3D"230ad9d98b72">Lender =E2=86=92 Borrower</p></td>
+<td data-local-id=3D"457d6449-ce2a-4b5e-b5b5-eae12c9a3525" class=3D"conflue=
+nceTd">
+<p local-id=3D"f47bcbcb78a2">=C4=90=E1=BB=8Bnh gi=C3=A1, 1 l=E1=BA=A7n</p><=
+/td>
+<td data-local-id=3D"e9406d45-706a-4107-a77f-bce0fc866c79" class=3D"conflue=
+nceTd">
+<p local-id=3D"8eceb7f57edc">Trigger t=E1=BA=A5t to=C3=A1n</p></td>
+<td data-local-id=3D"f1f56a63-3e55-40d0-8bf1-e2d815f37e9b" class=3D"conflue=
+nceTd">
+<p local-id=3D"072ae9cc79f5">M=E1=BB=99t th=E1=BB=9Di =C4=91i=E1=BB=83m</p>=
+</td>
+<td data-local-id=3D"f84505e4-5559-4e15-b0cc-f274a35be287" class=3D"conflue=
+nceTd">
+<p local-id=3D"a053e15ffc52">1 l=E1=BA=A7n</p></td>
+<td data-local-id=3D"d259d95a-3804-48cb-90b6-7fcb28f40d17" class=3D"conflue=
+nceTd">
+<p local-id=3D"3df8584bbd36">N/A</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"78e47a6b0aa7">=E2=86=92 5 OT, t=E1=BA=A5t c=E1=BA=A3 OE =C4=
+=91=C3=A3 =C4=91i=E1=BB=81n =C4=91=E1=BB=A7 6 OET =E2=86=92 th=E1=BB=8Fa =
+=C4=91=E1=BB=8Bnh ngh=C4=A9a OTF (H6). =E2=86=92 Qua Maker=E2=80=93Checker,=
+ OTF n=C3=A0y =E1=BB=9F tr=E1=BA=A1ng th=C3=A1i <strong>published</strong>.=
+ =E2=86=92 <strong>B=C3=A0n giao cho t=E1=BA=A7ng Pattern:</strong> =E1=BB=
+=9F b=C6=B0=E1=BB=9Bc "D=E1=BB=B1ng Product Pattern" (theo pipeline demo), =
+Product Designer g=C3=A1n OTF n=C3=A0y cho khu=C3=B4n, k=C3=A9o-th=E1=BA=A3=
+ Block b=E1=BA=AFt bu=E1=BB=99c/t=C3=B9y ch=E1=BB=8Dn t=C6=B0=C6=A1ng =E1=
+=BB=A9ng v=E1=BB=9Bi t=E1=BB=ABng OT =E2=80=94 =C4=91=C3=A2y l=C3=A0 =C4=91=
+i=E1=BB=83m n=E1=BB=91i gi=E1=BB=AFa L=C3=B5i Ngh=C4=A9a v=E1=BB=A5 v=C3=A0=
+ L=E1=BB=9Bp Concretization/Shell.</p>
+    </div>
+</body>
+</html>
+------=_Part_6_125658055.1783522362302--
