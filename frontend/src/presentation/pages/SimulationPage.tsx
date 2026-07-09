@@ -242,6 +242,79 @@ export default function SimulationPage() {
     URL.revokeObjectURL(url)
   }
 
+  const escapeHtml = (v: string | number) =>
+    String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
+  // Xuất PDF: dựng trang HTML in-được rồi gọi window.print() — trình duyệt tự cho lưu "Save as PDF"
+  // qua print dialog, không cần thêm thư viện PDF nào (nhẹ, không phụ thuộc mạng ngoài).
+  const handleExportPdf = () => {
+    if (!form || !result) return
+    const summaryRows: [string, string][] = [
+      ['Sản phẩm', escapeHtml(currentVariant?.name ?? form.variantCode)],
+      ['Mã Variant / Config', escapeHtml(`${form.variantCode} / ${form.configCode}`)],
+      ['Số tiền vay', escapeHtml(vnd(form.amount))],
+      ['Kỳ hạn', escapeHtml(`${form.months} tháng`)],
+      ['Ngày bắt đầu kỳ đầu tiên', escapeHtml(form.startDate)],
+      ['Lãi suất Base Rate', escapeHtml(`${fmt2(form.baseRatePct)}%/tháng`)],
+      ['Lãi suất hiệu dụng', escapeHtml(`${fmt2(result.effectiveRatePct)}%/tháng`)],
+      ['Phân khúc khách hàng', escapeHtml(SEGMENTS.find((s) => s.code === form.segmentCode)?.label ?? form.segmentCode)],
+      ['Kỳ trả định kỳ', escapeHtml(vnd(result.monthlyPayment))],
+      ['Tổng gốc', escapeHtml(vnd(result.totalPrincipal))],
+      ['Tổng lãi', escapeHtml(vnd(result.totalInterest))],
+      ['Tổng phí', escapeHtml(vnd(result.totalFee))],
+      ['Tổng phạt trễ hạn + tất toán sớm', escapeHtml(vnd(result.totalPenalty + result.totalEarlyPenalty))],
+      ['Tổng phải trả', escapeHtml(vnd(result.totalPayment))],
+      ['Số kỳ thực trả', escapeHtml(`${result.periodsUsed}/${form.months}`)],
+      ['Tỷ lệ LTV', escapeHtml(result.ltvPct != null ? `${fmt1(result.ltvPct)}%` : '—')],
+      ['Điểm hòa vốn', escapeHtml(result.breakevenPeriod != null ? `Kỳ ${result.breakevenPeriod}` : '—')],
+      ['Trạng thái ràng buộc', escapeHtml(result.valid ? 'Hợp lệ' : 'Có cảnh báo')],
+    ]
+    const scheduleRows = result.schedule
+      .map(
+        (r) => `<tr${r.hasTag ? ` style="background:${r.rowBg || '#FFF7E6'}"` : ''}>
+      <td>${r.periodNo}</td><td>${escapeHtml(r.periodStart)}</td><td>${escapeHtml(r.periodEnd)}</td>
+      <td class="num">${escapeHtml(vnd(r.openingBalance))}</td><td class="num">${escapeHtml(vnd(r.principal))}</td>
+      <td class="num">${escapeHtml(vnd(r.interest))}</td><td class="num">${escapeHtml(vnd(r.fee))}</td>
+      <td class="num">${escapeHtml(vnd(r.penalty))}</td><td class="num">${escapeHtml(vnd(r.payment))}</td>
+      <td class="num">${escapeHtml(vnd(r.closingBalance))}</td><td>${r.hasTag ? escapeHtml(r.tagText ?? '') : ''}</td>
+    </tr>`
+      )
+      .join('')
+    const html = `<!doctype html><html lang="vi"><head><meta charset="utf-8" />
+<title>Lịch trả nợ - ${escapeHtml(form.variantCode)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Be Vietnam Pro', Arial, sans-serif; color: #122019; padding: 28px; }
+  h1 { font-size: 18px; color: #0B7349; margin: 0 0 4px; }
+  .sub { font-size: 12px; color: #5E6F66; margin-bottom: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 28px; margin-bottom: 20px; font-size: 12px; }
+  .grid div { display: flex; justify-content: space-between; border-bottom: 1px solid #E6ECE8; padding-bottom: 3px; }
+  .grid .k { color: #5E6F66; } .grid .v { font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #E6ECE8; padding: 5px 7px; text-align: left; }
+  th { background: #F4F7F5; color: #41524A; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  @media print { body { padding: 8mm; } }
+</style></head><body>
+<h1>Lịch trả nợ (Amortization Schedule)</h1>
+<div class="sub">Product Factory · xuất ngày ${escapeHtml(new Date().toLocaleDateString('vi-VN'))}</div>
+<div class="grid">${summaryRows.map(([k, v]) => `<div><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
+<table><thead><tr>
+  <th>Kỳ</th><th>Từ ngày</th><th>Đến ngày</th><th>Dư đầu kỳ</th><th>Gốc</th><th>Lãi</th><th>Phí</th><th>Phạt</th><th>Kỳ trả</th><th>Dư cuối kỳ</th><th>Ghi chú</th>
+</tr></thead><tbody>${scheduleRows}</tbody></table>
+</body></html>`
+    const w = window.open('', '_blank')
+    if (!w) {
+      alert('Trình duyệt đang chặn popup — vui lòng cho phép popup cho trang này rồi bấm lại "Xuất PDF".')
+      return
+    }
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    setTimeout(() => w.print(), 300)
+  }
+
   if (loading || !form) return <div style={{ padding: '22px 26px', color: '#5E6F66' }}>Đang tải dữ liệu…</div>
   if (error && !result)
     return <div style={{ padding: '22px 26px', color: '#B23B3B' }}>Lỗi: {error}. Kiểm tra backend đã chạy chưa.</div>
@@ -434,7 +507,12 @@ export default function SimulationPage() {
               title={result ? 'Xuất lịch trả nợ ra file CSV (mở được bằng Excel)' : undefined}
               style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: result ? '#0B7349' : '#41524A', background: '#fff', cursor: result ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
             >Xuất CSV</button>
-            <button title="read-only" style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: '#41524A', background: '#fff', cursor: 'not-allowed', fontFamily: 'inherit' }}>Xuất PDF</button>
+            <button
+              onClick={handleExportPdf}
+              disabled={!result}
+              title={result ? 'Xuất lịch trả nợ ra PDF (qua hộp thoại In của trình duyệt)' : undefined}
+              style={{ flex: 1, border: '1px solid #C2D0C8', borderRadius: 10, padding: 11, fontSize: 12.5, fontWeight: 600, color: result ? '#0B7349' : '#41524A', background: '#fff', cursor: result ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}
+            >Xuất PDF</button>
           </div>
 
           {pinned.length > 0 && (
