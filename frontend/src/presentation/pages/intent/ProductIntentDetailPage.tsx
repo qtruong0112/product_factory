@@ -10,7 +10,6 @@ interface Intent {
   code: string | null
   name: string
   businessIntentId: number
-  natureElementCode: string
   archetypeCode: string
   status: string
 }
@@ -127,7 +126,6 @@ export default function ProductIntentDetailPage() {
           <span style={{ color: '#122019', fontWeight: 600 }}>{data.archetypeName ?? '—'}</span>
           <div style={{ marginTop: 4 }}>{mono(pi.archetypeCode)}</div>
         </InfoCard>
-        <InfoCard label="Obligation nature">{mono(pi.natureElementCode, '#243A30')}</InfoCard>
       </div>
 
       {/* element nền */}

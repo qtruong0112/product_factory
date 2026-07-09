@@ -4,9 +4,11 @@ import com.f88.productfactory.domain.model.governance.ConstraintMatrix;
 import com.f88.productfactory.domain.model.governance.MatrixCell;
 import com.f88.productfactory.domain.model.pipeline.PatternObligationType;
 import com.f88.productfactory.domain.model.pipeline.ProductPattern;
+import com.f88.productfactory.domain.model.ontology.FoaElement;
 import com.f88.productfactory.domain.repository.governance.ConstraintMatrixRepository;
 import com.f88.productfactory.domain.repository.governance.MatrixCellRepository;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
+import com.f88.productfactory.domain.repository.ontology.FoaElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementTypeRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeRepository;
@@ -26,12 +28,16 @@ import java.util.Optional;
 /**
  * Ma trận ràng buộc (Lớp IV — governance).
  *
- * 3 ma trận THẬT trong DB (constraint_matrix + matrix_cell):
- *   1 ARCHETYPE_X_ELEMENT, 2 ELEMENTTYPE_X_ELEMENTTYPE, 3 OBLIGATIONTYPE_X_BLOCK.
+ * 2 ma trận THẬT còn lưu trong DB (constraint_matrix + matrix_cell):
+ *   2 ELEMENTTYPE_X_ELEMENTTYPE, 3 OBLIGATIONTYPE_X_BLOCK.
  * Nhãn hàng/cột KHÔNG nằm trong matrix_cell (chỉ có code) → join theo kind từ các bảng tên thật:
- *   - ARCHETYPE_X_ELEMENT: row=obligation_element.name, col=financial_obligation_archetype.name
  *   - ELEMENTTYPE_X_ELEMENTTYPE: row/col=obligation_element_type.name
  *   - OBLIGATIONTYPE_X_BLOCK: row=obligation_type.name, col=block.name
+ *
+ * Giai đoạn 51: ma trận 1 (ARCHETYPE_X_ELEMENT) đã BỎ khỏi constraint_matrix — trùng lặp dữ liệu
+ * với foa_element (đều lưu FOA × Obligation Element requirement). foaOeMatrix() thay thế đúng vai
+ * trò đó, PHÁI SINH TRỰC TIẾP từ foa_element (nguồn duy nhất), cùng cơ chế derived-tab với
+ * patternCoverage() bên dưới.
  *
  * Tab 4 prototype "Pattern × Block (độ phủ)" KHÔNG phải constraint_matrix (là view phái sinh).
  * → patternCoverage(): PHÁI SINH TỪ DB THẬT — mỗi pattern gộp verdict ma trận 3 theo
@@ -50,6 +56,7 @@ public class ConstraintMatrixService {
     private final BlockRepository blockRepo;
     private final ProductPatternRepository patternRepo;
     private final PatternObligationTypeRepository patternOtRepo;
+    private final FoaElementRepository foaElementRepo;
 
     // 6 block "cover" của tab độ phủ (thứ tự trùng ma trận 3 prototype).
     private static final List<String> COVER_BLOCKS = List.of(
@@ -63,7 +70,8 @@ public class ConstraintMatrixService {
                                    ObligationTypeRepository obligationTypeRepo,
                                    BlockRepository blockRepo,
                                    ProductPatternRepository patternRepo,
-                                   PatternObligationTypeRepository patternOtRepo) {
+                                   PatternObligationTypeRepository patternOtRepo,
+                                   FoaElementRepository foaElementRepo) {
         this.repo = repo;
         this.cellRepo = cellRepo;
         this.elementRepo = elementRepo;
@@ -73,6 +81,7 @@ public class ConstraintMatrixService {
         this.blockRepo = blockRepo;
         this.patternRepo = patternRepo;
         this.patternOtRepo = patternOtRepo;
+        this.foaElementRepo = foaElementRepo;
     }
 
     /** Danh sách ma trận (cho tab bar): [{id, kind, title, description}] theo id. */
@@ -89,10 +98,9 @@ public class ConstraintMatrixService {
         return out;
     }
 
-    /** legend theo kind: rpn | compat | block (FE map ra màu + nhãn). */
+    /** legend theo kind: compat | block (FE map ra màu + nhãn). */
     private String legendOf(String kind) {
         return switch (kind) {
-            case "ARCHETYPE_X_ELEMENT" -> "rpn";
             case "ELEMENTTYPE_X_ELEMENTTYPE" -> "compat";
             default -> "block"; // OBLIGATIONTYPE_X_BLOCK
         };
@@ -101,16 +109,14 @@ public class ConstraintMatrixService {
     /** rowHead (nhãn cột đầu) theo kind. */
     private String rowHeadOf(String kind) {
         return switch (kind) {
-            case "ARCHETYPE_X_ELEMENT" -> "Obligation Element";
-            case "ELEMENTTYPE_X_ELEMENTTYPE" -> "Element Type";
-            default -> "Obligation Type";
+            case "ELEMENTTYPE_X_ELEMENTTYPE" -> "OET";
+            default -> "Obligation Type Family (OTF)";
         };
     }
 
     /** Nhãn của một row_code theo kind (fallback về chính code). */
     private String rowLabel(String kind, String code) {
         return switch (kind) {
-            case "ARCHETYPE_X_ELEMENT" -> elementRepo.findById(code).map(e -> e.getName()).orElse(code);
             case "ELEMENTTYPE_X_ELEMENTTYPE" -> elementTypeRepo.findById(code).map(e -> e.getName()).orElse(code);
             default -> obligationTypeRepo.findById(code).map(o -> o.getName()).orElse(code);
         };
@@ -119,7 +125,6 @@ public class ConstraintMatrixService {
     /** Nhãn của một col_code theo kind (fallback về chính code). */
     private String colLabel(String kind, String code) {
         return switch (kind) {
-            case "ARCHETYPE_X_ELEMENT" -> archetypeRepo.findById(code).map(a -> a.getName()).orElse(code);
             case "ELEMENTTYPE_X_ELEMENTTYPE" -> elementTypeRepo.findById(code).map(e -> e.getName()).orElse(code);
             default -> blockRepo.findById(code).map(b -> b.getName()).orElse(code);
         };
@@ -244,6 +249,53 @@ public class ConstraintMatrixService {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("rowHead", "Product Pattern");
         body.put("legend", "block");
+        body.put("cols", cols);
+        body.put("rows", rows);
+        return body;
+    }
+
+    /**
+     * Tab "FOA × Obligation Element" — Giai đoạn 51, PHÁI SINH TRỰC TIẾP từ foa_element
+     * (nguồn duy nhất sau khi gộp bỏ constraint_matrix kind=ARCHETYPE_X_ELEMENT). Cùng shape với
+     * detail()/patternCoverage() để FE dùng chung renderer.
+     */
+    public Map<String, Object> foaOeMatrix() {
+        List<FoaElement> all = foaElementRepo.findAll();
+
+        LinkedHashSet<String> rowCodes = new LinkedHashSet<>();
+        LinkedHashSet<String> colCodes = new LinkedHashSet<>();
+        Map<String, String> verdictByKey = new LinkedHashMap<>();
+        for (FoaElement fe : all) {
+            rowCodes.add(fe.getElementCode());
+            colCodes.add(fe.getArchetypeCode());
+            verdictByKey.put(fe.getElementCode() + "" + fe.getArchetypeCode(), fe.getRequirement());
+        }
+
+        List<Map<String, Object>> cols = new ArrayList<>();
+        for (String cc : colCodes) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("code", cc);
+            m.put("label", archetypeRepo.findById(cc).map(a -> a.getName()).orElse(cc));
+            cols.add(m);
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (String rc : rowCodes) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("code", rc);
+            row.put("label", elementRepo.findById(rc).map(e -> e.getName()).orElse(rc));
+            List<String> rowCells = new ArrayList<>();
+            for (String cc : colCodes) {
+                String v = verdictByKey.getOrDefault(rc + "" + cc, "na");
+                rowCells.add("required".equals(v) ? "req" : "possible".equals(v) ? "pos" : "na");
+            }
+            row.put("cells", rowCells);
+            rows.add(row);
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("rowHead", "Obligation Element");
+        body.put("legend", "rpn");
         body.put("cols", cols);
         body.put("rows", rows);
         return body;

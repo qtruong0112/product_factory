@@ -24,8 +24,8 @@ const LEG: Record<LegKind, Record<'req' | 'pos' | 'no', Tone>> = {
 // Nhãn tab ngắn (UI chrome — trích nguyên prototype `labels`).
 const TAB_LABELS = [
   'FOA × Obligation Element',
-  'Element Type × Element Type',
-  'Obligation Type × Block',
+  'OET × OET',
+  'Obligation Type Family (OTF) × Block',
   'Pattern × Block (độ phủ)',
 ]
 
@@ -71,6 +71,13 @@ export default function MatrixPage() {
 
   useEffect(() => {
     async function load() {
+      // Giai đoạn 51: ma trận "FOA × Obligation Element" không còn lưu trong constraint_matrix —
+      // đã gộp về foa_element (nguồn duy nhất), lấy qua endpoint derived riêng, giống cách
+      // "Pattern × Block (độ phủ)" đã derived từ trước.
+      const foaOeRes = await fetch('/api/constraint-matrices/foa-oe-matrix')
+      if (!foaOeRes.ok) throw new Error(`GET foa-oe-matrix ${foaOeRes.status}`)
+      const foaOe: CoverageResp = await foaOeRes.json()
+
       const listRes = await fetch('/api/constraint-matrices')
       if (!listRes.ok) throw new Error(`GET constraint-matrices ${listRes.status}`)
       const matrices: MatrixMeta[] = await listRes.json()
@@ -86,17 +93,27 @@ export default function MatrixPage() {
       if (!covRes.ok) throw new Error(`GET pattern-coverage ${covRes.status}`)
       const cov: CoverageResp = await covRes.json()
 
-      const g: Grid[] = details.map((d) => ({
-        title: d.matrix.title,
-        desc: d.matrix.description,
-        legend: d.legend,
-        rowHead: d.rowHead,
-        cols: d.cols,
-        rows: d.rows,
-      }))
+      const g: Grid[] = [
+        {
+          title: 'Ma trận 1: FOA × Obligation Element',
+          desc: 'Quy định Obligation Element nào bắt buộc / được phép với từng Financial Obligation Archetype (FOA). Nguồn duy nhất: foa_element.',
+          legend: foaOe.legend,
+          rowHead: foaOe.rowHead,
+          cols: foaOe.cols,
+          rows: foaOe.rows,
+        },
+        ...details.map((d) => ({
+          title: d.matrix.title,
+          desc: d.matrix.description,
+          legend: d.legend,
+          rowHead: d.rowHead,
+          cols: d.cols,
+          rows: d.rows,
+        })),
+      ]
       g.push({
         title: 'Ma trận 4: Pattern × Block (độ phủ)',
-        desc: 'Độ phủ Block thực tế của từng Pattern — đối chiếu với ma trận Obligation Type để phát hiện Block thiếu/thừa. (Suy diễn từ obligation type của Pattern × ma trận 3.)',
+        desc: 'Độ phủ Block thực tế của từng Pattern — đối chiếu với ma trận OTF để phát hiện Block thiếu/thừa. (Suy diễn từ OTF của Pattern × ma trận 3.)',
         legend: cov.legend,
         rowHead: cov.rowHead,
         cols: cov.cols,

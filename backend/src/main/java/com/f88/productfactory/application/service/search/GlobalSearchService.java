@@ -38,8 +38,7 @@ import java.util.function.Function;
  * Quét trực tiếp qua các bảng lõi (đều nhỏ, seed data), so khớp chuỗi con không phân biệt hoa
  * thường trên tên + mã thật (không bịa, không dùng index/full-text riêng). Mỗi loại giới hạn
  * {@link #PER_TYPE_LIMIT} kết quả để tránh 1 loại át hết danh sách. `path` trỏ thẳng tới route
- * chi tiết đã có sẵn của từng màn — Obligation Type (chưa có detail riêng) trỏ qua Archetype cha
- * (`archetype_code`, cột NOT NULL) vì đó là màn chi tiết thật gần nhất chứa thông tin obligation type.
+ * chi tiết đã có sẵn của từng màn — OTF trỏ `/obligation-type/{code}` (Giai đoạn 53).
  */
 @Service
 public class GlobalSearchService {
@@ -117,9 +116,9 @@ public class GlobalSearchService {
                 ProductVariant::getName, ProductVariant::getCode, ProductVariant::getStatus,
                 v -> "/variant/" + v.getCode());
 
-        addMatches(out, needle, "Obligation Type", obligationTypeRepo.findAll(),
+        addMatches(out, needle, "Obligation Type Family (OTF)", obligationTypeRepo.findAll(),
                 ObligationType::getName, ObligationType::getCode, ObligationType::getStatus,
-                ot -> "/archetype/" + ot.getArchetypeCode());
+                ot -> "/obligation-type/" + ot.getCode());
 
         addMatches(out, needle, "Financial Obligation Archetype", archetypeRepo.findAll(),
                 FinancialObligationArchetype::getName, FinancialObligationArchetype::getCode, a -> null,

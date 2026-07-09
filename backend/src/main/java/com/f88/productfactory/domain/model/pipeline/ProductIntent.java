@@ -23,9 +23,6 @@ public class ProductIntent {
     @Column(name = "business_intent_id", nullable = false)
     private Long businessIntentId;
 
-    @Column(name = "nature_element_code", length = 60, nullable = false)
-    private String natureElementCode;
-
     @Column(name = "archetype_code", length = 30, nullable = false)
     private String archetypeCode;
 
@@ -36,7 +33,6 @@ public class ProductIntent {
     public String getCode() { return code; }
     public String getName() { return name; }
     public Long getBusinessIntentId() { return businessIntentId; }
-    public String getNatureElementCode() { return natureElementCode; }
     public String getArchetypeCode() { return archetypeCode; }
     public String getStatus() { return status; }
 }

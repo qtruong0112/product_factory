@@ -13,7 +13,7 @@ const actColor: Record<string, [string, string]> = {
   review: ['#FEF3D6', '#9A6B00'],
   neutral: ['#EEF1EF', '#41524A'],
 }
-const familyPalette = ['#0E8C5A', '#5FC596', '#9ED9BC', '#22A86F', '#E8920C']
+const archetypePalette = ['#0E8C5A', '#5FC596', '#9ED9BC', '#22A86F', '#E8920C']
 const pipelineColors = ['#9ED9BC', '#5FC596', '#22A86F', '#0E8C5A', '#E8920C', '#0B7349']
 
 const entityIcon: Record<string, string> = {
@@ -35,8 +35,9 @@ function actionColor(action: string): keyof typeof actColor {
 
 interface StatusRow { status?: string }
 interface VariantRow extends StatusRow { channels?: string }
-interface ObligationTypeRow { familyCode?: string; familyName?: string }
-interface ObligationFamilyRow { code: string; name: string }
+// Giai đoạn 51: obligation_family đã gộp bỏ (trùng 1:1 với FOA) — phân bố dưới đây nay tính
+// trực tiếp theo Financial Obligation Archetype (typeCount đã tính sẵn ở FinancialObligationArchetypeService).
+interface ArchetypeRow { code: string; name: string; typeCount: number }
 interface ActivityRow {
   actor: string
   action: string
@@ -76,23 +77,18 @@ export default function DashboardPage() {
       getList<StatusRow>('product-configs', 0, 500),
       getList<VariantRow>('product-variants', 0, 500),
       getList('product-catalogs', 0, 500),
-      getList<ObligationTypeRow>('obligation-types', 0, 500),
-      getList<ObligationFamilyRow>('obligation-families', 0, 500),
+      getList('obligation-types', 0, 500),
+      getList<ArchetypeRow>('archetypes', 0, 10),
       getList<ActivityRow>('activity-logs', 0, 6),
     ])
-      .then(([intents, patterns, templates, configs, variants, catalogs, obligationTypes, obligationFamilies, activities]) => {
+      .then(([intents, patterns, templates, configs, variants, catalogs, obligationTypes, archetypes, activities]) => {
         if (cancelled) return
         const channelSet = new Set<string>()
         for (const c of catalogs.content as VariantRow[]) {
           (c.channels || '').split('·').map((s) => s.trim()).filter(Boolean).forEach((ch) => channelSet.add(ch))
         }
-        const familyCountByCode = new Map<string, number>()
-        for (const ot of obligationTypes.content) {
-          if (!ot.familyCode) continue
-          familyCountByCode.set(ot.familyCode, (familyCountByCode.get(ot.familyCode) || 0) + 1)
-        }
-        const families = obligationFamilies.content
-          .map((f) => ({ name: f.name, count: familyCountByCode.get(f.code) || 0 }))
+        const families = archetypes.content
+          .map((a) => ({ name: a.name, count: a.typeCount }))
           .filter((f) => f.count > 0)
 
         setData({
@@ -123,7 +119,7 @@ export default function DashboardPage() {
     ['Pattern đang dựng', data.patterns, `${data.patternsReview} chờ duyệt`, 'gold', 'pattern'],
     ['Config chờ phê duyệt', data.configsReview, 'maker–checker', 'review', 'config'],
     ['Kênh phân phối', data.channelCount, `${data.catalogs} sản phẩm`, 'green', 'variant'],
-    ['Obligation Types', data.obligationTypes, `${data.families.length} family`, 'neutral', 'obligation'],
+    ['Obligation Type Family (OTF)', data.obligationTypes, `${data.families.length} FOA`, 'neutral', 'obligation'],
   ]
 
   const pdef: [string, number, string][] = [
@@ -225,10 +221,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* family distribution */}
+        {/* archetype distribution — Giai đoạn 51: thay Family (đã gộp bỏ) bằng FOA */}
         <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '20px 22px' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Phân bố theo Obligation Family</div>
-          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>Số Obligation Type theo họ nghĩa vụ</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#122019', marginBottom: 4 }}>Phân bố theo Financial Obligation Archetype</div>
+          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 18 }}>Số OTF theo FOA</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {data.families.map((f, i) => {
               const pct = Math.round((f.count / famTotal) * 100)
@@ -239,7 +235,7 @@ export default function DashboardPage() {
                     <span style={{ fontSize: 12.5, color: '#5E6F66' }}>{f.count} ({pct}%)</span>
                   </div>
                   <div style={{ height: 8, background: '#F1F5F2', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', background: familyPalette[i % familyPalette.length], borderRadius: 99 }} />
+                    <div style={{ width: `${pct}%`, height: '100%', background: archetypePalette[i % archetypePalette.length], borderRadius: 99 }} />
                   </div>
                 </div>
               )

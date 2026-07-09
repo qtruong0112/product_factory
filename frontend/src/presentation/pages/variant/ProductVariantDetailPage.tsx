@@ -569,10 +569,10 @@ function ObligationsTab({ patternCode }: { patternCode: string }) {
   return (
     <Card style={{ animation: 'fadeUp .3s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <CardTitle>Obligation Type gán cho Pattern nguồn</CardTitle>
+        <CardTitle>Obligation Type Family gán cho Pattern nguồn</CardTitle>
         <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', background: '#F1F5F2', padding: '2px 9px', borderRadius: 99 }}>{ots.length}</span>
       </div>
-      {ots.length === 0 && <div style={{ color: '#A7B5AC', fontSize: 12.5 }}>Pattern nguồn chưa gán Obligation Type nào.</div>}
+      {ots.length === 0 && <div style={{ color: '#A7B5AC', fontSize: 12.5 }}>Pattern nguồn chưa gán Obligation Type Family nào.</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {ots.map((o, i) => (
           <div

@@ -191,25 +191,12 @@ CREATE TABLE "foa_element" (
   PRIMARY KEY ("archetype_code", "element_code")
 );
 
-CREATE TABLE "obligation_family" (
-  "code" varchar(30) PRIMARY KEY NOT NULL,
-  "name" varchar(80) NOT NULL,
-  "identified_by_nature_code" varchar(60) UNIQUE NOT NULL,
-  "created_user" varchar(120),
-  "created_date" timestamp NOT NULL DEFAULT (now()),
-  "updated_user" varchar(120),
-  "updated_date" timestamp,
-  "is_deleted" boolean NOT NULL DEFAULT false,
-  "deleted_user" varchar(120),
-  "deleted_date" timestamp,
-  "cdc_version" bigint NOT NULL DEFAULT 1,
-  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
-);
+-- Giai đoạn 51: xóa obligation_family (trùng 1:1 với financial_obligation_archetype theo
+-- tài liệu FOA/OET/OE/OT/OTF mới — OTF phân loại thẳng theo archetype_code, không cần tầng Family).
 
 CREATE TABLE "obligation_type" (
   "code" varchar(60) PRIMARY KEY NOT NULL,
   "name" varchar(160) NOT NULL,
-  "family_code" varchar(30) NOT NULL,
   "archetype_code" varchar(30) NOT NULL,
   "status" entity_status_enum NOT NULL,
   "created_user" varchar(120),
@@ -223,10 +210,29 @@ CREATE TABLE "obligation_type" (
   "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "obligation_type_composition" (
-  "obligation_type_code" varchar(60) NOT NULL,
-  "element_type_code" varchar(30) NOT NULL,
-  "element_code" varchar(60) NOT NULL,
+-- Giai đoạn 51: OT lõi (Obligation Type Core) — tập đóng 7 mã cố định theo Data dictionary
+-- FOA/OET/OE/OT/OTF (3 cốt lõi: Giải ngân/Hoàn trả gốc/Trả lãi + 4 phụ trợ: Phí/Phạt/Bảo hiểm/
+-- Bàn giao TS). Tên OT bất biến qua mọi FOA — chỉ OE bên trong (obligation_type_composition) biến thiên.
+CREATE TABLE "obligation_type_core" (
+  "code" varchar(30) PRIMARY KEY NOT NULL,
+  "name" varchar(120) NOT NULL,
+  "group_kind" varchar(12) NOT NULL,
+  "description" text,
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now())
+);
+
+-- Giai đoạn 51: bảng tra OE → bật/tắt OT phụ trợ, ĐỘC LẬP với FOA (Mục 6, tài liệu Lõi Nghĩa Vụ).
+CREATE TABLE "ot_activation_rule" (
+  "trigger_element_code" varchar(60) NOT NULL,
+  "activated_ot_core_code" varchar(30) NOT NULL,
   "created_user" varchar(120),
   "created_date" timestamp NOT NULL DEFAULT (now()),
   "updated_user" varchar(120),
@@ -236,7 +242,25 @@ CREATE TABLE "obligation_type_composition" (
   "deleted_date" timestamp,
   "cdc_version" bigint NOT NULL DEFAULT 1,
   "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
-  PRIMARY KEY ("obligation_type_code", "element_type_code")
+  PRIMARY KEY ("trigger_element_code", "activated_ot_core_code")
+);
+
+CREATE TABLE "obligation_type_composition" (
+  "obligation_type_code" varchar(60) NOT NULL,
+  "ot_core_code" varchar(30) NOT NULL,
+  "element_type_code" varchar(30) NOT NULL,
+  "element_code" varchar(60) NOT NULL,
+  "leg" varchar(20) NOT NULL DEFAULT 'default',
+  "created_user" varchar(120),
+  "created_date" timestamp NOT NULL DEFAULT (now()),
+  "updated_user" varchar(120),
+  "updated_date" timestamp,
+  "is_deleted" boolean NOT NULL DEFAULT false,
+  "deleted_user" varchar(120),
+  "deleted_date" timestamp,
+  "cdc_version" bigint NOT NULL DEFAULT 1,
+  "cdc_timestamp" timestamp NOT NULL DEFAULT (now()),
+  PRIMARY KEY ("obligation_type_code", "ot_core_code", "element_type_code", "leg")
 );
 
 CREATE TABLE "lifecycle" (
@@ -517,7 +541,6 @@ CREATE TABLE "product_intent" (
   "code" varchar(20),
   "name" varchar(200) NOT NULL,
   "business_intent_id" bigint NOT NULL,
-  "nature_element_code" varchar(60) NOT NULL,
   "archetype_code" varchar(30) NOT NULL,
   "status" entity_status_enum NOT NULL,
   "data_owner" varchar(120),
@@ -924,21 +947,21 @@ CREATE UNIQUE INDEX ON "version_entry" ("entity_type", "entity_code", "version")
 
 COMMENT ON TABLE "app_user" IS 'Giai đoạn 42 — Người dùng thật cho bộ chọn "đổi vai trò" ở sidebar (lọc menu phía frontend, KHÔNG phải đăng nhập/bảo mật thật) và nguồn populate created_user/updated_user của các bảng nghiệp vụ chính.';
 
-COMMENT ON TABLE "obligation_element_type" IS '#1 Obligation Element Type (OET) — Chiều phân loại ngữ nghĩa của nghĩa vụ. 6 chiều lõi (OET_NATURE…OET_TIME) + mở rộng OET_LIFECYCLE trong thư viện. OET_NATURE có is_identify=true — quyết định Family.';
+COMMENT ON TABLE "obligation_element_type" IS '#1 Obligation Element Type (OET) — Chiều phân loại ngữ nghĩa của nghĩa vụ. Đúng 6 chiều chuẩn, tập đóng (Giai đoạn 52): Party/Value/Activation/Time/Fulfillment/Recovery (mã OET_PARTY…OET_TIME). Đã gỡ OET_NATURE (trùng lặp financial_obligation_archetype) và OET_LIFECYCLE (không gắn dữ liệu obligation_element nào).';
 
-COMMENT ON TABLE "obligation_element" IS '#2 Obligation Element — Giá trị nguyên tử — ’gen’ ngữ nghĩa để lắp thành Obligation Type. App: 17 element, thư viện đầy đủ: 47. Rel #1: ElementType 1:N Element.';
+COMMENT ON TABLE "obligation_element" IS '#2 Obligation Element (OE) — Giá trị nguyên tử — câu trả lời cụ thể cho 1 OET, dùng lắp thành Obligation Type. Rel #1: ElementType 1:N Element.';
 
-COMMENT ON TABLE "financial_obligation_archetype" IS '#3 Financial Obligation Archetype — Khuôn nghĩa vụ gốc — mẫu trừu tượng cao nhất (Term Loan / Revolving / Conditional). Quy định Element nào Required/Possible qua Ma trận 1 (materialize ở foa_element).';
+COMMENT ON TABLE "financial_obligation_archetype" IS '#3 Financial Obligation Archetype (FOA) — Khuôn nghĩa vụ gốc — mẫu trừu tượng cao nhất (Term Loan / Revolving / Conditional), phân loại theo AI KIỂM SOÁT KÍCH HOẠT nghĩa vụ. Quy định OE nào Required/Possible cho từng OET qua Ma trận FOA×OE (materialize ở foa_element) — KHÔNG quyết định OT phụ trợ nào tồn tại (xem ot_activation_rule).';
 
-COMMENT ON TABLE "foa_element" IS '#23 Ma trận 1 (Archetype × Element) — materialized — Rel #5: Archetype constrains Element N:M kèm mức Required/Possible/N.A — ma trận gốc suy diễn Family & hợp lệ hóa Pattern/Intent.';
+COMMENT ON TABLE "foa_element" IS '#23 Ma trận FOA × Obligation Element — materialized, NGUỒN DUY NHẤT (Giai đoạn 51 gộp bỏ trùng lặp với constraint_matrix kind=ARCHETYPE_X_ELEMENT) — Rel #5: Archetype constrains Element N:M kèm mức Required/Possible/N.A.';
 
-COMMENT ON TABLE "obligation_family" IS '#4 Obligation Family — Họ nghĩa vụ. Rel #3: Nature định danh Family 1:1 → FK identified_by_nature_code UNIQUE (mỗi Nature định danh đúng 1 Family và ngược lại).';
+COMMENT ON TABLE "obligation_type" IS '#5 Obligation Type Family (OTF) — tên bảng/entity giữ nguyên để tránh vỡ Pattern/Search/API path đang tham chiếu, nhưng theo tài liệu Giai đoạn 51 đây là khái niệm OTF: 1 tổ hợp OT lõi (obligation_type_core) + OE cụ thể (materialize ở obligation_type_composition), gắn 1 archetype_code (FOA). KHÔNG còn family_code (đã gộp bỏ, dùng thẳng archetype_code).';
 
-COMMENT ON COLUMN "obligation_family"."identified_by_nature_code" IS 'Element thuộc OET_NATURE (is_identify)';
+COMMENT ON TABLE "obligation_type_core" IS '#5b Obligation Type (OT) lõi — Giai đoạn 51. Tập đóng 7 mã cố định (3 cốt lõi: Giải ngân/Hoàn trả gốc/Trả lãi + 4 phụ trợ: Phí/Phạt/Bảo hiểm/Bàn giao TS). Tên OT bất biến qua mọi FOA/OTF — chỉ OE trong obligation_type_composition biến thiên.';
 
-COMMENT ON TABLE "obligation_type" IS '#5 Obligation Type — Loại nghĩa vụ chuẩn hóa = tổ hợp đủ 6 Element (mỗi OET đúng 1, materialize ở obligation_type_composition). Nút trung tâm nối ontology với Block. Rel #4: N Type thuộc 1 Family. Rel #6 (MỚI so với v2): mỗi Type hiện thực hóa 1 Archetype.';
+COMMENT ON TABLE "ot_activation_rule" IS '#5c Bảng tra OE → bật/tắt OT phụ trợ, ĐỘC LẬP với FOA (Giai đoạn 51, Mục 6 tài liệu Lõi Nghĩa Vụ) — vd Recovery Anchor=Tài sản cầm cố → bật OT_ASSET_HANDOVER.';
 
-COMMENT ON TABLE "obligation_type_composition" IS '#2↔#5 (rel #2 composes) — Rel #2: N Element cấu thành 1 Type; PK ghép (type, element_type) ép ràng buộc ’mỗi OET chọn đúng 1 Element’ (trường comp trong HTML).';
+COMMENT ON TABLE "obligation_type_composition" IS '#2↔#5 (rel #2 composes) — 1 OTF (obligation_type_code) = tổ hợp NHIỀU OT lõi (ot_core_code), mỗi OT lõi có đủ 6 OET (Party/Value/Activation/Time/Fulfillment/Recovery). PK (obligation_type_code, ot_core_code, element_type_code, leg) — cột "leg" phân biệt 2 chiều của cùng 1 OT lõi (vd Bàn giao TS: nhận/trả).';
 
 COMMENT ON TABLE "lifecycle" IS '#6 Lifecycle & State Machine — Rel #8: mỗi Lifecycle chi phối 1 loại đối tượng (Term Loan 7 state, Facility 6, Product Variant 5, Pattern 5, Config maker–checker 6, Domain 4).';
 
@@ -962,7 +985,7 @@ COMMENT ON COLUMN "attribute_constraint"."depends_on_attribute_code" IS 'Attribu
 
 COMMENT ON TABLE "attribute_enum_value" IS '#11 Constraint (kind=enum) — Giá trị enum của attribute kiểu DT_ENUM (vd asset_type: Xe máy / Ô tô / Vàng).';
 
-COMMENT ON TABLE "block" IS '#7 Block — Khối cấu hình nghiệp vụ, 5 nhóm (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi). App: 12 block, thư viện: 26. Rel #10: mỗi Block governance bởi 1 Element (BLK_INTEREST↔TERM_LOAN_OBLIGATION, BLK_COLLATERAL↔ASSET_PLEDGE…) — FK nullable vì một số block neo vào ’khía cạnh’ chưa mã hóa thành element (Eligibility, Obligor Party).';
+COMMENT ON TABLE "block" IS '#7 Block — Khối cấu hình nghiệp vụ, 5 nhóm (Khởi tạo/Giá trị/Kích hoạt/Vận hành/Thu hồi). App: 12 block, thư viện: 26. Rel #10: mỗi Block governance bởi 1 Element thật (BLK_COLLATERAL↔OE_REC_ASSET_PLEDGE…) hoặc 1 aspect (FOA/khía cạnh chưa mã hóa thành element — Eligibility, Obligor Party, FOA_REVOLVING…) — 2 cột nullable, đúng 1 trong 2 khác NULL.';
 
 COMMENT ON COLUMN "block"."governed_by_aspect" IS 'Khía cạnh chi phối khi không phải element (Eligibility, Obligor Party, PENALTY…)';
 
@@ -982,13 +1005,11 @@ COMMENT ON TABLE "business_intent_kpi" IS '#15 Business Intent — KPI của Bus
 
 COMMENT ON TABLE "customer_segment" IS '#22 Customer Segment / Audience — Đối tượng KH mục tiêu — object riêng theo semantic sheet (MỚI so với v2): KH cá nhân (CMND/CCCD · Giấy nhận nợ) / KH doanh nghiệp (ĐKKD · HĐ tín dụng DN), kèm tier Standard/Loyalty/VIP.';
 
-COMMENT ON TABLE "product_intent" IS '#16 Product Intent — Ý định sản phẩm (12 intent: PI-001…). Rel #19: anchored to Obligation Nature + Archetype. Rel #20: 1 Intent định hình N Pattern.';
+COMMENT ON TABLE "product_intent" IS '#16 Product Intent — Ý định sản phẩm (12 intent: PI-001…). Rel #19: anchored to Archetype (FOA). Rel #20: 1 Intent định hình N Pattern.';
 
 COMMENT ON COLUMN "product_intent"."code" IS 'PI-001…';
 
-COMMENT ON COLUMN "product_intent"."nature_element_code" IS 'Element thuộc OET_NATURE (is_identify)';
-
-COMMENT ON TABLE "product_intent_element" IS '#16 Product Intent — Element nền khai báo cho Intent (đối chiếu Ma trận 1). PI-003 ghép FACILITY + LOAN → junction cho phép nhiều nature/element phụ.';
+COMMENT ON TABLE "product_intent_element" IS '#16 Product Intent — Element nền khai báo cho Intent (đối chiếu Ma trận 1). PI-003 ghép FACILITY + LOAN → junction cho phép nhiều element phụ.';
 
 COMMENT ON TABLE "product_pattern" IS '#17 Product Pattern — Khung sản phẩm (8 pattern): lắp Obligation Type × Block theo Ma trận 3, khóa Block không áp dụng (khóa chuyển về Pattern theo semantic sheet — pattern_block.usage). Rel #22: 1 Pattern sinh N Template.';
 
@@ -1034,17 +1055,19 @@ ALTER TABLE "foa_element" ADD FOREIGN KEY ("archetype_code") REFERENCES "financi
 
 ALTER TABLE "foa_element" ADD FOREIGN KEY ("element_code") REFERENCES "obligation_element" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "obligation_element" ADD FOREIGN KEY ("code") REFERENCES "obligation_family" ("identified_by_nature_code") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "obligation_type" ADD FOREIGN KEY ("family_code") REFERENCES "obligation_family" ("code") DEFERRABLE INITIALLY IMMEDIATE;
-
 ALTER TABLE "obligation_type" ADD FOREIGN KEY ("archetype_code") REFERENCES "financial_obligation_archetype" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "obligation_type_composition" ADD FOREIGN KEY ("obligation_type_code") REFERENCES "obligation_type" ("code") ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE "obligation_type_composition" ADD FOREIGN KEY ("ot_core_code") REFERENCES "obligation_type_core" ("code") DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE "obligation_type_composition" ADD FOREIGN KEY ("element_type_code") REFERENCES "obligation_element_type" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "obligation_type_composition" ADD FOREIGN KEY ("element_code") REFERENCES "obligation_element" ("code") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "ot_activation_rule" ADD FOREIGN KEY ("trigger_element_code") REFERENCES "obligation_element" ("code") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "ot_activation_rule" ADD FOREIGN KEY ("activated_ot_core_code") REFERENCES "obligation_type_core" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "lifecycle_state" ADD FOREIGN KEY ("lifecycle_code") REFERENCES "lifecycle" ("code") ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -1076,7 +1099,6 @@ ALTER TABLE "business_intent_kpi" ADD FOREIGN KEY ("business_intent_id") REFEREN
 
 ALTER TABLE "product_intent" ADD FOREIGN KEY ("business_intent_id") REFERENCES "business_intent" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "product_intent" ADD FOREIGN KEY ("nature_element_code") REFERENCES "obligation_element" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "product_intent" ADD FOREIGN KEY ("archetype_code") REFERENCES "financial_obligation_archetype" ("code") DEFERRABLE INITIALLY IMMEDIATE;
 

@@ -1,0 +1,723 @@
+Date: Wed, 8 Jul 2026 14:52:34 +0000 (UTC)
+Message-ID: <60206420.5.1783522354125@fd5c202e5dad>
+Subject: Exported From Confluence
+MIME-Version: 1.0
+Content-Type: multipart/related; 
+	boundary="----=_Part_4_1142785693.1783522354125"
+
+------=_Part_4_1142785693.1783522354125
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///C:/exported.html
+
+<html xmlns:o=3D'urn:schemas-microsoft-com:office:office'
+      xmlns:w=3D'urn:schemas-microsoft-com:office:word'
+      xmlns:v=3D'urn:schemas-microsoft-com:vml'
+      xmlns=3D'urn:w3-org-ns:HTML'>
+<head>
+    <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8=
+">
+    <title>L=C3=B5i Ngh=C4=A9a V=E1=BB=A5 T=C3=A0i Ch=C3=ADnh C=E1=BB=A7a S=
+=E1=BA=A3n Ph=E1=BA=A9m Vay</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:TargetScreenSize>1024x640</o:TargetScreenSize>
+            <o:PixelsPerInch>72</o:PixelsPerInch>
+            <o:AllowPNG/>
+        </o:OfficeDocumentSettings>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>90</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+                <!--
+        @page Section1 {
+            size: 8.5in 11.0in;
+            margin: 1.0in;
+            mso-header-margin: .5in;
+            mso-footer-margin: .5in;
+            mso-paper-source: 0;
+        }
+
+        table {
+            border: solid 1px;
+            border-collapse: collapse;
+        }
+
+        table td, table th {
+            border: solid 1px;
+            padding: 5px;
+        }
+
+        td {
+            page-break-inside: avoid;
+        }
+
+        tr {
+            page-break-after: avoid;
+        }
+
+        div.Section1 {
+            page: Section1;
+        }
+
+        /* Confluence print stylesheet. Common to all themes for print medi=
+a */
+/* Full of !important until we improve batching for print CSS */
+
+@media print {
+    #main {
+        padding-bottom: 1em !important; /* The default padding of 6em is to=
+o much for printouts */
+    }
+
+    body {
+        font: var(--ds-font-body-small, Arial, Helvetica, FreeSans, sans-se=
+rif);
+    }
+
+    body, #full-height-container, #main, #page, #content, .has-personal-sid=
+ebar #content {
+        background: var(--ds-surface, #fff) !important;
+        color: var(--ds-text, #000) !important;
+        border: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    a, a:link, a:visited, a:focus, a:hover, a:active {
+        color: var(--ds-text, #000);
+    }
+
+    #content h1,
+    #content h2,
+    #content h3,
+    #content h4,
+    #content h5,
+    #content h6 {
+        page-break-after: avoid;
+    }
+
+    pre {
+        font: var(--ds-font-code, Monaco, "Courier New", monospace);
+    }
+
+    #header,
+    .aui-header-inner,
+    #navigation,
+    #sidebar,
+    .sidebar,
+    #personal-info-sidebar,
+    .ia-fixed-sidebar,
+    .page-actions,
+    .navmenu,
+    .ajs-menu-bar,
+    .noprint,
+    .inline-control-link,
+    .inline-control-link a,
+    a.show-labels-editor,
+    .global-comment-actions,
+    .comment-actions,
+    .quick-comment-container,
+    #addcomment {
+        display: none !important;
+    }
+
+    /* CONF-28544 cannot print multiple pages in IE */
+    #splitter-content {
+        position: relative !important;
+    }
+
+    .comment .date::before {
+        content: none !important; /* remove middot for print view */
+    }
+
+    h1.pagetitle img {
+        height: auto;
+        width: auto;
+    }
+
+    .print-only {
+        display: block;
+    }
+
+    #footer {
+        position: relative !important; /* CONF-17506 Place the footer at en=
+d of the content */
+        margin: 0;
+        padding: 0;
+        background: none;
+        clear: both;
+    }
+
+    #poweredby {
+        border-top: none;
+        background: none;
+    }
+
+    #poweredby li.print-only {
+        display: list-item;
+        font-style: italic;
+    }
+
+    #poweredby li.noprint {
+        display: none;
+    }
+
+    /* no width controls in print */
+    .wiki-content .table-wrap,
+    .wiki-content p,
+    .panel .codeContent,
+    .panel .codeContent pre,
+    .image-wrap {
+        overflow: visible !important;
+    }
+
+    /* TODO - should this work? */
+    #children-section,
+    #comments-section .comment,
+    #comments-section .comment .comment-body,
+    #comments-section .comment .comment-content,
+    #comments-section .comment p {
+        page-break-inside: avoid;
+    }
+
+    #page-children a {
+        text-decoration: none;
+    }
+
+    /**
+     hide twixies
+
+     the specificity here is a hack because print styles
+     are getting loaded before the base styles. */
+    #comments-section.pageSection .section-header,
+    #comments-section.pageSection .section-title,
+    #children-section.pageSection .section-header,
+    #children-section.pageSection .section-title,
+    .children-show-hide {
+        padding-left: 0;
+        margin-left: 0;
+    }
+
+    .children-show-hide.icon {
+        display: none;
+    }
+
+    /* personal sidebar */
+    .has-personal-sidebar #content {
+        margin-right: 0px;
+    }
+
+    .has-personal-sidebar #content .pageSection {
+        margin-right: 0px;
+    }
+
+    .no-print, .no-print * {
+        display: none !important;
+    }
+}
+-->
+    </style>
+</head>
+<body>
+    <h1>L=C3=B5i Ngh=C4=A9a V=E1=BB=A5 T=C3=A0i Ch=C3=ADnh C=E1=BB=A7a S=E1=
+=BA=A3n Ph=E1=BA=A9m Vay</h1>
+    <div class=3D"Section1">
+        <h2 local-id=3D"2d4530228470" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=
+=C3=A0iCh=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-1.Xu=E1=BA=A5tph=C3=
+=A1t=C4=91i=E1=BB=83m">1. Xu=E1=BA=A5t ph=C3=A1t =C4=91i=E1=BB=83m</h2>
+<p local-id=3D"64154f26471c">S=E1=BA=A3n ph=E1=BA=A9m vay kh=C3=B4ng ph=E1=
+=BA=A3i l=C3=A0 =C4=91=C3=ADch =C4=91=E1=BA=BFn =E2=80=94 n=C3=B3 l=C3=A0 <=
+strong>khu=C3=B4n</strong> =C4=91=E1=BB=83 sinh ra c=C3=A1c kho=E1=BA=A3n v=
+ay th=E1=BB=B1c t=E1=BA=BF (obligation instances). V=C3=AC v=E1=BA=ADy, b=
+=E1=BA=A3n ch=E1=BA=A5t c=E1=BB=A7a m=E1=BB=99t s=E1=BA=A3n ph=E1=BA=A9m va=
+y n=E1=BA=B1m =E1=BB=9F vi=E1=BB=87c: <strong>n=C3=B3 quy =C4=91=E1=BB=8Bnh=
+ tr=C6=B0=E1=BB=9Bc t=E1=BA=ADp h=E1=BB=A3p ngh=C4=A9a v=E1=BB=A5 m=C3=A0 b=
+=E1=BA=A5t k=E1=BB=B3 kho=E1=BA=A3n vay n=C3=A0o sinh ra t=E1=BB=AB n=C3=B3=
+ c=C5=A9ng ph=E1=BA=A3i mang theo.</strong></p>
+<p local-id=3D"752f166e822a">N=C3=B3i c=C3=A1ch kh=C3=A1c: mu=E1=BB=91n hi=
+=E1=BB=83u s=E1=BA=A3n ph=E1=BA=A9m vay, ph=E1=BA=A3i hi=E1=BB=83u n=C3=B3 =
+=C4=91ang <em>quy =C4=91=E1=BB=8Bnh ngh=C4=A9a v=E1=BB=A5</em> nh=C6=B0 th=
+=E1=BA=BF n=C3=A0o =E2=80=94 kh=C3=B4ng ph=E1=BA=A3i n=C3=B3 c=C3=B3 bao nh=
+i=C3=AAu tr=C6=B0=E1=BB=9Dng d=E1=BB=AF li=E1=BB=87u hay giao di=E1=BB=87n =
+ra sao.</p>
+<hr local-id=3D"487342a0-7d1a-4272-86eb-74d6d755c7c1">
+<h2 local-id=3D"e214fb077512" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-2.=C4=90=E1=BB=8Bnhngh=C4=A9a=
+:Ngh=C4=A9av=E1=BB=A5t=C3=A0ich=C3=ADnhl=C3=A0g=C3=AC?">2. =C4=90=E1=BB=8Bn=
+h ngh=C4=A9a: Ngh=C4=A9a v=E1=BB=A5 t=C3=A0i ch=C3=ADnh l=C3=A0 g=C3=AC?</h=
+2>
+<blockquote local-id=3D"468349a3-bf3a-4b20-9d3d-48953f4c6d24">
+<p local-id=3D"77405c509a5f"><strong>Ngh=C4=A9a v=E1=BB=A5 t=C3=A0i ch=C3=
+=ADnh</strong> =3D cam k=E1=BA=BFt gi=E1=BB=AFa t=E1=BB=91i thi=E1=BB=83u 2=
+ b=C3=AAn, trong =C4=91=C3=B3 m=E1=BB=99t b=C3=AAn ph=E1=BA=A3i chuy=E1=BB=
+=83n giao m=E1=BB=99t gi=C3=A1 tr=E1=BB=8B cho b=C3=AAn c=C3=B2n l=E1=BA=A1=
+i, theo =C4=91i=E1=BB=81u ki=E1=BB=87n =E2=80=93 th=E1=BB=9Di gian =E2=80=
+=93 ph=C6=B0=C6=A1ng th=E1=BB=A9c x=C3=A1c =C4=91=E1=BB=8Bnh.</p>
+</blockquote>
+<p local-id=3D"f310b937af9a">T=E1=BB=AB =C4=91=E1=BB=8Bnh ngh=C4=A9a n=C3=
+=A0y, <strong>6 c=C3=A2u h=E1=BB=8Fi b=E1=BA=AFt bu=E1=BB=99c</strong> ph=
+=E1=BA=A3i =C4=91=C6=B0=E1=BB=A3c tr=E1=BA=A3 l=E1=BB=9Di =C4=91=E1=BB=83 m=
+=E1=BB=99t ngh=C4=A9a v=E1=BB=A5 =C4=91=C6=B0=E1=BB=A3c x=C3=A1c =C4=91=E1=
+=BB=8Bnh =C4=91=E1=BA=A7y =C4=91=E1=BB=A7:</p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"d2=
+2136ff-24fb-47c1-a82d-4dc5bbba81f8" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"16dd4bf6-c4cf-47a3-8707-f6b46b100b54">
+<th data-local-id=3D"fa7f9ebb-101e-4fa5-a445-4dafa272f846" class=3D"conflue=
+nceTh">
+<p local-id=3D"88fb1200c2b1">#</p></th>
+<th data-local-id=3D"2df21c1c-77de-41ec-b159-ef1d74cabe77" class=3D"conflue=
+nceTh">
+<p local-id=3D"aa1eadba159b">C=C3=A2u h=E1=BB=8Fi</p></th>
+<th data-local-id=3D"cf203ce5-98ed-41b6-958a-a3885936ccbe" class=3D"conflue=
+nceTh">
+<p local-id=3D"e8f59d7ae0c7">T=C3=AAn chi=E1=BB=81u (OET)</p></th>
+</tr>
+<tr data-local-id=3D"0d14b4d1-c6d9-4a8a-a6d6-ea1eee2e730d">
+<td data-local-id=3D"1b8ff0a4-be78-4959-98da-c7f78838bf8f" class=3D"conflue=
+nceTd">
+<p local-id=3D"5a14567de113">1</p></td>
+<td data-local-id=3D"54532564-0afc-4d3b-93cb-672187cd477d" class=3D"conflue=
+nceTd">
+<p local-id=3D"8b13de217918">Ai chuy=E1=BB=83n giao cho ai?</p></td>
+<td data-local-id=3D"73e5333e-e9d7-4a6c-8e29-a740236f36bb" class=3D"conflue=
+nceTd">
+<p local-id=3D"5800b4d4d526"><strong>Party</strong></p></td>
+</tr>
+<tr data-local-id=3D"982fea84-2c9c-4e69-b267-6f46fc6cd3b1">
+<td data-local-id=3D"754d3054-ad51-49bd-9800-11abf967daab" class=3D"conflue=
+nceTd">
+<p local-id=3D"0a119e0dca3d">2</p></td>
+<td data-local-id=3D"3feaa6e6-6ce7-4a86-a0fc-3e2fddfa3b86" class=3D"conflue=
+nceTd">
+<p local-id=3D"214b38d9efeb">Gi=C3=A1 tr=E1=BB=8B chuy=E1=BB=83n giao l=C3=
+=A0 g=C3=AC, v=E1=BA=ADn =C4=91=E1=BB=99ng ra sao?</p></td>
+<td data-local-id=3D"f20849a9-9103-4eec-bba1-4eb305c73461" class=3D"conflue=
+nceTd">
+<p local-id=3D"cfe5002d342f"><strong>Value Structure</strong></p></td>
+</tr>
+<tr data-local-id=3D"47f07ddb-2e52-46bf-a77b-f5c25a5ff123">
+<td data-local-id=3D"27d3b27c-a01d-4276-9e0a-c0823bdbcdf4" class=3D"conflue=
+nceTd">
+<p local-id=3D"22ef77de4530">3</p></td>
+<td data-local-id=3D"5e39f05d-e9cc-45b3-bfbb-c83227942d84" class=3D"conflue=
+nceTd">
+<p local-id=3D"16ecfed99cac">=C4=90i=E1=BB=81u g=C3=AC khi=E1=BA=BFn ngh=C4=
+=A9a v=E1=BB=A5 b=E1=BA=AFt =C4=91=E1=BA=A7u t=E1=BB=93n t=E1=BA=A1i?</p></=
+td>
+<td data-local-id=3D"70d4ac35-18df-4469-bfbe-5bad46939c09" class=3D"conflue=
+nceTd">
+<p local-id=3D"d5ce53fb6b98"><strong>Activation Logic</strong></p></td>
+</tr>
+<tr data-local-id=3D"04992b54-b3be-4e58-947c-e4ed5b1584a7">
+<td data-local-id=3D"6ac4dad2-c164-46d1-942e-dbc065f1fad9" class=3D"conflue=
+nceTd">
+<p local-id=3D"733098b93c6f">4</p></td>
+<td data-local-id=3D"3dedf82f-0c57-45bb-9ca7-c1f104ecafe8" class=3D"conflue=
+nceTd">
+<p local-id=3D"8e9e6b580b27">Ngh=C4=A9a v=E1=BB=A5 t=E1=BB=93n t=E1=BA=A1i/=
+ho=E1=BA=A1t =C4=91=E1=BB=99ng trong khung th=E1=BB=9Di gian n=C3=A0o?</p><=
+/td>
+<td data-local-id=3D"e72eeb78-cc93-4d42-96e2-4af7f6c9e43d" class=3D"conflue=
+nceTd">
+<p local-id=3D"43fe01260362"><strong>Time Structure</strong></p></td>
+</tr>
+<tr data-local-id=3D"849e416e-bc5c-4763-ad41-ed56e08de1fd">
+<td data-local-id=3D"208a1f5e-d9c8-447b-8743-dcff46305975" class=3D"conflue=
+nceTd">
+<p local-id=3D"ba4f163cbe41">5</p></td>
+<td data-local-id=3D"ff909d32-9dee-45a0-a16f-a7f7aca29808" class=3D"conflue=
+nceTd">
+<p local-id=3D"aae44656af22">Khi n=C3=A0o ngh=C4=A9a v=E1=BB=A5 =C4=91=C6=
+=B0=E1=BB=A3c coi l=C3=A0 ho=C3=A0n th=C3=A0nh?</p></td>
+<td data-local-id=3D"23ee4081-4a7c-4c75-8a3f-6d291d1f809e" class=3D"conflue=
+nceTd">
+<p local-id=3D"24ea695841e3"><strong>Fulfillment Logic</strong></p></td>
+</tr>
+<tr data-local-id=3D"1f47bc4b-c4a8-4366-a1a7-9843a1cc0c80">
+<td data-local-id=3D"0e8dab34-aa69-43ef-ad53-98ac617787b0" class=3D"conflue=
+nceTd">
+<p local-id=3D"6d1a3c11fe5c">6</p></td>
+<td data-local-id=3D"3ff95175-2bc2-4274-9feb-ff4914d270de" class=3D"conflue=
+nceTd">
+<p local-id=3D"575a21ec5b7c">Kh=C3=B4ng ho=C3=A0n th=C3=A0nh th=C3=AC x=E1=
+=BB=AD l=C3=BD tr=C3=AAn c=C6=A1 s=E1=BB=9F g=C3=AC?</p></td>
+<td data-local-id=3D"47fa7199-1a5d-4bed-8047-725759834b04" class=3D"conflue=
+nceTd">
+<p local-id=3D"192a64985246"><strong>Recovery Anchor</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"51e4d668cc7c">6 chi=E1=BB=81u n=C3=A0y g=E1=BB=8Di l=C3=A0 <=
+strong>OET (Obligation Element Type)</strong> =E2=80=94 =C4=91=C3=A2y l=C3=
+=A0 b=E1=BB=99 c=C3=A2u h=E1=BB=8Fi c=E1=BB=91 =C4=91=E1=BB=8Bnh, =C4=91=C3=
+=B3ng (closed set). C=C3=A2u tr=E1=BA=A3 l=E1=BB=9Di c=E1=BB=A5 th=E1=BB=83=
+ cho m=E1=BB=97i OET g=E1=BB=8Di l=C3=A0 <strong>OE (Obligation Element)</s=
+trong>.</p>
+<blockquote local-id=3D"6c1cc1bd-b489-4193-b743-7951f63a094d">
+<p local-id=3D"243206cce8ce">V=C3=AD d=E1=BB=A5: OET =3D Value Structure =
+=E2=86=92 OE =3D "G=E1=BB=91c kh=C3=B4ng t=C4=83ng, gi=E1=BA=A3m d=E1=BA=A7=
+n".</p>
+</blockquote>
+<hr local-id=3D"88b90e4b-00f6-447f-b22d-dc537065ade8">
+<h2 local-id=3D"02c3b7278e16" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-3.ObligationType(OT):khu=C3=
+=B4nngh=C4=A9av=E1=BB=A5c=E1=BB=A5th=E1=BB=83">3. Obligation Type (OT): khu=
+=C3=B4n ngh=C4=A9a v=E1=BB=A5 c=E1=BB=A5 th=E1=BB=83</h2>
+<p local-id=3D"b0cc3b04139c">Khi m=E1=BB=99t t=E1=BB=95 h=E1=BB=A3p OE <str=
+ong>ph=E1=BB=A7 =C4=91=E1=BB=A7 c=E1=BA=A3 6 chi=E1=BB=81u OET</strong>, ta=
+ c=C3=B3 m=E1=BB=99t khu=C3=B4n ngh=C4=A9a v=E1=BB=A5 ho=C3=A0n ch=E1=BB=89=
+nh =E2=80=94 g=E1=BB=8Di l=C3=A0 <strong>OT (Obligation Type)</strong>.</p>
+<p local-id=3D"075e9a4b1d46">D=E1=BB=B1a tr=C3=AAn th=E1=BB=B1c t=E1=BA=BF =
+nghi=E1=BB=87p v=E1=BB=A5, c=C3=A1c OT c=E1=BB=A7a s=E1=BA=A3n ph=E1=BA=A9m=
+ vay chia l=C3=A0m 2 nh=C3=B3m:</p>
+<p local-id=3D"2670d38526a1"><strong>Nh=C3=B3m c=E1=BB=91t l=C3=B5i</strong=
+> (lu=C3=B4n ph=E1=BA=A3i c=C3=B3):</p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"0e=
+47c6b6-63d8-4c78-9ba8-4e0eee8a1e96" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"7b88d225-8aad-4a82-b04d-d23853bc8384">
+<th data-local-id=3D"c6714d55-f9b2-4cbe-b12f-69a72cb77039" class=3D"conflue=
+nceTh">
+<p local-id=3D"afcc1da3b12a">OT</p></th>
+<th data-local-id=3D"c2edd2d8-5134-4142-8c61-9efafb699366" class=3D"conflue=
+nceTh">
+<p local-id=3D"1f6b48c144c4">B=E1=BA=A3n ch=E1=BA=A5t</p></th>
+</tr>
+<tr data-local-id=3D"c50eb44f-d9c8-41a2-a917-c05e599a993c">
+<td data-local-id=3D"17a410b2-1705-4201-a47b-f69e1eb65ddb" class=3D"conflue=
+nceTd">
+<p local-id=3D"b87d77f286e8">OT Gi=E1=BA=A3i ng=C3=A2n</p></td>
+<td data-local-id=3D"851aa68c-a523-4494-9ff5-a40088a6dd03" class=3D"conflue=
+nceTd">
+<p local-id=3D"c2ebd412802b">Ngh=C4=A9a v=E1=BB=A5 chuy=E1=BB=83n giao v=E1=
+=BB=91n g=E1=BB=91c: b=C3=AAn cho vay =E2=86=92 b=C3=AAn vay</p></td>
+</tr>
+<tr data-local-id=3D"49f9c820-0320-4ee0-a82d-7c43222e8c90">
+<td data-local-id=3D"5ef7572e-4498-41d6-983b-4ecc1736267f" class=3D"conflue=
+nceTd">
+<p local-id=3D"32a4e39be547">OT Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91c</p></td>
+<td data-local-id=3D"6fb54981-fe5c-4c06-866b-26d63786458a" class=3D"conflue=
+nceTd">
+<p local-id=3D"6020e180a09d">Ngh=C4=A9a v=E1=BB=A5 ho=C3=A0n tr=E1=BA=A3 v=
+=E1=BB=91n g=E1=BB=91c: b=C3=AAn vay =E2=86=92 b=C3=AAn cho vay</p></td>
+</tr>
+<tr data-local-id=3D"266e4c11-2a99-4e5b-9a66-3a70a3e8f951">
+<td data-local-id=3D"552eafc3-b795-4f95-aa23-052d15636fba" class=3D"conflue=
+nceTd">
+<p local-id=3D"e74087b4c78e">OT Tr=E1=BA=A3 l=C3=A3i</p></td>
+<td data-local-id=3D"f6f1ebd4-ca84-40af-9279-aff3a824a958" class=3D"conflue=
+nceTd">
+<p local-id=3D"434f5e4039ff">Ngh=C4=A9a v=E1=BB=A5 tr=E1=BA=A3 chi ph=C3=AD=
+ s=E1=BB=AD d=E1=BB=A5ng v=E1=BB=91n theo th=E1=BB=9Di gian</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"b65e8693006a"><strong>Nh=C3=B3m ph=E1=BB=A5 tr=E1=BB=A3</str=
+ong> (c=C3=B3 ho=E1=BA=B7c kh=C3=B4ng, t=C3=B9y s=E1=BA=A3n ph=E1=BA=A9m): =
+OT Ph=C3=AD, OT Ph=E1=BA=A1t, OT B=E1=BA=A3o hi=E1=BB=83m, OT B=C3=A0n giao=
+ t=C3=A0i s=E1=BA=A3n, v.v.</p>
+<hr local-id=3D"ca5dfd4b-e52b-4839-91cb-0f8ff00cbc8c">
+<h2 local-id=3D"98e2579d68f2" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-4.V=E1=BA=A5n=C4=91=E1=BB=81:=
+c=C3=A1cOT/OEkh=C3=B4ng=C4=91=E1=BB=99cl=E1=BA=ADpv=E1=BB=9Binhau">4. V=E1=
+=BA=A5n =C4=91=E1=BB=81: c=C3=A1c OT/OE kh=C3=B4ng =C4=91=E1=BB=99c l=E1=BA=
+=ADp v=E1=BB=9Bi nhau</h2>
+<p local-id=3D"2f1b3d74557b">M=E1=BB=99t s=E1=BA=A3n ph=E1=BA=A9m vay =3D t=
+=E1=BA=ADp OT + OE c=E1=BB=A5 th=E1=BB=83. Nh=C6=B0ng <strong>kh=C3=B4ng th=
+=E1=BB=83 ch=E1=BB=8Dn t=C3=B9y ti=E1=BB=87n</strong>, v=C3=AC gi=E1=BB=AFa=
+ ch=C3=BAng t=E1=BB=93n t=E1=BA=A1i r=C3=A0ng bu=E1=BB=99c ch=C3=A9o. V=C3=
+=AD d=E1=BB=A5:</p>
+<ul local-id=3D"323207f1-846e-4e16-bffb-3dbcc4b9957f">
+<li local-id=3D"1638f2cf-8cb5-4a5d-8e4a-f3a77392525f">
+<p local-id=3D"7e3f5ebb83a9">N=E1=BA=BFu <strong>Gi=E1=BA=A3i ng=C3=A2n</st=
+rong> cho ph=C3=A9p r=C3=BAt v=E1=BB=91n nhi=E1=BB=81u l=E1=BA=A7n =E2=86=
+=92 <strong>Ho=C3=A0n tr=E1=BA=A3 g=E1=BB=91c</strong> b=E1=BA=AFt bu=E1=BB=
+=99c ph=E1=BA=A3i theo <em>s=E1=BB=91 d=C6=B0 bi=E1=BA=BFn =C4=91=E1=BB=99n=
+g</em>, kh=C3=B4ng th=E1=BB=83 l=C3=A0 l=E1=BB=8Bch kh=E1=BA=A5u hao =C4=91=
+=C6=A1n gi=E1=BA=A3n m=E1=BB=99t chi=E1=BB=81u.</p></li>
+<li local-id=3D"bfd8177e-6817-49e2-af0b-4cf36179c5cb">
+<p local-id=3D"d0bed25058f2"><strong>Recovery Anchor</strong> c=E1=BB=A7a H=
+o=C3=A0n tr=E1=BA=A3 g=E1=BB=91c v=C3=A0 Tr=E1=BA=A3 l=C3=A3i <strong>lu=C3=
+=B4n ph=E1=BA=A3i gi=E1=BB=91ng nhau</strong> trong c=C3=B9ng m=E1=BB=99t h=
+=E1=BB=A3p =C4=91=E1=BB=93ng.</p></li>
+</ul>
+<p local-id=3D"4c3388c1790f">=E2=86=92 C=E1=BA=A7n m=E1=BB=99t <strong>t=E1=
+=BA=A7ng trung gian</strong> =C4=91=E1=BB=A9ng gi=E1=BB=AFa <em>S=E1=BA=A3n=
+ ph=E1=BA=A9m vay</em> v=C3=A0 <em>Ngh=C4=A9a v=E1=BB=A5 t=C3=A0i ch=C3=ADn=
+h</em> =C4=91=E1=BB=83 kh=C3=B3a tr=C6=B0=E1=BB=9Bc c=C3=A1c r=C3=A0ng bu=
+=E1=BB=99c n=C3=A0y, thay v=C3=AC =C4=91=E1=BB=83 ng=C6=B0=E1=BB=9Di d=C3=
+=B9ng t=E1=BB=B1 ph=E1=BB=91i h=E1=BB=A3p th=E1=BB=A7 c=C3=B4ng v=C3=A0 d=
+=E1=BB=85 sai. T=E1=BA=A7ng =C4=91=C3=B3 l=C3=A0 <strong>FOA</strong>.</p>
+<hr local-id=3D"5e47a65b-b484-4083-b284-644ae862c9e3">
+<h2 local-id=3D"0251a53cc9e4" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-5.FOA:t=E1=BA=A7ngquy=C4=91=
+=E1=BB=8Bnhr=C3=A0ngbu=E1=BB=99c">5. FOA: t=E1=BA=A7ng quy =C4=91=E1=BB=8Bn=
+h r=C3=A0ng bu=E1=BB=99c</h2>
+<p local-id=3D"e1002c502603"><strong>FOA quy =C4=91=E1=BB=8Bnh OE n=C3=A0o =
+=C4=91=C6=B0=E1=BB=A3c ph=C3=A9p xu=E1=BA=A5t hi=E1=BB=87n cho t=E1=BB=ABng=
+ OET c=E1=BB=A7a t=E1=BB=ABng OT b=C3=AAn trong n=C3=B3</strong> =E2=80=94 =
+n=C3=B3 l=C3=A0 b=E1=BB=99 l=E1=BB=8Dc/khung r=C3=A0ng bu=E1=BB=99c, kh=C3=
+=B4ng ph=E1=BA=A3i l=C3=A0 b=E1=BA=A3n th=C3=A2n ngh=C4=A9a v=E1=BB=A5.</p>
+<p local-id=3D"d012f1ed0dbf"><strong>Ti=C3=AAu ch=C3=AD ph=C3=A2n lo=E1=BA=
+=A1i FOA:</strong> <em>ai l=C3=A0 ng=C6=B0=E1=BB=9Di ki=E1=BB=83m so=C3=A1t=
+/k=C3=ADch ho=E1=BA=A1t vi=E1=BB=87c ngh=C4=A9a v=E1=BB=A5 di=E1=BB=85n ra?=
+</em></p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"d6=
+3c30c4-07d3-4e15-824e-8125c9861c53" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"2dba1f9e-7084-4ebf-afb1-25744443e1e1">
+<th data-local-id=3D"45aafa37-1f0d-48e4-9cd1-e17c2a37be92" class=3D"conflue=
+nceTh">
+<p local-id=3D"d283685fbdbe">FOA</p></th>
+<th data-local-id=3D"4a82e70e-5e39-4e57-88f5-1d10fad0bd4b" class=3D"conflue=
+nceTh">
+<p local-id=3D"c77c5895cf09">Ai ki=E1=BB=83m so=C3=A1t k=C3=ADch ho=E1=BA=
+=A1t</p></th>
+</tr>
+<tr data-local-id=3D"496c9831-bbc4-4904-886f-0fecc11d2784">
+<td data-local-id=3D"37b6611d-0d38-4305-8a2b-24e0a90224c6" class=3D"conflue=
+nceTd">
+<p local-id=3D"046f66e4f813"><strong>Term Loan</strong></p></td>
+<td data-local-id=3D"0f59a264-6ae0-4af2-bf49-1ce78ca55cf9" class=3D"conflue=
+nceTd">
+<p local-id=3D"32abfa2a70da">L=E1=BB=8Bch tr=E1=BA=A3 n=E1=BB=A3 c=E1=BB=91=
+ =C4=91=E1=BB=8Bnh, so=E1=BA=A1n s=E1=BA=B5n theo h=E1=BB=A3p =C4=91=E1=BB=
+=93ng</p></td>
+</tr>
+<tr data-local-id=3D"c39fc675-8416-4a9b-ae1f-c9cd7dee3bd0">
+<td data-local-id=3D"b021ab8c-5e35-41d4-9387-7186b924cca5" class=3D"conflue=
+nceTd">
+<p local-id=3D"2c26ffee487b"><strong>Revolving</strong></p></td>
+<td data-local-id=3D"06b3a880-3664-495d-89d3-a17ac2e630db" class=3D"conflue=
+nceTd">
+<p local-id=3D"a621d6c2fd5f">Ng=C6=B0=E1=BB=9Di vay t=E1=BB=B1 quy=E1=BA=BF=
+t =C4=91=E1=BB=8Bnh r=C3=BAt/tr=E1=BA=A3 trong h=E1=BA=A1n m=E1=BB=A9c</p><=
+/td>
+</tr>
+<tr data-local-id=3D"3ed13eed-b2bc-4cf2-b043-418704fc311a">
+<td data-local-id=3D"1307115e-31ff-4fe5-8799-fa1fbfe0dbcb" class=3D"conflue=
+nceTd">
+<p local-id=3D"ac5351d7ad93"><strong>Conditional</strong></p></td>
+<td data-local-id=3D"47fa6265-9bc4-48d5-8c9e-60f60268d54d" class=3D"conflue=
+nceTd">
+<p local-id=3D"ee9a5e37eb9a">M=E1=BB=99t s=E1=BB=B1 ki=E1=BB=87n b=C3=AAn n=
+go=C3=A0i h=C3=A0nh vi tr=E1=BA=A3 n=E1=BB=A3 th=C3=B4ng th=C6=B0=E1=BB=9Dn=
+g k=C3=ADch ho=E1=BA=A1t</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p local-id=3D"463d50a46a31"><strong>V=C3=AC sao ti=C3=AAu ch=C3=AD n=C3=A0=
+y l=C3=A0 b=E1=BA=A3n ch=E1=BA=A5t, kh=C3=B4ng ph=E1=BA=A3i t=C3=B9y ch=E1=
+=BB=8Dn ph=C3=A2n lo=E1=BA=A1i ch=E1=BB=A7 quan?</strong> V=C3=AC ch=E1=BB=
+=89 c=E1=BA=A7n =C4=91=E1=BB=95i 1 trong 3 c=C3=A2u tr=E1=BA=A3 l=E1=BB=9Di=
+ tr=C3=AAn, OE tr=E1=BA=A3 l=E1=BB=9Di cho c=E1=BA=A3 3 OT c=E1=BB=91t l=C3=
+=B5i s=E1=BA=BD thay =C4=91=E1=BB=95i =C4=91=C3=A1ng k=E1=BB=83, k=C3=A9o t=
+heo c=C3=A1ch c=C3=A1c kho=E1=BA=A3n vay (obligation instances) v=E1=BA=ADn=
+ h=C3=A0nh trong th=E1=BB=B1c t=E1=BA=BF c=C5=A9ng kh=C3=A1c nhau h=E1=BA=
+=B3n. =C4=90=C3=A2y l=C3=A0 ranh gi=E1=BB=9Bi t=E1=BA=A1o ra s=E1=BB=B1 kh=
+=C3=A1c bi=E1=BB=87t th=E1=BA=ADt, kh=C3=B4ng ph=E1=BA=A3i ranh gi=E1=BB=9B=
+i =C4=91=E1=BA=B7t ra cho g=E1=BB=8Dn.</p>
+<hr local-id=3D"9e29b484-6e1a-4633-9e0f-7aea38096132">
+<h2 local-id=3D"a40f716ad95d" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-6.=C4=90i=E1=BB=83md=E1=BB=85=
+nh=E1=BA=A7m:FOAc=C3=B3quy=E1=BA=BFt=C4=91=E1=BB=8BnhOTn=C3=A0ot=E1=BB=93nt=
+=E1=BA=A1ikh=C3=B4ng?">6. =C4=90i=E1=BB=83m d=E1=BB=85 nh=E1=BA=A7m: FOA c=
+=C3=B3 quy=E1=BA=BFt =C4=91=E1=BB=8Bnh OT n=C3=A0o t=E1=BB=93n t=E1=BA=A1i =
+kh=C3=B4ng?</h2>
+<p local-id=3D"d977de4974bf"><strong>C=C3=A2u h=E1=BB=8Fi ki=E1=BB=83m =C4=
+=91=E1=BB=8Bnh:</strong> V=C3=AC sao s=E1=BA=A3n ph=E1=BA=A9m T=C3=ADn ch=
+=E1=BA=A5p, d=C3=B9 ch=E1=BB=8Dn FOA n=C3=A0o, c=C5=A9ng kh=C3=B4ng c=E1=BA=
+=A7n OT B=C3=A0n giao t=C3=A0i s=E1=BA=A3n?</p>
+<p local-id=3D"6defa2452cc2"><strong>Tr=E1=BA=A3 l=E1=BB=9Di:</strong> =C4=
+=90=C3=A2y <strong>kh=C3=B4ng ph=E1=BA=A3i</strong> do b=E1=BA=A3n th=C3=A2=
+n FOA quy=E1=BA=BFt =C4=91=E1=BB=8Bnh. FOA ch=E1=BB=89 <strong>m=E1=BB=9F r=
+a m=E1=BB=99t menu l=E1=BB=B1a ch=E1=BB=8Dn</strong> =E2=80=94 v=C3=AD d=E1=
+=BB=A5 v=E1=BB=9Bi Recovery Anchor, c=E1=BA=A3 "T=C3=A0i s=E1=BA=A3n c=E1=
+=BA=A7m c=E1=BB=91" v=C3=A0 "T=C3=ADn ch=E1=BA=A5p" =C4=91=E1=BB=81u =C4=91=
+=C6=B0=E1=BB=A3c ph=C3=A9p (pos) =E1=BB=9F ph=E1=BA=A7n l=E1=BB=9Bn Nature.=
+ FOA kh=C3=B4ng =C3=A9p ch=E1=BB=8Dn b=C3=AAn n=C3=A0o.</p>
+<p local-id=3D"fed71999554b"><strong>Ng=C6=B0=E1=BB=9Di x=C3=A2y d=E1=BB=B1=
+ng s=E1=BA=A3n ph=E1=BA=A9m</strong> m=E1=BB=9Bi l=C3=A0 ng=C6=B0=E1=BB=9Di=
+ ch=E1=BB=8Dn gi=C3=A1 tr=E1=BB=8B c=E1=BB=A5 th=E1=BB=83 trong menu =C4=91=
+=C3=B3 =E2=80=94 v=C3=A0 <strong>ch=C3=ADnh l=E1=BB=B1a ch=E1=BB=8Dn OE c=
+=E1=BB=A5 th=E1=BB=83 n=C3=A0y</strong>, ch=E1=BB=A9 kh=C3=B4ng ph=E1=BA=A3=
+i FOA, l=C3=A0 th=E1=BB=A9 quy=E1=BA=BFt =C4=91=E1=BB=8Bnh m=E1=BB=99t OT p=
+h=E1=BB=A5 tr=E1=BB=A3 c=C3=B3 =C4=91=C6=B0=E1=BB=A3c k=C3=ADch ho=E1=BA=A1=
+t hay kh=C3=B4ng.</p>
+<p local-id=3D"b4f9f3ce886c">Do =C4=91=C3=B3, quy t=E1=BA=AFc k=C3=ADch ho=
+=E1=BA=A1t OT ph=E1=BB=A5 tr=E1=BB=A3 l=C3=A0 <strong>m=E1=BB=99t b=E1=BA=
+=A3ng tra =C4=91=E1=BB=99c l=E1=BA=ADp v=E1=BB=9Bi FOA</strong>, map tr=E1=
+=BB=B1c ti=E1=BA=BFp t=E1=BB=AB OE c=E1=BB=A5 th=E1=BB=83 =E2=86=92 b=E1=BA=
+=ADt/t=E1=BA=AFt OT:</p>
+<div class=3D"table-wrap">
+<table data-table-width=3D"760" data-layout=3D"default" data-local-id=3D"d4=
+8d050b-00c0-4152-9aaf-57f7750a35ba" class=3D"confluenceTable">
+<tbody>
+<tr data-local-id=3D"339c5d61-c591-4d75-8fd5-3dd2e2161504">
+<th data-local-id=3D"6eededf4-9f49-46ea-b5df-810ebe3f8503" class=3D"conflue=
+nceTh">
+<p local-id=3D"baa2e7a92b47">OE =C4=91=C6=B0=E1=BB=A3c ch=E1=BB=8Dn</p></th=
+>
+<th data-local-id=3D"91753e48-6301-429b-8db6-a1926360ca39" class=3D"conflue=
+nceTh">
+<p local-id=3D"b85f3f358479">OT ph=E1=BB=A5 tr=E1=BB=A3 =C4=91=C6=B0=E1=BB=
+=A3c k=C3=ADch ho=E1=BA=A1t</p></th>
+</tr>
+<tr data-local-id=3D"b7027522-974c-45b8-80c5-89b7980a4718">
+<td data-local-id=3D"fe052e60-8558-4ab1-bd1b-f7caf430508e" class=3D"conflue=
+nceTd">
+<p local-id=3D"7b3470d2a0c4">Recovery Anchor =3D "T=C3=A0i s=E1=BA=A3n c=E1=
+=BA=A7m c=E1=BB=91"</p></td>
+<td data-local-id=3D"0f0c4d51-3d01-49a8-bbe7-8672e1d2eeed" class=3D"conflue=
+nceTd">
+<p local-id=3D"69a9b10abf0c">OT B=C3=A0n giao t=C3=A0i s=E1=BA=A3n =E2=86=
+=92 <strong>ON</strong></p></td>
+</tr>
+<tr data-local-id=3D"5f256720-3c26-44e5-85b8-e2f2c57a174e">
+<td data-local-id=3D"88fad6e6-581b-4505-8238-e5064607e4a4" class=3D"conflue=
+nceTd">
+<p local-id=3D"9e6dba7a28c6">Recovery Anchor =3D "T=C3=ADn ch=E1=BA=A5p"</p=
+></td>
+<td data-local-id=3D"60989611-2698-4b43-9815-e1051e5381cb" class=3D"conflue=
+nceTd">
+<p local-id=3D"519e03044e31">Kh=C3=B4ng OT ph=E1=BB=A5 tr=E1=BB=A3 n=C3=A0o=
+ li=C3=AAn quan =C4=91=C6=B0=E1=BB=A3c k=C3=ADch ho=E1=BA=A1t</p></td>
+</tr>
+<tr data-local-id=3D"68e05071-360c-47c5-9ac2-9826afa2515d">
+<td data-local-id=3D"48744a29-5298-4e23-a9f4-6d0f1a2e3593" class=3D"conflue=
+nceTd">
+<p local-id=3D"9279ee3b07cb">S=E1=BA=A3n ph=E1=BA=A9m y=C3=AAu c=E1=BA=A7u =
+mua b=E1=BA=A3o hi=E1=BB=83m kho=E1=BA=A3n vay</p></td>
+<td data-local-id=3D"a9227d8f-8d55-4ed5-a54c-b9df16483929" class=3D"conflue=
+nceTd">
+<p local-id=3D"35f7b26f533b">OT B=E1=BA=A3o hi=E1=BB=83m =E2=86=92 <strong>=
+ON</strong></p></td>
+</tr>
+<tr data-local-id=3D"c0cb1876-e1a7-4017-8390-39c7463d786b">
+<td data-local-id=3D"38284e57-20ae-48d8-b44e-63840defe237" class=3D"conflue=
+nceTd">
+<p local-id=3D"cb1263d079d9">S=E1=BA=A3n ph=E1=BA=A9m =C3=A1p d=E1=BB=A5ng =
+l=C3=A3i ph=E1=BA=A1t tr=E1=BB=85 h=E1=BA=A1n</p></td>
+<td data-local-id=3D"6ec056e6-9110-46d9-8a91-b0d661f7378c" class=3D"conflue=
+nceTd">
+<p local-id=3D"1b4b133eef1f">OT Ph=E1=BA=A1t =E2=86=92 <strong>ON</strong><=
+/p></td>
+</tr>
+<tr data-local-id=3D"294f2b0a-6e57-40ff-ade9-0b35b90b7852">
+<td data-local-id=3D"b3216ebc-62c7-43e6-940b-c171f40cc572" class=3D"conflue=
+nceTd">
+<p local-id=3D"797431f5ee95">S=E1=BA=A3n ph=E1=BA=A9m ph=C3=A1t sinh ph=C3=
+=AD li=C3=AAn quan (th=E1=BA=A9m =C4=91=E1=BB=8Bnh, tr=E1=BA=A3 tr=C6=B0=E1=
+=BB=9Bc h=E1=BA=A1n...)</p></td>
+<td data-local-id=3D"f8ac3f53-f764-4fcc-910a-8d85d865bab7" class=3D"conflue=
+nceTd">
+<p local-id=3D"e8eab3fc1acb">OT Ph=C3=AD =E2=86=92 <strong>ON</strong></p><=
+/td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote local-id=3D"48890082-6c0f-4602-b027-6ab02e5e365d">
+<p local-id=3D"55816d4f49d2"><strong>Ghi nh=E1=BB=9B:</strong> FOA g=C3=A1c=
+ c=E1=BB=95ng <strong>OE</strong> (=C4=91=C6=B0=E1=BB=A3c ph=C3=A9p hay kh=
+=C3=B4ng), kh=C3=B4ng g=C3=A1c c=E1=BB=95ng <strong>OT</strong> (c=C3=B3 t=
+=E1=BB=93n t=E1=BA=A1i hay kh=C3=B4ng). S=E1=BB=B1 t=E1=BB=93n t=E1=BA=A1i =
+c=E1=BB=A7a OT ph=E1=BB=A5 tr=E1=BB=A3 l=C3=A0 h=E1=BB=87 qu=E1=BA=A3 gi=C3=
+=A1n ti=E1=BA=BFp, =C4=91i qua l=E1=BB=B1a ch=E1=BB=8Dn OE.</p>
+</blockquote>
+<hr local-id=3D"305d44f1-d03a-4d42-8bcb-95d8773ee89b">
+<h2 local-id=3D"b645c806cec3" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-7.OTF:t=E1=BA=A7nggomnh=C3=B3=
+m=C4=91=E1=BB=83t=C3=A1is=E1=BB=ADd=E1=BB=A5ng">7. OTF: t=E1=BA=A7ng gom nh=
+=C3=B3m =C4=91=E1=BB=83 t=C3=A1i s=E1=BB=AD d=E1=BB=A5ng</h2>
+<p local-id=3D"1e921068a1a4">V=C3=AC m=E1=BB=A5c ti=C3=AAu cu=E1=BB=91i lu=
+=C3=B4n l=C3=A0 t=E1=BA=A1o ra c=C3=A1c ph=E1=BA=A7n <strong>t=C3=A1i s=E1=
+=BB=AD d=E1=BB=A5ng =C4=91=C6=B0=E1=BB=A3c</strong>, ta c=E1=BA=A7n th=C3=
+=AAm m=E1=BB=99t t=E1=BA=A7ng gom m=E1=BB=8Di khung c=C3=B3 c=C3=B9ng c=E1=
+=BA=A5u tr=C3=BAc OT v=C3=A0 c=C3=B9ng OE =C4=91=C3=A3 =C4=91i=E1=BB=81n c=
+=E1=BB=A5 th=E1=BB=83 l=E1=BA=A1i v=E1=BB=9Bi nhau. T=E1=BA=A7ng n=C3=A0y g=
+=E1=BB=8Di l=C3=A0 <strong>OTF (Obligation Type Family)</strong>.</p>
+<blockquote local-id=3D"e3b0667b-f66f-4ef5-9ee8-ff51ab6a4efe">
+<p local-id=3D"a5aa412e8b0f"><strong>OTF =3D OT + OE c=E1=BB=A5 th=E1=BB=83=
+</strong> (m=E1=BB=99t OT =C4=91=C3=A3 =C4=91=C6=B0=E1=BB=A3c "=C4=91i=E1=
+=BB=81n =C4=91=E1=BA=A7y" b=E1=BA=B1ng c=C3=A1c OE x=C3=A1c =C4=91=E1=BB=8B=
+nh, s=E1=BA=B5n s=C3=A0ng =C4=91=E1=BB=83 t=C3=A1i s=E1=BB=AD d=E1=BB=A5ng =
+nhi=E1=BB=81u l=E1=BA=A7n)</p>
+</blockquote>
+<blockquote local-id=3D"0bb66cca-eb25-4906-9202-1bf154d27c25">
+<p local-id=3D"66ab7959ea3e"><strong>L=C6=B0u =C3=BD ph=C3=A2n bi=E1=BB=87t=
+:</strong> OTF =E2=89=A0 OT. OT l=C3=A0 <em>khu=C3=B4n tr=E1=BB=ABu t=C6=B0=
+=E1=BB=A3ng</em> (c=C3=B3 ch=E1=BB=97 tr=E1=BB=91ng c=E1=BA=A7n =C4=91i=E1=
+=BB=81n OE); OTF l=C3=A0 <em>khu=C3=B4n =C4=91=C3=A3 =C4=91i=E1=BB=81n c=E1=
+=BB=A5 th=E1=BB=83</em>, s=E1=BA=B5n s=C3=A0ng d=C3=B9ng l=E1=BA=A1i.</p>
+</blockquote>
+<hr local-id=3D"5d90e6de-dcd3-4137-8268-5d621d5f7428">
+<h2 local-id=3D"3c9f7d30529d" id=3D"L=C3=B5iNgh=C4=A9aV=E1=BB=A5T=C3=A0iCh=
+=C3=ADnhC=E1=BB=A7aS=E1=BA=A3nPh=E1=BA=A9mVay-8.Quytr=C3=ACnht=E1=BB=95ngth=
+=E1=BB=83:d=E1=BB=B1ngl=C3=B5ingh=C4=A9av=E1=BB=A5chom=E1=BB=99ts=E1=BA=A3n=
+ph=E1=BA=A9m">8. Quy tr=C3=ACnh t=E1=BB=95ng th=E1=BB=83: d=E1=BB=B1ng l=C3=
+=B5i ngh=C4=A9a v=E1=BB=A5 cho m=E1=BB=99t s=E1=BA=A3n ph=E1=BA=A9m</h2>
+<div class=3D"code panel pdl" style=3D"border-width: 1px;">
+<div class=3D"codeContent panelContent pdl">
+<pre class=3D"syntaxhighlighter-pre" data-syntaxhighlighter-params=3D"brush=
+: java; gutter: false; theme: Confluence" data-theme=3D"Confluence">Ch=E1=
+=BB=8Dn FOA
+   =E2=94=82
+   =E2=96=BC
+M=E1=BB=9F danh s=C3=A1ch OE =C4=91=C6=B0=E1=BB=A3c ph=C3=A9p/b=E1=BA=AFt b=
+u=E1=BB=99c cho t=E1=BB=ABng OET
+c=E1=BB=A7a 3 OT c=E1=BB=91t l=C3=B5i (m=C3=B4 ph=E1=BB=8Fng qua ma tr=E1=
+=BA=ADn FOA =C3=97 OE)
+   =E2=94=82
+   =E2=96=BC
+Ch=E1=BB=8Dn OE c=E1=BB=A5 th=E1=BB=83
+   =E2=94=82
+   =E2=94=9C=E2=94=80=E2=94=80=E2=96=BA B=E1=BA=ADt/t=E1=BA=AFt OT ph=E1=BB=
+=A5 tr=E1=BB=A3 (theo b=E1=BA=A3ng tra =E1=BB=9F M=E1=BB=A5c 6)
+   =E2=94=82
+   =E2=96=BC
+=C4=90i=E1=BB=81n c=C3=A1c OE c=C3=B2n thi=E1=BA=BFu =E2=86=92 t=E1=BA=A1o =
+th=C3=A0nh OTF
+   =E2=94=82
+   =E2=96=BC
+S=E1=BA=A3n ph=E1=BA=A9m k=E1=BA=BF th=E1=BB=ABa OTF</pre>
+</div>
+</div>
+<p local-id=3D"550d80b1e788"><strong>Ba b=C6=B0=E1=BB=9Bc c=C3=B4 =C4=91=E1=
+=BB=8Dng:</strong></p>
+<ol start=3D"1" local-id=3D"fe326811-2985-4b95-9bae-9ef73cb0f330">
+<li local-id=3D"1ecbf3c6-7ec8-42e8-8222-39cd805b8ca7">
+<p local-id=3D"9c33d9707c1e"><strong>Ch=E1=BB=8Dn FOA</strong> =E2=86=92 m=
+=E1=BB=9F khung OE h=E1=BB=A3p l=E1=BB=87 cho 3 OT c=E1=BB=91t l=C3=B5i (ma=
+ tr=E1=BA=ADn FOA =C3=97 OE).</p></li>
+<li local-id=3D"086bea9f-57df-43f9-9f39-3af785f14e95">
+<p local-id=3D"e71779825853"><strong>Ch=E1=BB=8Dn OE c=E1=BB=A5 th=E1=BB=83=
+</strong> =E2=86=92 OT ph=E1=BB=A5 tr=E1=BB=A3 t=E1=BB=B1 =C4=91=E1=BB=99ng=
+ b=E1=BA=ADt/t=E1=BA=AFt theo b=E1=BA=A3ng tra =C4=91=E1=BB=99c l=E1=BA=ADp=
+; =C4=91i=E1=BB=81n n=E1=BB=91t OE c=C3=B2n thi=E1=BA=BFu =E2=86=92 h=C3=AC=
+nh th=C3=A0nh <strong>OTF</strong>.</p></li>
+<li local-id=3D"a74dbb6f-7def-44d7-955d-53570d6b048d">
+<p local-id=3D"4a6c169d4d97"><strong>S=E1=BA=A3n ph=E1=BA=A9m k=E1=BA=BF th=
+=E1=BB=ABa OTF</strong> =C4=91=C3=A3 h=C3=ACnh th=C3=A0nh.</p></li>
+</ol>
+    </div>
+</body>
+</html>
+------=_Part_4_1142785693.1783522354125--

@@ -5,11 +5,15 @@ import com.f88.productfactory.domain.model.ontology.FoaElement;
 import com.f88.productfactory.domain.model.ontology.ObligationElement;
 import com.f88.productfactory.domain.model.ontology.ObligationElementType;
 import com.f88.productfactory.domain.model.ontology.ObligationType;
+import com.f88.productfactory.domain.model.ontology.ObligationTypeCore;
+import com.f88.productfactory.domain.model.ontology.OtActivationRule;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
 import com.f88.productfactory.domain.repository.ontology.FoaElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementTypeRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationTypeCoreRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeRepository;
+import com.f88.productfactory.domain.repository.ontology.OtActivationRuleRepository;
 import com.f88.productfactory.domain.repository.pipeline.PatternObligationTypeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -45,19 +49,25 @@ public class FinancialObligationArchetypeService {
     private final ObligationElementRepository obligationElementRepo;
     private final ObligationElementTypeRepository elementTypeRepo;
     private final PatternObligationTypeRepository patternObligationTypeRepo;
+    private final OtActivationRuleRepository activationRuleRepo;
+    private final ObligationTypeCoreRepository obligationTypeCoreRepo;
 
     public FinancialObligationArchetypeService(FinancialObligationArchetypeRepository repo,
                                                ObligationTypeRepository obligationTypeRepo,
                                                FoaElementRepository foaElementRepo,
                                                ObligationElementRepository obligationElementRepo,
                                                ObligationElementTypeRepository elementTypeRepo,
-                                               PatternObligationTypeRepository patternObligationTypeRepo) {
+                                               PatternObligationTypeRepository patternObligationTypeRepo,
+                                               OtActivationRuleRepository activationRuleRepo,
+                                               ObligationTypeCoreRepository obligationTypeCoreRepo) {
         this.repo = repo;
         this.obligationTypeRepo = obligationTypeRepo;
         this.foaElementRepo = foaElementRepo;
         this.obligationElementRepo = obligationElementRepo;
         this.elementTypeRepo = elementTypeRepo;
         this.patternObligationTypeRepo = patternObligationTypeRepo;
+        this.activationRuleRepo = activationRuleRepo;
+        this.obligationTypeCoreRepo = obligationTypeCoreRepo;
     }
 
     /** Đếm số pattern khác nhau dùng ít nhất 1 trong các Obligation Type đã cho. */
@@ -145,6 +155,21 @@ public class FinancialObligationArchetypeService {
                 typeRows.add(m);
             }
             body.put("typeRows", typeRows);
+
+            // Giai đoạn 51: quy tắc OE → bật OT phụ trợ (Mục 6 tài liệu Lõi Nghĩa Vụ) — ĐỘC LẬP
+            // với FOA (áp dụng như nhau cho mọi archetype), chỉ hiển thị minh bạch ở đây.
+            List<Map<String, Object>> activationRules = new ArrayList<>();
+            for (OtActivationRule r : activationRuleRepo.findAll()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("triggerElementCode", r.getTriggerElementCode());
+                m.put("triggerElementName", obligationElementRepo.findById(r.getTriggerElementCode())
+                        .map(ObligationElement::getName).orElse(r.getTriggerElementCode()));
+                m.put("activatedOtCoreCode", r.getActivatedOtCoreCode());
+                m.put("activatedOtCoreName", obligationTypeCoreRepo.findById(r.getActivatedOtCoreCode())
+                        .map(ObligationTypeCore::getName).orElse(r.getActivatedOtCoreCode()));
+                activationRules.add(m);
+            }
+            body.put("activationRules", activationRules);
 
             return body;
         });
