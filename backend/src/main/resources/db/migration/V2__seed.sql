@@ -1173,76 +1173,15 @@ INSERT INTO "catalog_listing" ("catalog_id", "variant_code", "published_date", "
   (1, 'VAR-108', '2026-07-07', 'published'),
   (2, 'VAR-108', '2026-07-07', 'published');
 
--- ===== 34. constraint_matrix — 3 ma trận (matrixDefs; Ma trận 4 Pattern×Block ngoài phạm vi v3) =====
--- Giai đoạn 51: bỏ hẳn matrix id=1 (ARCHETYPE_X_ELEMENT) — trùng lặp dữ liệu với foa_element
--- (đều lưu FOA × Obligation Element requirement). Từ nay foa_element là NGUỒN DUY NHẤT;
--- tab "FOA × Obligation Element" ở màn Ma trận ràng buộc tự dựng từ foa_element (derived,
--- giống patternCoverage() đã làm cho tab "Pattern × Block"), không qua constraint_matrix nữa.
-INSERT INTO "constraint_matrix" ("id", "kind", "title", "description") VALUES
-  (2, 'ELEMENTTYPE_X_ELEMENTTYPE', 'Ma trận 2: OET × OET (tương thích)', 'Kiểm tra tính tương thích giữa các nhóm OET khi ghép vào một OT lõi — tránh cấu hình mâu thuẫn.'),
-  (3, 'OBLIGATIONTYPE_X_BLOCK', 'Ma trận 3: OTF × Block', 'Block nào bắt buộc / tùy chọn / không dùng cho từng OTF. Dùng để dựng khung Block khi tạo Pattern.');
-
-SELECT setval(pg_get_serial_sequence('constraint_matrix','id'), 3);
-
--- ===== 35. matrix_cell — verdict 'no' của UI quy đổi thành 'na'
--- Giai đoạn 52: bỏ hàng/cột OET_NATURE khỏi Matrix 2 (ELEMENTTYPE_X_ELEMENTTYPE) — không còn là
--- 1 trong 6 OET chuẩn, ma trận co từ 6×6 (36 ô) còn đúng 5×5 (25 ô) =====
-INSERT INTO "matrix_cell" ("matrix_id", "row_code", "col_code", "verdict", "is_override") VALUES
-  (2, 'OET_VALUE', 'OET_VALUE', 'req', false),
-  (2, 'OET_VALUE', 'OET_ACTIVATION', 'pos', false),
-  (2, 'OET_VALUE', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_VALUE', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_VALUE', 'OET_TIME', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_VALUE', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_ACTIVATION', 'req', false),
-  (2, 'OET_ACTIVATION', 'OET_FULFILLMENT', 'pos', false),
-  (2, 'OET_ACTIVATION', 'OET_RECOVERY', 'na', false),
-  (2, 'OET_ACTIVATION', 'OET_TIME', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_VALUE', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_ACTIVATION', 'pos', false),
-  (2, 'OET_FULFILLMENT', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_FULFILLMENT', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_FULFILLMENT', 'OET_TIME', 'req', false),
-  (2, 'OET_RECOVERY', 'OET_VALUE', 'pos', false),
-  (2, 'OET_RECOVERY', 'OET_ACTIVATION', 'na', false),
-  (2, 'OET_RECOVERY', 'OET_FULFILLMENT', 'pos', false),
-  (2, 'OET_RECOVERY', 'OET_RECOVERY', 'req', false),
-  (2, 'OET_RECOVERY', 'OET_TIME', 'pos', false),
-  (2, 'OET_TIME', 'OET_VALUE', 'pos', false),
-  (2, 'OET_TIME', 'OET_ACTIVATION', 'req', false),
-  (2, 'OET_TIME', 'OET_FULFILLMENT', 'req', false),
-  (2, 'OET_TIME', 'OET_RECOVERY', 'pos', false),
-  (2, 'OET_TIME', 'OET_TIME', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_PLEDGE_INSTALLMENT', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_REPAYMENT', 'na', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_PLEDGE_BULLET', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_FACILITY', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_COLLATERAL', 'pos', false),
-  (3, 'OT_FACILITY', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_LIMIT', 'req', false),
-  (3, 'OT_FACILITY', 'BLK_PENALTY', 'pos', false),
-  (3, 'OT_UNSECURED', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_COLLATERAL', 'na', false),
-  (3, 'OT_UNSECURED', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_UNSECURED', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_UNSECURED', 'BLK_PENALTY', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_COUNTERPARTY', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_INTEREST', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_COLLATERAL', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_REPAYMENT', 'req', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_LIMIT', 'na', false),
-  (3, 'OT_AUTO_PLEDGE', 'BLK_PENALTY', 'pos', false);
+-- ===== 34-35. constraint_matrix / matrix_cell — Giai đoạn 58: BỎ HẲN, không còn dùng =====
+-- Màn Ma trận giờ chỉ còn đúng 2 ma trận, cả 2 đều PHÁI SINH (không lưu bảng này):
+--   "FOA × Obligation Element" (derived từ foa_element, từ Giai đoạn 51) và
+--   "Obligation Element × Block" (derived từ block.governed_by_element_code, Giai đoạn 58).
+-- 2 kind cũ ELEMENTTYPE_X_ELEMENTTYPE ("OET × OET") và OBLIGATIONTYPE_X_BLOCK ("OTF × Block") đã
+-- bỏ khỏi màn Ma trận theo yêu cầu user; banner độ phủ ở Pattern builder (trước đọc từ
+-- OBLIGATIONTYPE_X_BLOCK) cũng đổi sang đọc trực tiếp Obligation Element × Block — xem
+-- ProductPatternService#detail. Bảng constraint_matrix/matrix_cell vẫn giữ trong schema (có thể
+-- dùng lại cho ma trận thật khác sau này) nhưng seed để trống, không còn dữ liệu nào.
 
 -- ===== 36. maker_checker_process + process_step + checklist (releaseSteps; done=4, đang ở bước 5) =====
 INSERT INTO "maker_checker_process" ("id", "variant_code", "product_name", "done_count") VALUES

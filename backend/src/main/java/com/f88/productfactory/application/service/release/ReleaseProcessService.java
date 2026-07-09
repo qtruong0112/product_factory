@@ -48,7 +48,7 @@ public class ReleaseProcessService {
     private static final String[] TIP = {
             "1 Business Intent có thể dẫn xuất nhiều Product Intent.",
             "Ma trận FOA × Obligation Element sẽ giới hạn OE hợp lệ theo Archetype đã chọn.",
-            "Đối chiếu Ma trận Obligation Type Family (OTF) × Block để không thiếu Block.",
+            "Đối chiếu Ma trận Obligation Element × Block để không thiếu Block.",
             "Template thừa kế cấu trúc Block từ Pattern nguồn.",
             "Mỗi Fragment gán 1 giá trị, có thể chồng theo Selector Scope.",
             "Verdict \"Hợp lệ\" là điều kiện cần để gửi duyệt.",
