@@ -22,6 +22,8 @@ interface ElementRow {
   elementTypeName: string
   elementCode: string
   elementName: string
+  blockId: string | null
+  blockName: string | null
 }
 
 interface OtCoreGroup {
@@ -138,30 +140,75 @@ export default function ObligationTypeDetailPage() {
           <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
             1 OTF = tổ hợp nhiều Obligation Type lõi, mỗi OT lõi đủ 6 OET (Party/Value/Activation/Time/Fulfillment/Recovery).
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {data.otCores.map((g) => (
-              <div key={g.otCoreCode + g.leg}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div key={g.otCoreCode + g.leg} style={{ border: '1px solid #EEF1EF', borderRadius: 10, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: '#F7F9F8' }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#243A30' }}>{g.otCoreName}</span>
                   {LEG_LABEL[g.leg] && (
                     <span style={{ fontSize: 10.5, fontWeight: 700, color: '#7A3FA0', background: '#F3E9F9', padding: '2px 8px', borderRadius: 99 }}>
                       {LEG_LABEL[g.leg]}
                     </span>
                   )}
-                  <span style={{ fontSize: 10.5, fontWeight: 600, color: '#8A998F' }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: '#8A998F', marginLeft: 'auto' }}>
                     {g.groupKind === 'core' ? 'Cốt lõi' : 'Phụ trợ'}
                   </span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 8 }}>
-                  {g.elements.map((el) => (
-                    <div key={el.elementTypeCode} style={{ background: '#F7F9F8', borderRadius: 8, padding: '8px 10px' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#8A998F', textTransform: 'uppercase', letterSpacing: '.3px' }}>
-                        {el.elementTypeName}
-                      </div>
-                      <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30', marginTop: 2 }}>{el.elementName}</div>
-                    </div>
-                  ))}
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '150px 1fr 170px',
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    color: '#8A998F',
+                    textTransform: 'uppercase',
+                    letterSpacing: '.3px',
+                    padding: '7px 14px',
+                    borderBottom: '1px solid #EEF1EF',
+                  }}
+                >
+                  <span>OET</span>
+                  <span>Obligation Element</span>
+                  <span>Block</span>
                 </div>
+                {g.elements.map((el, i) => (
+                  <div
+                    key={el.elementTypeCode}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '150px 1fr 170px',
+                      alignItems: 'center',
+                      padding: '9px 14px',
+                      borderBottom: i < g.elements.length - 1 ? '1px solid #F4F7F5' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: 12, color: '#5E6F66', fontWeight: 600 }}>{el.elementTypeName}</span>
+                    <span style={{ fontSize: 12.5, color: '#243A30', fontWeight: 600 }}>{el.elementName}</span>
+                    {el.blockId ? (
+                      <span
+                        onClick={() => navigate(`/block/${el.blockId}`)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                          color: '#7A3FA0',
+                          background: '#F3E9F9',
+                          padding: '2px 8px',
+                          borderRadius: 99,
+                          cursor: 'pointer',
+                          width: 'fit-content',
+                        }}
+                      >
+                        <Icon name="block" size={11} color="#7A3FA0" /> {el.blockName}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#C4CFC8' }}>—</span>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>

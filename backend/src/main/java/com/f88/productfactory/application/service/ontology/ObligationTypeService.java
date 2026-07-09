@@ -8,6 +8,7 @@ import com.f88.productfactory.domain.model.ontology.ObligationTypeComposition;
 import com.f88.productfactory.domain.model.ontology.ObligationTypeCore;
 import com.f88.productfactory.domain.model.pipeline.PatternObligationType;
 import com.f88.productfactory.domain.model.pipeline.ProductPattern;
+import com.f88.productfactory.domain.model.structure.Block;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementTypeRepository;
@@ -16,6 +17,7 @@ import com.f88.productfactory.domain.repository.ontology.ObligationTypeCoreRepos
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeRepository;
 import com.f88.productfactory.domain.repository.pipeline.PatternObligationTypeRepository;
 import com.f88.productfactory.domain.repository.pipeline.ProductPatternRepository;
+import com.f88.productfactory.domain.repository.structure.BlockRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +49,7 @@ public class ObligationTypeService {
     private final ObligationElementRepository elementRepo;
     private final PatternObligationTypeRepository patternObligationTypeRepo;
     private final ProductPatternRepository patternRepo;
+    private final BlockRepository blockRepo;
 
     public ObligationTypeService(ObligationTypeRepository repo,
                                  FinancialObligationArchetypeRepository archetypeRepo,
@@ -55,7 +58,8 @@ public class ObligationTypeService {
                                  ObligationElementTypeRepository elementTypeRepo,
                                  ObligationElementRepository elementRepo,
                                  PatternObligationTypeRepository patternObligationTypeRepo,
-                                 ProductPatternRepository patternRepo) {
+                                 ProductPatternRepository patternRepo,
+                                 BlockRepository blockRepo) {
         this.repo = repo;
         this.archetypeRepo = archetypeRepo;
         this.compositionRepo = compositionRepo;
@@ -64,6 +68,7 @@ public class ObligationTypeService {
         this.elementRepo = elementRepo;
         this.patternObligationTypeRepo = patternObligationTypeRepo;
         this.patternRepo = patternRepo;
+        this.blockRepo = blockRepo;
     }
 
     /**
@@ -95,8 +100,11 @@ public class ObligationTypeService {
 
     /**
      * Chi tiết đầy đủ 1 OTF: { otf, archetypeName, patterns:[{patternCode,patternName,role}],
-     * otCores:[{otCoreCode,otCoreName,groupKind,leg,elements:[{elementTypeCode,elementTypeName,elementCode,elementName}]}] }.
+     * otCores:[{otCoreCode,otCoreName,groupKind,leg,elements:[{elementTypeCode,elementTypeName,elementCode,elementName,blockId,blockName}]}] }.
      * otCores nhóm theo (ot_core_code, leg) — 1 OTF = nhiều OT lõi, mỗi OT lõi đủ 6 OET (Giai đoạn 51).
+     * blockId/blockName (Giai đoạn 53b, null nếu không có) = Block được "chi phối bởi" chính OE đó
+     * (block.governed_by_element_code) — theo tài liệu "Lớp vỏ thương mại": OE định tính, Block là
+     * tầng kế tiếp (nhóm Attribute định lượng hóa OE đó), không phải OE "chứa" Block.
      */
     public Optional<Map<String, Object>> detail(String code) {
         return repo.findById(code).map(type -> {
@@ -144,6 +152,9 @@ public class ObligationTypeService {
                 el.put("elementName", elementRepo.findById(c.getElementCode())
                         .map(ObligationElement::getName)
                         .orElse(c.getElementCode()));
+                List<Block> governedBlocks = blockRepo.findByGovernedByElementCode(c.getElementCode());
+                el.put("blockId", governedBlocks.isEmpty() ? null : governedBlocks.get(0).getId());
+                el.put("blockName", governedBlocks.isEmpty() ? null : governedBlocks.get(0).getName());
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> elements = (List<Map<String, Object>>) g.get("elements");
                 elements.add(el);
