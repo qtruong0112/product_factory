@@ -1,10 +1,21 @@
 package com.f88.productfactory.application.service.ontology;
 
 import com.f88.productfactory.domain.model.ontology.FinancialObligationArchetype;
+import com.f88.productfactory.domain.model.ontology.ObligationElement;
+import com.f88.productfactory.domain.model.ontology.ObligationElementType;
 import com.f88.productfactory.domain.model.ontology.ObligationType;
+import com.f88.productfactory.domain.model.ontology.ObligationTypeComposition;
+import com.f88.productfactory.domain.model.ontology.ObligationTypeCore;
+import com.f88.productfactory.domain.model.pipeline.PatternObligationType;
+import com.f88.productfactory.domain.model.pipeline.ProductPattern;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationElementTypeRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeCompositionRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationTypeCoreRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationTypeRepository;
+import com.f88.productfactory.domain.repository.pipeline.PatternObligationTypeRepository;
+import com.f88.productfactory.domain.repository.pipeline.ProductPatternRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -31,13 +42,28 @@ public class ObligationTypeService {
     private final ObligationTypeRepository repo;
     private final FinancialObligationArchetypeRepository archetypeRepo;
     private final ObligationTypeCompositionRepository compositionRepo;
+    private final ObligationTypeCoreRepository typeCoreRepo;
+    private final ObligationElementTypeRepository elementTypeRepo;
+    private final ObligationElementRepository elementRepo;
+    private final PatternObligationTypeRepository patternObligationTypeRepo;
+    private final ProductPatternRepository patternRepo;
 
     public ObligationTypeService(ObligationTypeRepository repo,
                                  FinancialObligationArchetypeRepository archetypeRepo,
-                                 ObligationTypeCompositionRepository compositionRepo) {
+                                 ObligationTypeCompositionRepository compositionRepo,
+                                 ObligationTypeCoreRepository typeCoreRepo,
+                                 ObligationElementTypeRepository elementTypeRepo,
+                                 ObligationElementRepository elementRepo,
+                                 PatternObligationTypeRepository patternObligationTypeRepo,
+                                 ProductPatternRepository patternRepo) {
         this.repo = repo;
         this.archetypeRepo = archetypeRepo;
         this.compositionRepo = compositionRepo;
+        this.typeCoreRepo = typeCoreRepo;
+        this.elementTypeRepo = elementTypeRepo;
+        this.elementRepo = elementRepo;
+        this.patternObligationTypeRepo = patternObligationTypeRepo;
+        this.patternRepo = patternRepo;
     }
 
     /**
@@ -65,5 +91,66 @@ public class ObligationTypeService {
     /** Chi tiết entity theo PK (code). */
     public Optional<ObligationType> byId(String code) {
         return repo.findById(code);
+    }
+
+    /**
+     * Chi tiết đầy đủ 1 OTF: { otf, archetypeName, patterns:[{patternCode,patternName,role}],
+     * otCores:[{otCoreCode,otCoreName,groupKind,leg,elements:[{elementTypeCode,elementTypeName,elementCode,elementName}]}] }.
+     * otCores nhóm theo (ot_core_code, leg) — 1 OTF = nhiều OT lõi, mỗi OT lõi đủ 6 OET (Giai đoạn 51).
+     */
+    public Optional<Map<String, Object>> detail(String code) {
+        return repo.findById(code).map(type -> {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("otf", type);
+            body.put("archetypeName", archetypeRepo.findById(type.getArchetypeCode())
+                    .map(FinancialObligationArchetype::getName)
+                    .orElse(type.getArchetypeCode()));
+
+            List<Map<String, Object>> patterns = new ArrayList<>();
+            for (PatternObligationType pot : patternObligationTypeRepo.findByObligationTypeCode(code)) {
+                Map<String, Object> p = new LinkedHashMap<>();
+                p.put("patternCode", pot.getPatternCode());
+                p.put("patternName", patternRepo.findById(pot.getPatternCode())
+                        .map(ProductPattern::getName)
+                        .orElse(pot.getPatternCode()));
+                p.put("role", pot.getRole());
+                patterns.add(p);
+            }
+            body.put("patterns", patterns);
+
+            Map<String, Map<String, Object>> groups = new LinkedHashMap<>();
+            for (ObligationTypeComposition c : compositionRepo.findByObligationTypeCode(code)) {
+                String key = c.getOtCoreCode() + "::" + c.getLeg();
+                Map<String, Object> g = groups.get(key);
+                if (g == null) {
+                    g = new LinkedHashMap<>();
+                    g.put("otCoreCode", c.getOtCoreCode());
+                    g.put("otCoreName", typeCoreRepo.findById(c.getOtCoreCode())
+                            .map(ObligationTypeCore::getName)
+                            .orElse(c.getOtCoreCode()));
+                    g.put("groupKind", typeCoreRepo.findById(c.getOtCoreCode())
+                            .map(ObligationTypeCore::getGroupKind)
+                            .orElse(null));
+                    g.put("leg", c.getLeg());
+                    g.put("elements", new ArrayList<Map<String, Object>>());
+                    groups.put(key, g);
+                }
+                Map<String, Object> el = new LinkedHashMap<>();
+                el.put("elementTypeCode", c.getElementTypeCode());
+                el.put("elementTypeName", elementTypeRepo.findById(c.getElementTypeCode())
+                        .map(ObligationElementType::getName)
+                        .orElse(c.getElementTypeCode()));
+                el.put("elementCode", c.getElementCode());
+                el.put("elementName", elementRepo.findById(c.getElementCode())
+                        .map(ObligationElement::getName)
+                        .orElse(c.getElementCode()));
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> elements = (List<Map<String, Object>>) g.get("elements");
+                elements.add(el);
+            }
+            body.put("otCores", new ArrayList<>(groups.values()));
+
+            return body;
+        });
     }
 }
