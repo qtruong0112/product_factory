@@ -751,6 +751,11 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   -- Giai đoạn 48: bổ sung Block "Hạn mức" — Pattern gốc thiếu sót từ đầu (CFG-0021/0040/0043
   -- đóng gói từ TPL-001 đều có product_variant.limit_range thật nhưng chưa từng đi qua Answer Slot).
   ('PT-001', 'BLK_LIMIT', 8, 'active'),
+  -- Giai đoạn 60: bổ sung 2 Block còn thiếu theo ma trận OE×Block derived (Giai đoạn 58/59) — Pattern
+  -- đã published mà OTF gán vào (OT_PLEDGE_INSTALLMENT) có OE_VAL_PRINCIPAL_MULTI_DECREASE/OE_ACT_ON_DISBURSEMENT
+  -- trong composition nhưng Block tương ứng (BLK_VALUEBASE/BLK_DISBURSEMENT) chưa từng được gán vào canvas.
+  ('PT-001', 'BLK_VALUEBASE', 9, 'active'),
+  ('PT-001', 'BLK_DISBURSEMENT', 10, 'active'),
   ('PT-002', 'BLK_ELIGIBILITY', 1, 'active'),
   ('PT-002', 'BLK_COUNTERPARTY', 2, 'active'),
   ('PT-002', 'BLK_REGULATORY', 3, 'active'),
@@ -766,6 +771,9 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   ('PT-003', 'BLK_INTEREST', 4, 'active'),
   ('PT-003', 'BLK_COLLATERAL', 5, 'active'),
   ('PT-003', 'BLK_PENALTY', 6, 'active'),
+  -- Giai đoạn 60: BLK_DISBURSEMENT đã có sẵn từ đầu; chỉ thiếu BLK_VALUEBASE (OTF OT_PLEDGE_BULLET
+  -- vẫn có OE_VAL_PRINCIPAL_MULTI_DECREASE trong composition dù là Bullet — đúng dữ liệu thật hiện có).
+  ('PT-003', 'BLK_VALUEBASE', 7, 'active'),
   ('PT-004', 'BLK_COUNTERPARTY', 1, 'active'),
   ('PT-004', 'BLK_REGULATORY', 2, 'active'),
   ('PT-004', 'BLK_LIMIT', 3, 'active'),
@@ -779,13 +787,17 @@ INSERT INTO "pattern_block" ("pattern_code", "block_id", "position", "usage") VA
   ('PT-005', 'BLK_INTEREST', 3, 'active'),
   ('PT-005', 'BLK_REPAYMENT', 4, 'active'),
   ('PT-005', 'BLK_PENALTY', 5, 'active'),
+  ('PT-005', 'BLK_VALUEBASE', 6, 'active'),
+  ('PT-005', 'BLK_DISBURSEMENT', 7, 'active'),
   ('PT-006', 'BLK_COUNTERPARTY', 1, 'active'),
   ('PT-006', 'BLK_REGULATORY', 2, 'active'),
   ('PT-006', 'BLK_INTEREST', 3, 'active'),
   ('PT-006', 'BLK_FEE', 4, 'active'),
   ('PT-006', 'BLK_REPAYMENT', 5, 'active'),
   ('PT-006', 'BLK_COLLATERAL', 6, 'active'),
-  ('PT-006', 'BLK_PENALTY', 7, 'active');
+  ('PT-006', 'BLK_PENALTY', 7, 'active'),
+  ('PT-006', 'BLK_VALUEBASE', 8, 'active'),
+  ('PT-006', 'BLK_DISBURSEMENT', 9, 'active');
 
 -- ===== 25. pattern_obligation_type =====
 INSERT INTO "pattern_obligation_type" ("pattern_code", "obligation_type_code", "role") VALUES
@@ -964,6 +976,41 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-006', 'BLK_ELIGIBILITY', 'occupation', 'Không giới hạn'),
   ('TPL-006', 'BLK_COUNTERPARTY', 'beneficiary', 'Không chỉ định (mặc định là Bên vay)'),
   ('TPL-006', 'BLK_PENALTY', 'grace', '5 ngày');
+
+-- ===== 28e. template_frame — Giai đoạn 60: giá trị khung cho 2 Block mới gán vào PT-001/003/005/006
+-- (BLK_VALUEBASE/BLK_DISBURSEMENT, xem mục 24 pattern_block). decrease_method/principal_base chỉ có
+-- đúng 1 giá trị enum đóng trong attribute_enum_value ("Giảm dần theo gốc"/"Gốc vay") — dùng thẳng,
+-- không có lựa chọn nào khác kể cả cho PT-003 (Bullet), vì catalog thật của DB chỉ có 1 giá trị.
+-- disb_method/disb_syntax/transfer_content lấy đúng giá trị đã dùng cho TPL-005 (block này TPL-005 đã
+-- có sẵn từ trước) để nhất quán giữa các Template dùng chung block, không suy diễn giá trị mới. =====
+INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_value") VALUES
+  -- TPL-001 (PT-001)
+  ('TPL-001', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-001', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-001', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-002 (PT-001, doanh nghiệp)
+  ('TPL-002', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-002', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-002', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-004 (PT-006)
+  ('TPL-004', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-004', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-004', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88'),
+  -- TPL-005 (PT-003) — BLK_DISBURSEMENT đã có sẵn từ trước, chỉ thiếu BLK_VALUEBASE
+  ('TPL-005', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-005', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  -- TPL-006 (PT-005)
+  ('TPL-006', 'BLK_VALUEBASE', 'decrease_method', 'Giảm dần theo gốc'),
+  ('TPL-006', 'BLK_VALUEBASE', 'principal_base', 'Gốc vay'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'disb_method', 'Chuyển khoản'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'disb_syntax', 'F88 {contract}'),
+  ('TPL-006', 'BLK_DISBURSEMENT', 'transfer_content', 'Giai ngan {contract} - F88');
 
 -- ===== 29. product_config — 6 CFG (list view) + CFG-0021 [suy luận] làm nguồn cho VAR-106 retired =====
 -- CFG-0042 sửa từ TPL-001 → TPL-003: TPL-001 không có dòng template_frame nào (không thể suy ra
@@ -1153,6 +1200,43 @@ INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "s
   -- Giai đoạn 48: khớp đúng product_variant.limit_range thật của VAR-108 ("3tr – 40tr").
   ('CFG-0043', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '3.000.000đ – 40.000.000đ', false, 'Hợp lệ'),
   ('CFG-0043', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ');
+
+-- ===== 30d. fragment — Giai đoạn 60: fragment scope=default cho 2 slot bắt buộc của 2 Block mới gán
+-- vào PT-001/003/005/006 (BLK_VALUEBASE.decrease_method+principal_base, BLK_DISBURSEMENT.disb_method)
+-- — hoàn thiện thân bất biến "mỗi (config, slot bắt buộc) phải có ≥1 fragment" (mục 30b) cho các Config
+-- đang dùng 4 Pattern này, để completeness lên đúng 100% thay vì báo thiếu dù Template đã có khung.
+-- CFG-0039 đã có sẵn disb_method từ trước (TPL-005/PT-003 vốn có BLK_DISBURSEMENT từ đầu) nên chỉ
+-- thiếu BLK_VALUEBASE. decrease_method/principal_base dùng đúng giá trị enum đóng duy nhất trong DB
+-- (không có lựa chọn khác); disb_method dùng "Chuyển khoản" khớp CFG-0039 đã có sẵn (Giai đoạn 41). =====
+INSERT INTO "fragment" ("config_code", "block_id", "slot_code", "scope_code", "scope_value", "value", "is_warning", "validation_msg") VALUES
+  -- CFG-0021 (retired) ← TPL-001/PT-001
+  ('CFG-0021', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0021', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0037 (review) ← TPL-002/PT-001
+  ('CFG-0037', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- Giai đoạn 60: BLK_LIMIT có sẵn từ PT-001 (Giai đoạn 48) nhưng CFG-0037 chưa từng có fragment —
+  -- khớp đúng product_variant.limit_range thật của VAR-107 ("100tr – 2 tỷ"), lỗ hổng sót từ Giai đoạn 48
+  -- (đợt đó chỉ backfill 3 Config của TPL-001, bỏ sót CFG-0037 của TPL-002).
+  ('CFG-0037', 'BLK_LIMIT', 'limit_amount', 'default', NULL, '100.000.000đ – 2.000.000.000đ', false, 'Hợp lệ'),
+  ('CFG-0037', 'BLK_LIMIT', 'capacity_range', 'default', NULL, 'Có quản trị', false, 'Hợp lệ'),
+  -- CFG-0038 (review) ← TPL-006/PT-005
+  ('CFG-0038', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0038', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0039 (approved) ← TPL-005/PT-003 — disb_method đã có sẵn, chỉ thiếu BLK_VALUEBASE
+  ('CFG-0039', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0039', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  -- CFG-0040 (published) ← TPL-001/PT-001
+  ('CFG-0040', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0040', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ'),
+  -- CFG-0043 (published) ← TPL-001/PT-001
+  ('CFG-0043', 'BLK_VALUEBASE', 'decrease_method', 'default', NULL, 'Giảm dần theo gốc', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_VALUEBASE', 'principal_base', 'default', NULL, 'Gốc vay', false, 'Hợp lệ'),
+  ('CFG-0043', 'BLK_DISBURSEMENT', 'disb_method', 'default', NULL, 'Chuyển khoản', false, 'Hợp lệ');
 
 -- ===== 31. product_variant — 8 VAR (list view + catalog) =====
 INSERT INTO "product_variant" ("code", "name", "from_config_code", "family", "limit_range", "display_rate", "marketing_content", "status") VALUES
