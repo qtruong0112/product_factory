@@ -9,5 +9,5 @@ import java.util.List;
 public interface ProductIntentElementRepository
         extends JpaRepository<ProductIntentElement, ProductIntentElementId> {
 
-    List<ProductIntentElement> findByProductIntentIdOrderByElementCode(Long productIntentId);
+    List<ProductIntentElement> findByProductIntentId(Long productIntentId);
 }

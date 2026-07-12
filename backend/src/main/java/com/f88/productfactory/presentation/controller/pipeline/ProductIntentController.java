@@ -1,73 +1,48 @@
 package com.f88.productfactory.presentation.controller.pipeline;
 
+import com.f88.productfactory.application.service.pipeline.ProductIntentService;
 import com.f88.productfactory.domain.model.pipeline.ProductIntent;
-import com.f88.productfactory.domain.model.pipeline.ProductIntentElement;
-import com.f88.productfactory.domain.repository.pipeline.BusinessIntentRepository;
-import com.f88.productfactory.domain.repository.pipeline.ProductIntentElementRepository;
-import com.f88.productfactory.domain.repository.pipeline.ProductIntentRepository;
-import com.f88.productfactory.presentation.common.ReadOnlyController;
-import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
-import com.f88.productfactory.application.common.ReadOnlyService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Product Intent — list() làm giàu (coreCount/auxCount, Giai đoạn 66) nên không còn extends
+ * ReadOnlyController thuần (xem ProductIntentService).
+ */
 @RestController
 @RequestMapping("/api/product-intents")
-public class ProductIntentController extends ReadOnlyController<ProductIntent, Long> {
+public class ProductIntentController {
 
-    private final ProductIntentRepository repo;
-    private final ProductIntentElementRepository elementRepo;
-    private final BusinessIntentRepository businessIntentRepo;
-    private final FinancialObligationArchetypeRepository archetypeRepo;
+    private final ProductIntentService service;
 
-    public ProductIntentController(ProductIntentRepository repo,
-                                   ProductIntentElementRepository elementRepo,
-                                   BusinessIntentRepository businessIntentRepo,
-                                   FinancialObligationArchetypeRepository archetypeRepo) {
-        this.repo = repo;
-        this.elementRepo = elementRepo;
-        this.businessIntentRepo = businessIntentRepo;
-        this.archetypeRepo = archetypeRepo;
+    public ProductIntentController(ProductIntentService service) {
+        this.service = service;
     }
 
-    @Override
-    protected ReadOnlyService<ProductIntent, Long> service() { return new ReadOnlyService<>(repo); }
+    @GetMapping
+    public Page<Map<String, Object>> list(@PageableDefault(size = 50) Pageable pageable) {
+        return service.list(pageable);
+    }
 
-    /**
-     * Chi tiết Product Intent: entity chính + tên BI cha + tên archetype + list element nền.
-     * Trả Map để kèm dữ liệu tra cứu hiển thị mà không đổi entity read-only.
-     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductIntent> byId(@PathVariable Long id) {
+        return service.byId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}/detail")
     public ResponseEntity<Map<String, Object>> detail(@PathVariable Long id) {
-        return repo.findById(id).map(intent -> {
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("intent", intent);
-
-            String biName = businessIntentRepo.findById(intent.getBusinessIntentId())
-                    .map(bi -> bi.getName())
-                    .orElse(null);
-            body.put("businessIntentName", biName);
-
-            String archetypeName = archetypeRepo.findById(intent.getArchetypeCode())
-                    .map(a -> a.getName())
-                    .orElse(null);
-            body.put("archetypeName", archetypeName);
-
-            List<String> elements = elementRepo
-                    .findByProductIntentIdOrderByElementCode(id)
-                    .stream()
-                    .map(ProductIntentElement::getElementCode)
-                    .toList();
-            body.put("elements", elements);
-
-            return ResponseEntity.ok(body);
-        }).orElse(ResponseEntity.notFound().build());
+        return service.detail(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

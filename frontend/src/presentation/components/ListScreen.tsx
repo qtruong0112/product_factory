@@ -1,5 +1,6 @@
 import { isValidElement, useMemo, useState, type ReactNode } from 'react'
 import Icon from './Icon'
+import PaginationFooter from './PaginationFooter'
 import { STATUS_LABELS } from './StatusChip'
 
 export interface ListColumn {
@@ -327,6 +328,8 @@ export default function ListScreen({
           </div>
         </div>
       </div>
+
+      <PaginationFooter total={visibleIndexes.length} />
     </div>
   )
 }

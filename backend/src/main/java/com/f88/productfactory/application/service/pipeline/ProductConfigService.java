@@ -235,7 +235,14 @@ public class ProductConfigService {
 
                 for (AnswerSlot slot : slotRepo.findByBlockId(pb.getBlockId())) {
                     String k = key(pb.getBlockId(), slot.getCode());
-                    List<Fragment> frags = fragsByKey.getOrDefault(k, List.of());
+                    List<Fragment> rawFrags = fragsByKey.getOrDefault(k, List.of());
+
+                    Attribute attr = attributeRepo.findById(slot.getAttributeCode()).orElse(null);
+                    // Attribute khóa ghi đè (is_overridable=false) → Fragment thật vẫn tồn tại trong DB
+                    // nhưng bị bỏ qua khi resolve, giá trị luôn lấy từ template_frame/slot default.
+                    boolean overridable = attr == null || attr.isOverridable();
+                    List<Fragment> frags = overridable ? rawFrags : List.of();
+                    int ignoredFragmentCount = overridable ? 0 : rawFrags.size();
                     boolean filled = !frags.isEmpty();
 
                     if (slot.isRequired()) {
@@ -259,7 +266,6 @@ public class ProductConfigService {
                         missingRequired.add(mr);
                     }
 
-                    Attribute attr = attributeRepo.findById(slot.getAttributeCode()).orElse(null);
                     DataType dt = attr != null ? dataTypeRepo.findById(attr.getDataTypeCode()).orElse(null) : null;
                     List<AttributeConstraint> constraints = attr != null
                             ? constraintRepo.findByAttributeCode(attr.getCode()) : List.of();
@@ -316,10 +322,22 @@ public class ProductConfigService {
                     slotDetail.put("attributeName", attr != null ? attr.getName() : null);
                     slotDetail.put("dataTypeName", dt != null ? dt.getName() : null);
                     slotDetail.put("constraintText", constraintText);
-                    slotDetail.put("inheritedFrameValue", frameByKey.get(k));
-                    slotDetail.put("slotDefaultValue", slot.getDefaultValue());
+                    String inheritedFrameValue = frameByKey.get(k);
+                    boolean templateCustomizable = attr != null && attr.isTemplateCustomizable();
+                    slotDetail.put("inheritedFrameValue", inheritedFrameValue);
+                    // Giai đoạn 73: nguồn default chuyển về tầng Attribute (single source of truth) —
+                    // answer_slot.default_value không còn dùng ở đây (trùng dữ liệu, dễ trôi như đã
+                    // phát hiện ở asset_type trước khi vá).
+                    slotDetail.put("slotDefaultValue", attr != null ? attr.getDefaultValue() : slot.getDefaultValue());
                     slotDetail.put("fragmentCount", frags.size());
                     slotDetail.put("fragments", fragRows);
+                    slotDetail.put("overridable", overridable);
+                    slotDetail.put("ignoredFragmentCount", ignoredFragmentCount);
+                    slotDetail.put("templateCustomizable", templateCustomizable);
+                    // Chỉ coi là lỗ hổng thật khi Attribute "chính gốc" (cần Template tự khai báo)
+                    // mà lại chưa có template_frame — Attribute "đơn giản" không có template_frame là
+                    // bình thường (tự động lấy default_value từ tầng Attribute).
+                    slotDetail.put("missingTemplateFrame", templateCustomizable && inheritedFrameValue == null);
                     slotsOut.put(slot.getCode(), slotDetail);
                 }
 

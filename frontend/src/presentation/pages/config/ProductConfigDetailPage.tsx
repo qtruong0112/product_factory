@@ -59,8 +59,13 @@ interface SlotDetail {
   dataTypeName: string | null
   constraintText: string | null
   inheritedFrameValue: string | null
+  slotDefaultValue: string | null
   fragmentCount: number
   fragments: FragmentRow[]
+  overridable: boolean
+  ignoredFragmentCount: number
+  templateCustomizable: boolean
+  missingTemplateFrame: boolean
 }
 interface Completeness {
   reqFilled: number
@@ -86,6 +91,8 @@ const SCOPE_META: Record<string, { color: string; bg: string }> = {
   time: { color: '#9A6B00', bg: '#FBEFC7' },
   place: { color: '#0B7349', bg: '#DCF3E7' },
   people: { color: '#1F5FAF', bg: '#E5EEF9' },
+  template: { color: '#0B7349', bg: '#DCF3E7' },
+  'attribute-default': { color: '#7A4FB0', bg: '#EFE6F8' },
 }
 
 const HIEN_TAI = 'Hiện tại'
@@ -137,8 +144,28 @@ export default function ProductConfigDetailPage() {
   const resolution = useMemo(() => {
     if (!selectedSlot) return null
     const matched = selectedSlot.fragments.filter(matches).sort((a, b) => b.priority - a.priority)
-    const winner = matched[0] ?? null
-    return { winner, explain: selectedSlot.fragments.map((f) => ({ f, matched: matches(f), isWin: winner === f })) }
+    const fragWinner = matched[0] ?? null
+    const explain = selectedSlot.fragments.map((f) => ({ f, matched: matches(f), isWin: fragWinner === f }))
+    if (fragWinner) {
+      return { winner: { ...fragWinner, source: 'fragment' as const }, explain }
+    }
+    // Không có Fragment nào khớp ngữ cảnh — gán luôn giá trị gốc cho Attribute: kế thừa khung
+    // Template (Attribute "chính gốc") hoặc default gán sẵn ở tầng Attribute (Attribute "đơn giản"),
+    // khớp đúng cách buildBody() đã resolve — tránh hiện "chưa cấu hình" trong khi thực chất đã có
+    // giá trị phục vụ khách hàng thật (Giai đoạn 74).
+    if (selectedSlot.inheritedFrameValue) {
+      return {
+        winner: { value: selectedSlot.inheritedFrameValue, scopeCode: 'template', scopeName: 'Kế thừa Template', priority: -1, scopeValue: null, isWarning: false, validationMsg: null, source: 'template' as const },
+        explain,
+      }
+    }
+    if (selectedSlot.slotDefaultValue) {
+      return {
+        winner: { value: selectedSlot.slotDefaultValue, scopeCode: 'attribute-default', scopeName: 'Mặc định Attribute', priority: -2, scopeValue: null, isWarning: false, validationMsg: null, source: 'attribute-default' as const },
+        explain,
+      }
+    }
+    return { winner: null, explain }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSlot, ctxPeople, ctxPlace, ctxTime])
 
@@ -314,10 +341,41 @@ export default function ProductConfigDetailPage() {
                           Ràng buộc: {selectedSlot.constraintText}
                         </span>
                       )}
+                      {!selectedSlot.overridable && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#8A998F', background: '#F1F5F2', padding: '3px 9px', borderRadius: 7 }}>
+                          Attribute khóa ghi đè
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: selectedSlot.templateCustomizable ? '#7A4FB0' : '#8A998F',
+                          background: selectedSlot.templateCustomizable ? '#EFE6F8' : '#F1F5F2',
+                          padding: '3px 9px',
+                          borderRadius: 7,
+                        }}
+                      >
+                        {selectedSlot.templateCustomizable ? 'Chính gốc · cấu hình ở Template' : 'Đơn giản · default từ Attribute'}
+                      </span>
                     </div>
-                    {selectedSlot.inheritedFrameValue && (
+                    {selectedSlot.missingTemplateFrame && (
+                      <div style={{ marginTop: 9, fontSize: 11, color: '#9A6B00', background: '#FFFCF4', border: '1px solid #F0DBA8', padding: '4px 10px', borderRadius: 7 }}>
+                        Attribute chính gốc — Template cần khai báo giá trị riêng nhưng chưa có
+                      </div>
+                    )}
+                    {selectedSlot.inheritedFrameValue ? (
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 9, fontSize: 11, color: '#5E6F66', background: '#F4F7F5', border: '1px dashed #C7D5CC', padding: '4px 10px', borderRadius: 7 }}>
                         <Icon name="template" size={13} color="#0B7349" /> Kế thừa giá trị khung từ Template: <b style={{ color: '#0B7349', fontWeight: 600 }}>{selectedSlot.inheritedFrameValue}</b>
+                      </div>
+                    ) : selectedSlot.fragmentCount === 0 && selectedSlot.slotDefaultValue ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 9, fontSize: 11, color: '#5E6F66', background: '#F4F7F5', border: '1px dashed #C7D5CC', padding: '4px 10px', borderRadius: 7 }}>
+                        <Icon name="template" size={13} color="#0B7349" /> Mặc định từ Attribute: <b style={{ color: '#0B7349', fontWeight: 600 }}>{selectedSlot.slotDefaultValue}</b>
+                      </div>
+                    ) : null}
+                    {selectedSlot.ignoredFragmentCount > 0 && (
+                      <div style={{ marginTop: 9, fontSize: 11, color: '#9A6B00', background: '#FFFCF4', border: '1px solid #F0DBA8', padding: '4px 10px', borderRadius: 7 }}>
+                        {selectedSlot.ignoredFragmentCount} Fragment bị bỏ qua do Attribute khóa ghi đè
                       </div>
                     )}
                   </div>
@@ -444,12 +502,18 @@ export default function ProductConfigDetailPage() {
                       <span style={{ fontSize: 11, fontWeight: 700, color: (SCOPE_META[resolution.winner.scopeCode] ?? SCOPE_META.default).color, background: (SCOPE_META[resolution.winner.scopeCode] ?? SCOPE_META.default).bg, padding: '3px 9px', borderRadius: 7 }}>
                         Thắng: {resolution.winner.scopeName}
                       </span>
-                      <span style={{ fontSize: 11, color: '#8A998F' }}>ưu tiên {resolution.winner.priority}</span>
+                      {resolution.winner.source === 'fragment' && (
+                        <span style={{ fontSize: 11, color: '#8A998F' }}>ưu tiên {resolution.winner.priority}</span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11.5, color: '#5E6F66', marginTop: 10, lineHeight: 1.5 }}>
-                      {resolution.winner.scopeCode === 'default'
-                        ? 'Không có fragment scope nào khớp ngữ cảnh → dùng giá trị mặc định'
-                        : `${resolution.winner.scopeName} = "${resolution.winner.scopeValue}" khớp & có ưu tiên cao nhất (${resolution.winner.priority})`}
+                      {resolution.winner.source === 'template'
+                        ? 'Không có Fragment nào khớp ngữ cảnh → kế thừa giá trị khung Template (Attribute chính gốc)'
+                        : resolution.winner.source === 'attribute-default'
+                          ? 'Không có Fragment nào khớp ngữ cảnh → dùng default gán sẵn ở tầng Attribute (Attribute đơn giản)'
+                          : resolution.winner.scopeCode === 'default'
+                            ? 'Không có fragment scope nào khớp ngữ cảnh → dùng giá trị mặc định'
+                            : `${resolution.winner.scopeName} = "${resolution.winner.scopeValue}" khớp & có ưu tiên cao nhất (${resolution.winner.priority})`}
                     </div>
                   </>
                 ) : (

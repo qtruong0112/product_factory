@@ -95,6 +95,8 @@ public class AttributeUsageService {
         attrInfo.put("required", attribute.isRequired());
         attrInfo.put("unique", attribute.isUnique());
         attrInfo.put("nullable", attribute.isNullable());
+        attrInfo.put("overridable", attribute.isOverridable());
+        attrInfo.put("templateCustomizable", attribute.isTemplateCustomizable());
         attrInfo.put("defaultValue", attribute.getDefaultValue());
         attrInfo.put("unit", attribute.getUnit());
         attrInfo.put("groupCode", attribute.getGroupCode());

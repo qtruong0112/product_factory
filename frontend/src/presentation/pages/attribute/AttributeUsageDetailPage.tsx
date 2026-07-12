@@ -8,6 +8,8 @@ interface AttributeInfo {
   name: string
   dataTypeCode: string
   required: boolean
+  overridable: boolean
+  templateCustomizable: boolean
   unit: string | null
   groupCode: string
   groupName: string
@@ -252,6 +254,30 @@ export default function AttributeUsageDetailPage() {
                   >
                     {a.required ? 'Bắt buộc' : 'Tùy chọn'}
                   </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: 7,
+                      background: a.overridable ? '#DCF3E7' : '#F1F5F2',
+                      color: a.overridable ? '#0B7349' : '#8A998F',
+                    }}
+                  >
+                    {a.overridable ? 'Cho phép ghi đè' : 'Khóa ghi đè'}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: 7,
+                      background: a.templateCustomizable ? '#EFE6F8' : '#F1F5F2',
+                      color: a.templateCustomizable ? '#7A4FB0' : '#8A998F',
+                    }}
+                  >
+                    {a.templateCustomizable ? 'Chính gốc · cấu hình ở Template' : 'Đơn giản · default từ Attribute'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -362,6 +388,22 @@ export default function AttributeUsageDetailPage() {
               <div style={{ fontSize: 11.5, color: '#8A998F', marginBottom: 13 }}>
                 Cùng một Attribute nhận giá trị khác nhau theo People / Place / Time, gán qua Fragment của từng Config.
               </div>
+              {!a.overridable && data.slots.some((s) => s.usedInFragments.length > 0) && (
+                <div
+                  style={{
+                    border: '1px solid #F0DBA8',
+                    background: '#FFFCF4',
+                    borderRadius: 10,
+                    padding: '10px 13px',
+                    fontSize: 11.5,
+                    color: '#9A6B00',
+                    marginBottom: 12,
+                  }}
+                >
+                  Attribute đã khóa ghi đè nhưng vẫn còn {data.slots.reduce((n, s) => n + s.usedInFragments.length, 0)} Fragment
+                  bên dưới — các Fragment này bị bỏ qua khi resolve, cần rà soát lại dữ liệu.
+                </div>
+              )}
               {data.slots.every((s) => s.usedInFragments.length === 0) ? (
                 <div style={{ color: '#A7B5AC', fontSize: 12.5 }}>—</div>
               ) : (
