@@ -405,6 +405,10 @@ interface SlotDetail {
   inheritedFrameValue: string | null
   slotDefaultValue: string | null
   fragments: FragmentRow[]
+  overridable: boolean
+  ignoredFragmentCount: number
+  templateCustomizable: boolean
+  missingTemplateFrame: boolean
 }
 interface SlotSummary {
   code: string
@@ -477,7 +481,17 @@ function ConfigValuesTab({ configCode }: { configCode: string }) {
                   <div key={s.code} style={{ border: '1px solid #EEF2EF', borderRadius: 10, padding: '11px 13px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{detail?.name ?? s.code}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{detail?.name ?? s.code}</div>
+                          {detail && !detail.overridable && (
+                            <span
+                              title="Attribute khóa ghi đè — giá trị luôn lấy từ Template"
+                              style={{ fontSize: 9.5, fontWeight: 700, color: '#8A998F', background: '#F1F5F2', padding: '1px 7px', borderRadius: 99 }}
+                            >
+                              KHÓA
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 11, color: '#8A998F', marginTop: 2 }}>
                           {detail?.attributeName} {detail?.dataTypeName ? `(${detail.dataTypeName})` : ''}
                         </div>
@@ -520,8 +534,13 @@ function ConfigValuesTab({ configCode }: { configCode: string }) {
                         {detail?.inheritedFrameValue
                           ? `Kế thừa Template: ${detail.inheritedFrameValue}`
                           : detail?.slotDefaultValue
-                            ? `Mặc định Answer Slot: ${detail.slotDefaultValue}`
+                            ? `Mặc định từ Attribute: ${detail.slotDefaultValue}`
                             : 'Chưa cấu hình giá trị'}
+                      </div>
+                    )}
+                    {detail?.missingTemplateFrame && (
+                      <div style={{ fontSize: 10.5, color: '#9A6B00', marginTop: 4 }}>
+                        Attribute chính gốc — Template cần khai báo giá trị riêng nhưng chưa có
                       </div>
                     )}
                   </div>

@@ -63,6 +63,9 @@ public class AttributeService {
             row.put("groupCode", a.getGroupCode());
             row.put("dataTypeCode", a.getDataTypeCode());
             row.put("required", a.isRequired());
+            row.put("overridable", a.isOverridable());
+            row.put("templateCustomizable", a.isTemplateCustomizable());
+            row.put("defaultValue", a.getDefaultValue());
             row.put("unit", a.getUnit());
 
             String dataTypeName = dataTypeRepo.findById(a.getDataTypeCode())

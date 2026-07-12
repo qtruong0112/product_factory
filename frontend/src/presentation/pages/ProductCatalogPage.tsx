@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../../infrastructure/api/client'
 import Icon from '../components/Icon'
+import PaginationFooter from '../components/PaginationFooter'
 import { StatusChip } from '../components/StatusChip'
 
 // Card do backend làm giàu — join product_variant (family/limitRange/displayRate/status)
@@ -91,6 +92,8 @@ export default function ProductCatalogPage() {
           </div>
         ))}
       </div>
+
+      <PaginationFooter total={list.length} unit="sản phẩm" />
     </div>
   )
 }

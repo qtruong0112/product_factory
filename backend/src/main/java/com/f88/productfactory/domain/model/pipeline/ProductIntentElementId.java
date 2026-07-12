@@ -5,7 +5,9 @@ import java.util.Objects;
 
 public class ProductIntentElementId implements Serializable {
     private Long productIntentId;
-    private String elementCode;
+    private String otCoreCode;
+    private String elementTypeCode;
+    private String leg;
 
     public ProductIntentElementId() {}
 
@@ -13,7 +15,9 @@ public class ProductIntentElementId implements Serializable {
         if (this == o) return true;
         if (!(o instanceof ProductIntentElementId that)) return false;
         return Objects.equals(productIntentId, that.productIntentId)
-                && Objects.equals(elementCode, that.elementCode);
+                && Objects.equals(otCoreCode, that.otCoreCode)
+                && Objects.equals(elementTypeCode, that.elementTypeCode)
+                && Objects.equals(leg, that.leg);
     }
-    @Override public int hashCode() { return Objects.hash(productIntentId, elementCode); }
+    @Override public int hashCode() { return Objects.hash(productIntentId, otCoreCode, elementTypeCode, leg); }
 }

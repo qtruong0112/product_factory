@@ -35,6 +35,12 @@ public class Attribute {
     @Column(name = "is_nullable", nullable = false)
     private boolean nullable;
 
+    @Column(name = "is_overridable", nullable = false)
+    private boolean overridable;
+
+    @Column(name = "is_template_customizable", nullable = false)
+    private boolean templateCustomizable;
+
     @Column(name = "default_value", length = 255)
     private String defaultValue;
 
@@ -48,6 +54,8 @@ public class Attribute {
     public boolean isRequired() { return required; }
     public boolean isUnique() { return unique; }
     public boolean isNullable() { return nullable; }
+    public boolean isOverridable() { return overridable; }
+    public boolean isTemplateCustomizable() { return templateCustomizable; }
     public String getDefaultValue() { return defaultValue; }
     public String getUnit() { return unit; }
 }

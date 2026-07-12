@@ -492,7 +492,7 @@ INSERT INTO "attribute" ("code", "name", "group_code", "data_type_code", "is_req
   ('min_amount', 'Số dư tối thiểu', 'GRP_LIMIT', 'DT_MONEY', false, '0đ', 'VND'),
   ('capacity_range', 'Khoảng capacity', 'GRP_LIMIT', 'DT_RANGE', true, 'Có quản trị', NULL),
   ('ltv', 'Tỷ lệ cho vay (LTV)', 'GRP_COLLATERAL', 'DT_PERCENT', true, '80%', '%'),
-  ('asset_type', 'Loại tài sản', 'GRP_COLLATERAL', 'DT_ENUM', true, 'Xe máy', NULL),
+  ('asset_type', 'Loại tài sản', 'GRP_COLLATERAL', 'DT_ENUM', true, 'Xe máy (TwoWheels)', NULL),
   ('asset_valuation', 'Công thức định giá TS', 'GRP_COLLATERAL', 'DT_FORMULA', true, '70% giá trị', NULL),
   ('repay_method', 'Phương thức trả nợ', 'GRP_REPAYMENT', 'DT_ENUM', true, 'Trả góp nhiều kỳ', NULL),
   ('installment_count', 'Số kỳ trả góp', 'GRP_REPAYMENT', 'DT_INT', true, '1 – 18', 'kỳ'),
@@ -533,6 +533,33 @@ INSERT INTO "attribute" ("code", "name", "group_code", "data_type_code", "is_req
   ('disb_timing', 'Thời điểm giải ngân', 'GRP_DISBURSEMENT', 'DT_ENUM', false, 'Ngay sau ký hợp đồng', NULL),
   ('credit_history_required', 'Yêu cầu lịch sử tín dụng', 'GRP_ELIGIBILITY', 'DT_ENUM', false, 'Không nợ xấu nhóm 3-5', NULL),
   ('stmt_channel', 'Kênh gửi sao kê', 'GRP_BILLING', 'DT_ENUM', false, 'SMS', NULL);
+
+-- ===== 12c. attribute — Giai đoạn 71: khóa is_overridable=false cho 6 Attribute đại diện cơ chế/
+-- định dạng kỹ thuật cố định hoặc thủ tục pháp lý chuẩn hóa (KHÔNG phải giá trị "bao nhiêu" thương
+-- mại biến thiên theo Selector Scope — theo đúng phân biệt của tài liệu "Lớp vỏ thương mại"). Cả 6
+-- mã đều CHƯA từng có Fragment nào trong toàn bộ sample data (đã đối chiếu qua query fragment↔
+-- answer_slot.attribute_code) nên khóa không ảnh hưởng completeness của bất kỳ Config hiện có nào:
+-- dispute_resolution/legal_form-adjacent (GRP_LEGAL, cơ chế pháp lý); disb_syntax/transfer_content
+-- (định dạng kỹ thuật cố định, vd "F88 {contract}"); rounding_rule (quy ước tính toán chuẩn hóa);
+-- penalty_base (cơ chế tính phạt, khác penalty_rate là con số % vẫn giữ overridable); disb_timing
+-- (gắn quy trình thẩm định rủi ro của Pattern, không phải dial thương mại).
+UPDATE "attribute" SET "is_overridable" = false
+  WHERE "code" IN ('dispute_resolution', 'disb_syntax', 'transfer_content', 'rounding_rule', 'penalty_base', 'disb_timing');
+
+-- ===== 12d. attribute — Giai đoạn 73: đánh dấu is_template_customizable=true cho 17 Attribute có
+-- BẰNG CHỨNG THẬT là giá trị khác nhau giữa các Template (đếm DISTINCT template_frame.frame_value
+-- qua toàn bộ 6 Template — vd base_rate 4 giá trị khác nhau, asset_type/installment_count/
+-- limit_amount 3, còn lại 2) — đây là nhóm "chính gốc" thật sự cần Template tự khai báo riêng.
+-- 26 Attribute còn lại (KHÔNG nằm trong danh sách này, kể cả một số đang is_required=true như
+-- age/compliance/lender_party/penalty_rate/rate_type/schedule) chỉ có ĐÚNG 1 giá trị y hệt ở mọi
+-- Template từ trước tới giờ — is_required KHÔNG tương quan với "cần tuỳ biến theo Template" (đã xác
+-- nhận qua AskUserQuestion, dùng tiêu chí dữ liệu thật thay vì suy diễn từ is_required) — giữ mặc
+-- định false, tự động lấy default_value từ tầng Attribute, Template không cần khai báo lại.
+UPDATE "attribute" SET "is_template_customizable" = true
+  WHERE "code" IN ('base_rate', 'asset_type', 'installment_count', 'limit_amount', 'fee_amount',
+                    'borrower_type', 'fee_type', 'interest_calc', 'legal_form', 'co_borrower_allowed',
+                    'disb_timing', 'dispute_resolution', 'fee_collection_time', 'insurance_required',
+                    'repay_channel', 'ltv', 'asset_valuation');
 
 -- ===== 13. attribute_constraint — từ cột RÀNG BUỘC + cfgValidate() =====
 INSERT INTO "attribute_constraint" ("attribute_code", "kind", "min_value", "max_value", "step_value", "expression", "depends_on_attribute_code", "message") VALUES
@@ -639,10 +666,15 @@ INSERT INTO "block" ("id", "code", "name", "biz_group", "governed_by_element_cod
   ('BLK_REGULATORY', 'BLOCK_REGULATORY', 'Tuân thủ & Pháp lý', 'Khởi tạo', NULL, 'Legal Form', 'published'),
   -- Giai đoạn 52: BLK_LIMIT/BLK_INTEREST/BLK_FEE trước đây governed_by mã OET_NATURE giả (đã xóa) —
   -- chuyển sang governed_by_aspect = mã FOA thật (giữ đúng ý nghĩa gốc, không bịa liên kết OE mới).
-  ('BLK_LIMIT', 'BLOCK_LIMIT', 'Hạn mức (Limit)', 'Giá trị', NULL, 'FOA_REVOLVING', 'published'),
+  -- Giai đoạn 68: BLK_LIMIT/BLK_INTEREST đổi lại sang governed_by_element_code THẬT — query
+  -- obligation_type_composition xác nhận OE_VAL_LIMIT_INC_DEC_CAPACITY 100% (2/2 dòng) chỉ dùng cho
+  -- OTF họ Facility, OE_VAL_ACCRUAL_ON_BALANCE 100% (7/7 dòng) chỉ dùng cho OT_INTEREST — sạch,
+  -- không mơ hồ (khác BLK_COUNTERPARTY còn 5 mã OE_PARTY_* không mã nào áp đảo, giữ nguyên aspect).
+  -- BLK_FEE giữ nguyên aspect vì OT_FEE chưa từng có 1 dòng composition nào (không có OE thật).
+  ('BLK_LIMIT', 'BLOCK_LIMIT', 'Hạn mức (Limit)', 'Giá trị', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', NULL, 'published'),
   ('BLK_VALUEBASE', 'BLOCK_VALUE_BASE', 'Cơ sở giá trị (Value Base)', 'Giá trị', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', NULL, 'published'),
   ('BLK_DISBURSEMENT', 'BLOCK_DISBURSEMENT', 'Giải ngân (Disbursement)', 'Kích hoạt', 'OE_ACT_ON_DISBURSEMENT', NULL, 'published'),
-  ('BLK_INTEREST', 'BLOCK_INTEREST', 'Lãi suất (Interest)', 'Vận hành', NULL, 'FOA_TERM_LOAN', 'published'),
+  ('BLK_INTEREST', 'BLOCK_INTEREST', 'Lãi suất (Interest)', 'Vận hành', 'OE_VAL_ACCRUAL_ON_BALANCE', NULL, 'published'),
   ('BLK_FEE', 'BLOCK_FEE', 'Phí (Fee)', 'Vận hành', NULL, 'FOA_TERM_LOAN', 'published'),
   ('BLK_REPAYMENT', 'BLOCK_REPAYMENT', 'Trả nợ (Repayment)', 'Vận hành', 'OE_FUL_INSTALLMENT', NULL, 'published'),
   ('BLK_COLLATERAL', 'BLOCK_COLLATERAL', 'Tài sản đảm bảo', 'Thu hồi', 'OE_REC_ASSET_PLEDGE', NULL, 'published'),
@@ -776,45 +808,195 @@ INSERT INTO "product_intent" ("id", "code", "name", "business_intent_id", "arche
 
 SELECT setval(pg_get_serial_sequence('product_intent','id'), 6);
 
--- ===== 22. product_intent_element — element nền (PI-003 ghép FACILITY + LOAN theo list view)
--- Giai đoạn 52: bỏ dòng đầu mã nature (trùng lặp archetype_code của product_intent) =====
-INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUES
-  (3, 'OE_VAL_LIMIT_INC_DEC_CAPACITY'),
-  (3, 'OE_FUL_STATEMENT_CYCLE'),
-  (5, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
-  (5, 'OE_ACT_ON_DISBURSEMENT'),
-  (5, 'OE_FUL_INSTALLMENT'),
-  (5, 'OE_REC_ASSET_PLEDGE'),
-  (5, 'OE_TIME_CYCLE_DEADLINE');
-
--- ===== 22b. product_intent_element — bổ sung PI-001,002,004,006 (thiếu trong bản gốc; suy diễn nguyên vẹn
--- từ obligation_type_composition của Obligation Type mà Pattern gắn với Intent đó dùng, không bịa mã mới) =====
-INSERT INTO "product_intent_element" ("product_intent_id", "element_code") VALUES
-  -- PI-001 'Cho vay tiêu dùng nhỏ lẻ' → PT-005/PT-003 nhóm tín chấp+cầm cố trả góp dùng chung archetype FOA_TERM_LOAN;
-  -- lấy nguyên bộ composition của OT_UNSECURED (đại diện Term Loan không TSĐB)
-  (1, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
-  (1, 'OE_ACT_ON_DISBURSEMENT'),
-  (1, 'OE_FUL_INSTALLMENT'),
-  (1, 'OE_REC_UNSECURED'),
-  (1, 'OE_TIME_CYCLE_DEADLINE'),
-  -- PI-002 'Cấp hạn mức để cho vay' → archetype FOA_REVOLVING; lấy nguyên bộ composition của OT_FACILITY
-  (2, 'OE_VAL_LIMIT_INC_DEC_CAPACITY'),
-  (2, 'OE_ACT_FACILITY_OPEN'),
-  (2, 'OE_FUL_STATEMENT_CYCLE'),
-  (2, 'OE_REC_ASSET_PLEDGE'),
-  (2, 'OE_TIME_CYCLE_STATEMENT'),
-  -- PI-004 'Cho vay cầm cố ô tô' → Pattern PT-006 gắn OT_AUTO_PLEDGE; lấy nguyên bộ composition tương ứng
-  (4, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
-  (4, 'OE_ACT_ON_DISBURSEMENT'),
-  (4, 'OE_FUL_INSTALLMENT'),
-  (4, 'OE_REC_ASSET_PLEDGE'),
-  (4, 'OE_TIME_CYCLE_DEADLINE'),
-  -- PI-006 'Vay tín chấp lương' → Pattern PT-005 gắn OT_UNSECURED; lấy nguyên bộ composition tương ứng
-  (6, 'OE_VAL_PRINCIPAL_MULTI_DECREASE'),
-  (6, 'OE_ACT_ON_DISBURSEMENT'),
-  (6, 'OE_FUL_INSTALLMENT'),
-  (6, 'OE_REC_UNSECURED'),
-  (6, 'OE_TIME_CYCLE_DEADLINE');
+-- ===== 22. product_intent_element — Giai đoạn 66: viết lại hoàn toàn, đủ cấu trúc OT lõi/leg
+-- (mirror obligation_type_composition, xem V1__schema.sql) thay vì 27 dòng phẳng cũ (Giai đoạn 22/51b).
+-- Mỗi Intent copy NGUYÊN VẸN composition đầy đủ của đúng OTF "Primary" mà Pattern con thật của nó
+-- (product_pattern.product_intent_id → pattern_obligation_type role='Primary') đang dùng — không bịa
+-- mã mới, không rút gọn. Mapping thật:
+--   PI-001 (id 1) ← PT-003 → OT_PLEDGE_BULLET (30 dòng)
+--   PI-002 (id 2) ← PT-004 → OT_FACILITY       (30 dòng)
+--   PI-003 (id 3) ← PT-002 → OT_FACILITY       (30 dòng, PT-002 còn có OT_PLEDGE_INSTALLMENT vai Support — bỏ qua, Intent chỉ phản ánh OTF chính)
+--   PI-004 (id 4) ← PT-006 → OT_AUTO_PLEDGE     (30 dòng)
+--   PI-005 (id 5) ← PT-001 → OT_PLEDGE_INSTALLMENT (30 dòng)
+--   PI-006 (id 6) ← PT-005 → OT_UNSECURED       (18 dòng, không có OT_ASSET_HANDOVER)
+-- Sửa 1 điểm lệch so với Giai đoạn 51b: PI-001 trước đây dùng tạm composition của OT_UNSECURED
+-- ("đại diện cùng archetype FOA_TERM_LOAN" — chọn nhanh lúc đó), nay đúng lineage thật của Pattern
+-- con (PT-003) là OT_PLEDGE_BULLET, đã sửa lại cho khớp. =====
+INSERT INTO "product_intent_element" ("product_intent_id", "ot_core_code", "element_type_code", "element_code", "leg") VALUES
+  -- PI-001 ← OT_PLEDGE_BULLET
+  (1, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (1, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (1, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (1, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (1, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (1, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (1, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_DEADLINE_ONLY', 'default'),
+  (1, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (1, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (1, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (1, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (1, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (1, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_DEADLINE_ONLY', 'default'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER_CUSTODY', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'receive'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER_RELEASE', 'release'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'release'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_SETTLEMENT_TRIGGER', 'release'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'release'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'release'),
+  (1, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'release'),
+  -- PI-002 ← OT_FACILITY
+  (2, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (2, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (2, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (2, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (2, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (2, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_FACILITY_OPEN', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_STATEMENT_CYCLE', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (2, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_CYCLE_STATEMENT', 'default'),
+  (2, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (2, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (2, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_FACILITY_OPEN', 'default'),
+  (2, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_STATEMENT_CYCLE', 'default'),
+  (2, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (2, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_CYCLE_STATEMENT', 'default'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER_CUSTODY', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'receive'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER_RELEASE', 'release'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'release'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_SETTLEMENT_TRIGGER', 'release'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'release'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'release'),
+  (2, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'release'),
+  -- PI-003 ← OT_FACILITY (Pattern con PT-002 dùng Primary; bỏ qua OT_PLEDGE_INSTALLMENT vai Support)
+  (3, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (3, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (3, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (3, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (3, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (3, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_LIMIT_INC_DEC_CAPACITY', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_FACILITY_OPEN', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_STATEMENT_CYCLE', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (3, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_CYCLE_STATEMENT', 'default'),
+  (3, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (3, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (3, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_FACILITY_OPEN', 'default'),
+  (3, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_STATEMENT_CYCLE', 'default'),
+  (3, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (3, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_CYCLE_STATEMENT', 'default'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER_CUSTODY', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'receive'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER_RELEASE', 'release'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'release'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_SETTLEMENT_TRIGGER', 'release'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'release'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'release'),
+  (3, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'release'),
+  -- PI-004 ← OT_AUTO_PLEDGE
+  (4, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (4, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (4, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (4, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (4, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (4, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (4, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default'),
+  (4, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (4, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (4, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (4, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (4, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (4, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER_CUSTODY', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'receive'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER_RELEASE', 'release'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'release'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_SETTLEMENT_TRIGGER', 'release'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'release'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'release'),
+  (4, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'release'),
+  -- PI-005 ← OT_PLEDGE_INSTALLMENT
+  (5, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (5, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (5, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (5, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (5, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (5, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (5, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default'),
+  (5, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (5, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (5, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (5, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (5, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_ASSET_PLEDGE', 'default'),
+  (5, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER_CUSTODY', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'receive'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER_RELEASE', 'release'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'release'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_ACTIVATION', 'OE_ACT_SETTLEMENT_TRIGGER', 'release'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_TIME', 'OE_TIME_POINT', 'release'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'release'),
+  (5, 'OT_ASSET_HANDOVER', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'release'),
+  -- PI-006 ← OT_UNSECURED (không có OT_ASSET_HANDOVER — tín chấp, không tài sản đảm bảo)
+  (6, 'OT_DISBURSEMENT', 'OET_PARTY', 'OE_PARTY_LENDER_BORROWER', 'default'),
+  (6, 'OT_DISBURSEMENT', 'OET_VALUE', 'OE_VAL_FIXED_ONE_OFF', 'default'),
+  (6, 'OT_DISBURSEMENT', 'OET_ACTIVATION', 'OE_ACT_CONTRACT_EFFECTIVE', 'default'),
+  (6, 'OT_DISBURSEMENT', 'OET_TIME', 'OE_TIME_POINT', 'default'),
+  (6, 'OT_DISBURSEMENT', 'OET_FULFILLMENT', 'OE_FUL_LUMP_SUM', 'default'),
+  (6, 'OT_DISBURSEMENT', 'OET_RECOVERY', 'OE_REC_NOT_APPLICABLE', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_VALUE', 'OE_VAL_PRINCIPAL_MULTI_DECREASE', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_RECOVERY', 'OE_REC_UNSECURED', 'default'),
+  (6, 'OT_PRINCIPAL_REPAYMENT', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default'),
+  (6, 'OT_INTEREST', 'OET_PARTY', 'OE_PARTY_BORROWER_LENDER', 'default'),
+  (6, 'OT_INTEREST', 'OET_VALUE', 'OE_VAL_ACCRUAL_ON_BALANCE', 'default'),
+  (6, 'OT_INTEREST', 'OET_ACTIVATION', 'OE_ACT_ON_DISBURSEMENT', 'default'),
+  (6, 'OT_INTEREST', 'OET_FULFILLMENT', 'OE_FUL_INSTALLMENT', 'default'),
+  (6, 'OT_INTEREST', 'OET_RECOVERY', 'OE_REC_UNSECURED', 'default'),
+  (6, 'OT_INTEREST', 'OET_TIME', 'OE_TIME_CYCLE_DEADLINE', 'default');
 
 -- ===== 23. product_pattern — 6 PT (list view; intent nguồn: PT-002←PI-003 theo version note, còn lại [suy luận]) =====
 INSERT INTO "product_pattern" ("code", "name", "product_intent_id", "status") VALUES
@@ -955,6 +1137,12 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-001', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   -- Giai đoạn 48: BLK_LIMIT mới thêm vào PT-001 — giá trị khung chung, từng Config override riêng.
   ('TPL-001', 'BLK_LIMIT', 'limit_amount', '3tr – 80tr'),
+  -- Giai đoạn 72: vá lỗ hổng phát hiện qua audit — capacity_range (bắt buộc) và min_amount của
+  -- BLK_LIMIT chưa từng có khung Template dù mọi Config đã dùng TPL-001 đều có Fragment/default
+  -- riêng khớp đúng 2 giá trị này (capacity_range='Có quản trị' — khớp answer_slot.default_value
+  -- và mọi Fragment thật; min_amount='0đ' — khớp answer_slot.default_value, chưa Config nào override).
+  ('TPL-001', 'BLK_LIMIT', 'capacity_range', 'Có quản trị'),
+  ('TPL-001', 'BLK_LIMIT', 'min_amount', '0đ'),
   -- TPL-002 'Vay cầm cố trả góp · KH doanh nghiệp' ← PT-001 (đối tượng doanh nghiệp)
   ('TPL-002', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-002', 'BLK_COUNTERPARTY', 'borrower_type', 'Doanh nghiệp'),
@@ -972,6 +1160,9 @@ INSERT INTO "template_frame" ("template_code", "block_id", "slot_code", "frame_v
   ('TPL-002', 'BLK_COLLATERAL', 'ltv', '70%'),
   ('TPL-002', 'BLK_PENALTY', 'penalty_rate', '150% lãi'),
   ('TPL-002', 'BLK_LIMIT', 'limit_amount', '50tr – 2 tỷ'),
+  -- Giai đoạn 72: cùng lỗ hổng như TPL-001 (xem comment ở trên) — vá cho TPL-002.
+  ('TPL-002', 'BLK_LIMIT', 'capacity_range', 'Có quản trị'),
+  ('TPL-002', 'BLK_LIMIT', 'min_amount', '0đ'),
   -- TPL-004 'Vay cầm cố ô tô · trả góp' ← PT-006 (COUNTERPARTY/REGULATORY/INTEREST/FEE/REPAYMENT/COLLATERAL/PENALTY)
   ('TPL-004', 'BLK_COUNTERPARTY', 'lender_party', 'F88'),
   ('TPL-004', 'BLK_COUNTERPARTY', 'borrower_type', 'Cá nhân'),

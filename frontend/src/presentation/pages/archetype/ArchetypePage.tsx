@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getList, type Page } from '../../../infrastructure/api/client'
 import Icon from '../../components/Icon'
+import PaginationFooter from '../../components/PaginationFooter'
 
 // Card do backend làm giàu: typeCount (obligation_type theo archetype),
 // elementCount (foa_element theo archetype), productCount (số pattern khác nhau
@@ -125,6 +126,8 @@ export default function ArchetypePage() {
           </div>
         ))}
       </div>
+
+      <PaginationFooter total={list.length} unit="archetype" />
     </div>
   )
 }

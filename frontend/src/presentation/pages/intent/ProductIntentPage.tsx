@@ -11,6 +11,17 @@ interface ProductIntent {
   businessIntentId: number
   archetypeCode: string
   status: string
+  coreCount: number
+  auxCount: number
+}
+
+function OtCoreSummary({ coreCount, auxCount }: { coreCount: number; auxCount: number }) {
+  return (
+    <span style={{ fontSize: 12.5, color: '#41524A', fontWeight: 600 }}>
+      {coreCount} Cốt lõi
+      {auxCount > 0 && <span style={{ color: '#8A998F', fontWeight: 500 }}> · {auxCount} Phụ trợ</span>}
+    </span>
+  )
 }
 
 // Nhãn hiển thị archetype (khớp prototype) + tone chip.
@@ -72,6 +83,7 @@ export default function ProductIntentPage() {
     { label: 'Mã', width: '120px' },
     { label: 'Tên Product Intent' },
     { label: 'Archetype', width: '150px' },
+    { label: 'OT lõi', width: '170px' },
     { label: 'Trạng thái', width: '130px' },
   ]
 
@@ -81,6 +93,7 @@ export default function ProductIntentPage() {
     mono(pi.code ?? `PI-${String(pi.id).padStart(3, '0')}`),
     <span style={{ fontWeight: 600, color: '#122019' }}>{pi.name}</span>,
     <ArchetypeChip code={pi.archetypeCode} />,
+    <OtCoreSummary coreCount={pi.coreCount} auxCount={pi.auxCount} />,
     <StatusChip status={pi.status} />,
   ])
 

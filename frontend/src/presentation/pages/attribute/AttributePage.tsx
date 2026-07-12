@@ -16,6 +16,9 @@ interface AttrRow {
   constraintCount: number
   constraintSummary: string | null
   required: boolean
+  overridable: boolean
+  templateCustomizable: boolean
+  defaultValue: string | null
 }
 
 // Attribute Group — làm giàu: domainName (join domain), attributeCount (đếm).
@@ -55,6 +58,8 @@ interface AttrDetail {
     required: boolean
     unique: boolean
     nullable: boolean
+    overridable: boolean
+    templateCustomizable: boolean
     defaultValue: string | null
     unit: string | null
     groupName: string
@@ -144,6 +149,46 @@ function RequiredChip({ required }: { required: boolean }) {
       }}
     >
       {required ? 'Bắt buộc' : 'Tùy chọn'}
+    </span>
+  )
+}
+
+// Chip "Cho phép" (xanh) / "Khóa" (xám) — cờ is_overridable, cùng kiểu RequiredChip.
+function OverrideChip({ overridable }: { overridable: boolean }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '3px 10px',
+        borderRadius: 99,
+        fontSize: 11.5,
+        fontWeight: 700,
+        background: overridable ? '#DCF3E7' : '#F1F5F2',
+        color: overridable ? '#0B7349' : '#8A998F',
+      }}
+    >
+      {overridable ? 'Cho phép' : 'Khóa'}
+    </span>
+  )
+}
+
+// Chip "Chính gốc" (tím, cần Template tự khai báo) / "Đơn giản" (xám, tự lấy default từ Attribute).
+function TemplateChip({ templateCustomizable }: { templateCustomizable: boolean }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '3px 10px',
+        borderRadius: 99,
+        fontSize: 11.5,
+        fontWeight: 700,
+        background: templateCustomizable ? '#EFE6F8' : '#F1F5F2',
+        color: templateCustomizable ? '#7A4FB0' : '#8A998F',
+      }}
+    >
+      {templateCustomizable ? 'Chính gốc' : 'Đơn giản'}
     </span>
   )
 }
@@ -301,6 +346,8 @@ function AttrDetailBody({ detail, dataTypes }: { detail: AttrDetail; dataTypes: 
           <BoolBadge label="Bắt buộc (Required)" hint="Giá trị không được để trống khi resolve" value={a.required} />
           <BoolBadge label="Duy nhất (Unique)" hint="Không trùng giá trị trong cùng phạm vi" value={a.unique} />
           <BoolBadge label="Cho phép Null (Nullable)" hint="Chấp nhận chưa có giá trị (override sau)" value={a.nullable} />
+          <BoolBadge label="Cho phép ghi đè (Overridable)" hint="Fragment ở Config có được ghi đè giá trị hay luôn dùng Template" value={a.overridable} />
+          <BoolBadge label="Cấu hình riêng ở Template" hint="Có/Không cần Template tự khai báo giá trị khung — nếu không, tự động lấy default từ Attribute" value={a.templateCustomizable} />
         </div>
         {a.defaultValue && (
           <div style={{ marginTop: 10 }}>
@@ -428,14 +475,26 @@ export default function AttributePage() {
       { label: 'Mã', width: '160px' },
       { label: 'Attribute' },
       { label: 'Data Type', width: '120px' },
+      { label: 'Giá trị gốc', width: '160px' },
       { label: 'Dùng trong Answer Slot', width: '250px' },
       { label: 'Ràng buộc', width: '170px' },
-      { label: 'Bắt buộc', width: '110px' },
+      { label: 'Bắt buộc', width: '100px' },
+      { label: 'Ghi đè', width: '100px' },
+      { label: 'Cấu hình Template', width: '130px' },
     ]
     rows = (attrs?.content ?? []).map((a) => [
       mono(a.code),
       <span style={{ fontWeight: 600, color: '#122019' }}>{a.name}</span>,
       <InfoChip label={a.dataTypeName} />,
+      a.templateCustomizable ? (
+        <span style={{ color: '#A7B5AC', fontSize: 12, fontStyle: 'italic' }} title="Attribute chính gốc — giá trị thật khác nhau theo từng Template, xem ở Template tương ứng">
+          Theo Template
+        </span>
+      ) : a.defaultValue ? (
+        <span style={{ color: '#243A30', fontWeight: 600, fontSize: 12.5 }}>{a.defaultValue}</span>
+      ) : (
+        <span style={{ color: '#A7B5AC' }}>—</span>
+      ),
       a.usedInSlots.length ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
           {a.usedInSlots.map((s, i) => (
@@ -454,6 +513,8 @@ export default function AttributePage() {
         <span style={{ color: '#A7B5AC' }}>—</span>
       ),
       <RequiredChip required={a.required} />,
+      <OverrideChip overridable={a.overridable} />,
+      <TemplateChip templateCustomizable={a.templateCustomizable} />,
     ])
     searchPlaceholder = 'Tìm Attribute…'
     actionLabel = 'Tạo Attribute'

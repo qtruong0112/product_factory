@@ -1,10 +1,13 @@
 package com.f88.productfactory.application.service.governance;
 
 import com.f88.productfactory.domain.model.ontology.FoaElement;
+import com.f88.productfactory.domain.model.ontology.ObligationElement;
+import com.f88.productfactory.domain.model.ontology.ObligationTypeComposition;
 import com.f88.productfactory.domain.model.structure.Block;
 import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
 import com.f88.productfactory.domain.repository.ontology.FoaElementRepository;
 import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
+import com.f88.productfactory.domain.repository.ontology.ObligationTypeCompositionRepository;
 import com.f88.productfactory.domain.repository.structure.BlockRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +26,8 @@ import java.util.Map;
  * phủ ở Pattern builder đổi sang đọc trực tiếp từ Obligation Element × Block, xem
  * ProductPatternService#detail):
  *   - foaOeMatrix(): PHÁI SINH TỪ foa_element (nguồn duy nhất, từ Giai đoạn 51).
- *   - oeBlockMatrix(): PHÁI SINH TỪ block.governed_by_element_code (nguồn duy nhất, từ Giai đoạn 53b)
- *     — mỗi Block chỉ do tối đa 1 Obligation Element chi phối (không có mức "tuỳ chọn", chỉ
- *     req/na), nên rows=Block (toàn bộ), cols=các OE thực sự chi phối ít nhất 1 Block.
+ *   - oeBlockMatrix(): PHÁI SINH TỪ block.governed_by_element_code (Giai đoạn 53b) + đối chiếu
+ *     obligation_type_composition (Giai đoạn 67). Chi tiết ở oeBlockMatrix().
  */
 @Service
 public class ConstraintMatrixService {
@@ -34,15 +36,18 @@ public class ConstraintMatrixService {
     private final FinancialObligationArchetypeRepository archetypeRepo;
     private final BlockRepository blockRepo;
     private final FoaElementRepository foaElementRepo;
+    private final ObligationTypeCompositionRepository compositionRepo;
 
     public ConstraintMatrixService(ObligationElementRepository elementRepo,
                                    FinancialObligationArchetypeRepository archetypeRepo,
                                    BlockRepository blockRepo,
-                                   FoaElementRepository foaElementRepo) {
+                                   FoaElementRepository foaElementRepo,
+                                   ObligationTypeCompositionRepository compositionRepo) {
         this.elementRepo = elementRepo;
         this.archetypeRepo = archetypeRepo;
         this.blockRepo = blockRepo;
         this.foaElementRepo = foaElementRepo;
+        this.compositionRepo = compositionRepo;
     }
 
     /**
@@ -93,13 +98,19 @@ public class ConstraintMatrixService {
     }
 
     /**
-     * Tab "Obligation Element × Block" — Giai đoạn 58, PHÁI SINH TRỰC TIẾP từ
-     * block.governed_by_element_code (nguồn duy nhất, không lưu matrix_cell riêng). Mỗi Block tối
-     * đa 1 OE chi phối → chỉ 2 mức req/na (không có "tuỳ chọn"). Rows CHỈ gồm Block thực sự có
-     * governed_by_element_code (không phải toàn bộ 12 Block trong thư viện) — 7/12 Block còn lại
-     * được chi phối bởi thứ khác không phải OE (FOA cho BLK_LIMIT/INTEREST/FEE, khái niệm tự do
-     * cho BLK_ELIGIBILITY/COUNTERPARTY/REGULATORY/PENALTY — xem governed_by_aspect), luôn "na" ở
-     * mọi cột nên đưa vào chỉ gây loãng ma trận, không thêm thông tin thật.
+     * Tab "Obligation Element × Block" — Giai đoạn 58 (đường chéo req/na thuần từ
+     * block.governed_by_element_code) + Giai đoạn 67 (thêm mức "pos" — Được phép). Rows CHỈ gồm 5
+     * Block thực sự có governed_by_element_code (7/12 Block còn lại governed bởi thứ khác không
+     * phải OE — xem governed_by_aspect — luôn "na" ở mọi cột nên không đưa vào, giống lý do Giai
+     * đoạn 59).
+     *
+     * Cols: Giai đoạn 67 mở rộng từ "chỉ 5 OE governing" ra TOÀN BỘ Obligation Element THẬT đang
+     * được dùng (distinct element_code trong obligation_type_composition) mà CÙNG element_type_code
+     * (OET) với OE governing 1 trong 5 Block trên — gộp theo OET liền nhau, bỏ hẳn OET_PARTY (không
+     * Block nào chi phối bởi chiều này). Cell: "req" = đúng OE governing của Block; "pos" = OE khác
+     * nhưng cùng OET (suy luận kỹ thuật "cùng kiểu câu trả lời cho cùng 1 câu hỏi định tính" — CHƯA
+     * có tài liệu xác nhận đây là đúng 100% quy tắc nghiệp vụ, chỉ là derive hợp lý từ cấu trúc OET
+     * đã có); "na" = khác OET hoàn toàn.
      */
     public Map<String, Object> oeBlockMatrix() {
         List<Block> governedBlocks = new ArrayList<>();
@@ -107,25 +118,52 @@ public class ConstraintMatrixService {
             if (b.getGovernedByElementCode() != null) governedBlocks.add(b);
         }
 
-        LinkedHashSet<String> colCodes = new LinkedHashSet<>();
-        for (Block b : governedBlocks) colCodes.add(b.getGovernedByElementCode());
+        Map<String, String> otetByBlock = new LinkedHashMap<>();
+        LinkedHashSet<String> relevantOets = new LinkedHashSet<>();
+        for (Block b : governedBlocks) {
+            String oet = elementRepo.findById(b.getGovernedByElementCode())
+                    .map(ObligationElement::getElementTypeCode)
+                    .orElse(null);
+            otetByBlock.put(b.getId(), oet);
+            if (oet != null) relevantOets.add(oet);
+        }
+
+        Map<String, List<String>> elementCodesByOet = new LinkedHashMap<>();
+        LinkedHashSet<String> seenElementCodes = new LinkedHashSet<>();
+        for (ObligationTypeComposition c : compositionRepo.findAll()) {
+            String elCode = c.getElementCode();
+            if (!seenElementCodes.add(elCode)) continue;
+            String oet = elementRepo.findById(elCode).map(ObligationElement::getElementTypeCode).orElse(null);
+            if (oet == null || !relevantOets.contains(oet)) continue;
+            elementCodesByOet.computeIfAbsent(oet, k -> new ArrayList<>()).add(elCode);
+        }
 
         List<Map<String, Object>> cols = new ArrayList<>();
-        for (String cc : colCodes) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("code", cc);
-            m.put("label", elementRepo.findById(cc).map(e -> e.getName()).orElse(cc));
-            cols.add(m);
+        LinkedHashSet<String> colCodes = new LinkedHashSet<>();
+        for (String oet : relevantOets) {
+            for (String elCode : elementCodesByOet.getOrDefault(oet, List.of())) {
+                if (!colCodes.add(elCode)) continue;
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("code", elCode);
+                m.put("label", elementRepo.findById(elCode).map(e -> e.getName()).orElse(elCode));
+                cols.add(m);
+            }
         }
 
         List<Map<String, Object>> rows = new ArrayList<>();
         for (Block b : governedBlocks) {
+            String blockOet = otetByBlock.get(b.getId());
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("code", b.getId());
             row.put("label", b.getName());
             List<String> rowCells = new ArrayList<>();
             for (String cc : colCodes) {
-                rowCells.add(cc.equals(b.getGovernedByElementCode()) ? "req" : "na");
+                if (cc.equals(b.getGovernedByElementCode())) {
+                    rowCells.add("req");
+                } else {
+                    String ccOet = elementRepo.findById(cc).map(ObligationElement::getElementTypeCode).orElse(null);
+                    rowCells.add(blockOet != null && blockOet.equals(ccOet) ? "pos" : "na");
+                }
             }
             row.put("cells", rowCells);
             rows.add(row);
