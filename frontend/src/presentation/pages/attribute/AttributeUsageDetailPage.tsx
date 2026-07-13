@@ -10,6 +10,7 @@ interface AttributeInfo {
   required: boolean
   overridable: boolean
   templateCustomizable: boolean
+  defaultValue: string | null
   unit: string | null
   groupCode: string
   groupName: string
@@ -278,6 +279,18 @@ export default function AttributeUsageDetailPage() {
                   >
                     {a.templateCustomizable ? 'Chính gốc · cấu hình ở Template' : 'Đơn giản · default từ Attribute'}
                   </span>
+                  {a.templateCustomizable ? (
+                    <span
+                      style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 7, background: '#F1F5F2', color: '#A7B5AC', fontStyle: 'italic' }}
+                      title="Giá trị thật khác nhau theo từng Template — xem khung riêng ở bảng Where-used hoặc màn Template tương ứng"
+                    >
+                      Giá trị gốc · Theo Template
+                    </span>
+                  ) : a.defaultValue ? (
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 7, background: '#DCF3E7', color: '#0B7349' }}>
+                      Giá trị gốc · {a.defaultValue}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </div>
