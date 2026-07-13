@@ -169,6 +169,42 @@ export default function ProductPatternDetailPage() {
       </div>
     )
 
+  // Thêm/bớt Block ở canvas — thuần local state (demo builder), KHÔNG gọi API/ghi DB.
+  // Reload trang sẽ mất thay đổi — đúng chủ đích, tránh tạo ảo giác đã lưu.
+  const ADD_REMOVE_HINT = 'Thêm/bớt tại UI — minh hoạ builder, chưa ghi vào hệ thống'
+
+  async function handleAddBlock(blockId: string) {
+    if (canvasIds.has(blockId)) return
+    const lib = blockLibById[blockId]
+    if (!lib) return
+    try {
+      const full = await getDetail<{ slots: ApiSlot[] }>('blocks', blockId)
+      setData((prev) => {
+        if (!prev) return prev
+        const nextPosition = prev.blocks.reduce((m, b) => Math.max(m, b.position), 0) + 1
+        const newBlock: ApiBlock = {
+          blockId: lib.id,
+          position: nextPosition,
+          usage: 'active',
+          name: lib.name,
+          bizGroup: lib.bizGroup,
+          gov: lib.gov,
+          status: lib.status,
+          slots: full.slots,
+        }
+        return { ...prev, blocks: [...prev.blocks, newBlock] }
+      })
+      setSelectedBlockId(blockId)
+    } catch {
+      // demo UI-only — lỗi mạng thì bỏ qua, chưa có state nào cần rollback
+    }
+  }
+
+  function handleRemoveBlock(blockId: string) {
+    setData((prev) => (prev ? { ...prev, blocks: prev.blocks.filter((b) => b.blockId !== blockId) } : prev))
+    setSelectedBlockId((cur) => (cur === blockId ? null : cur))
+  }
+
   const pt = data.pattern
   const statusColor = STATUS_COLORS[pt.status] ?? STATUS_COLORS.draft
   const piCode = pt.productIntentId != null ? `PI-${String(pt.productIntentId).padStart(3, '0')}` : null
@@ -282,8 +318,9 @@ export default function ProductPatternDetailPage() {
                   return (
                     <div
                       key={b.id}
-                      title={READONLY}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', border: '1px solid ' + (inC ? '#CDE9DA' : '#E6ECE8'), borderRadius: 10, background: inC ? '#F4FBF7' : '#fff', cursor: 'grab' }}
+                      title={ADD_REMOVE_HINT}
+                      onClick={() => (inC ? handleRemoveBlock(b.id) : handleAddBlock(b.id))}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', border: '1px solid ' + (inC ? '#CDE9DA' : '#E6ECE8'), borderRadius: 10, background: inC ? '#F4FBF7' : '#fff', cursor: 'pointer' }}
                     >
                       <span style={{ display: 'flex', color: '#A7B5AC', flex: 'none' }}><Icon name="grip" size={15} /></span>
                       <div style={{ width: 30, height: 30, borderRadius: 8, background: '#ECF6F1', color: '#0B7349', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
@@ -370,7 +407,13 @@ export default function ProductPatternDetailPage() {
                     <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{c.blockLabel}</span>
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: c.fg, background: c.bg, padding: '3px 9px', borderRadius: 99 }}>{c.chipLabel}</span>
                     {c.showAdd && (
-                      <button title={READONLY} style={{ fontSize: 11, fontWeight: 700, color: '#0B7349', background: '#DCF3E7', borderRadius: 7, padding: '5px 11px', flex: 'none', border: 'none', cursor: 'default', fontFamily: 'inherit' }}>+ Thêm Block</button>
+                      <button
+                        title={ADD_REMOVE_HINT}
+                        onClick={() => handleAddBlock(c.blockId)}
+                        style={{ fontSize: 11, fontWeight: 700, color: '#0B7349', background: '#DCF3E7', borderRadius: 7, padding: '5px 11px', flex: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        + Thêm Block
+                      </button>
                     )}
                   </div>
                 ))}
@@ -406,7 +449,14 @@ export default function ProductPatternDetailPage() {
                     <div style={{ fontSize: 11.5, color: '#8A998F', marginTop: 3 }}>{b.slots.length} answer slot{preview ? ` · ${preview}` : ''}</div>
                   </div>
                   <span style={{ fontSize: 10.5, fontWeight: 600, padding: '3px 9px', borderRadius: 99, flex: 'none', background: reqd ? '#FBEFC7' : '#EEF1EF', color: reqd ? '#8A6300' : '#5E6F66' }}>{reqd ? 'Bắt buộc' : 'Tùy chọn'}</span>
-                  <button title={READONLY} style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2A0A0', flex: 'none', border: 'none', background: 'none', cursor: 'default' }} onClick={(e) => e.stopPropagation()}>
+                  <button
+                    title={ADD_REMOVE_HINT}
+                    style={{ width: 28, height: 28, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2A0A0', flex: 'none', border: 'none', background: 'none', cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRemoveBlock(b.blockId)
+                    }}
+                  >
                     <Icon name="trash" size={15} color="#C2A0A0" />
                   </button>
                 </div>
