@@ -97,6 +97,15 @@ const SCOPE_META: Record<string, { color: string; bg: string }> = {
 
 const HIEN_TAI = 'Hiện tại'
 
+// Thêm Config Fragment — thuần local state (demo builder), KHÔNG gọi API/ghi DB.
+// Reload trang sẽ mất thay đổi — đúng chủ đích, tránh tạo ảo giác đã lưu vào hệ thống.
+const NEW_FRAG_SCOPES: { code: 'default' | 'time' | 'place' | 'people'; chipLabel: string; scopeName: string; priority: number }[] = [
+  { code: 'default', chipLabel: 'Mặc định', scopeName: 'Mặc định', priority: 0 },
+  { code: 'time', chipLabel: 'Time', scopeName: 'Time (Hiệu lực)', priority: 1 },
+  { code: 'place', chipLabel: 'Place', scopeName: 'Place (Khu vực)', priority: 2 },
+  { code: 'people', chipLabel: 'People', scopeName: 'People (Borrower Segment)', priority: 3 },
+]
+
 export default function ProductConfigDetailPage() {
   const { code } = useParams()
   const navigate = useNavigate()
@@ -108,6 +117,9 @@ export default function ProductConfigDetailPage() {
   const [ctxPlace, setCtxPlace] = useState('')
   const [ctxTime, setCtxTime] = useState(HIEN_TAI)
   const [versionOpen, setVersionOpen] = useState(false)
+  const [newFragScope, setNewFragScope] = useState<'default' | 'time' | 'place' | 'people'>('people')
+  const [newFragScopeValue, setNewFragScopeValue] = useState('')
+  const [newFragValue, setNewFragValue] = useState('')
 
   useEffect(() => {
     if (!code) return
@@ -130,6 +142,13 @@ export default function ProductConfigDetailPage() {
     () => (selectedSlotCode && data ? data.slots[selectedSlotCode] : undefined),
     [data, selectedSlotCode]
   )
+
+  // Đổi slot → làm sạch form "Thêm Config Fragment" (tránh mang giá trị của slot cũ sang).
+  useEffect(() => {
+    setNewFragScope('people')
+    setNewFragScopeValue('')
+    setNewFragValue('')
+  }, [selectedSlotCode])
 
   // Thắng theo ngữ cảnh: default luôn khớp; people/time so khớp đúng giá trị chọn;
   // place khớp nếu giá trị chọn nằm trong danh sách "HCM, HN" tách theo dấu phẩy.
@@ -176,6 +195,53 @@ export default function ProductConfigDetailPage() {
         Lỗi: {error ?? 'Không tìm thấy'}. Kiểm tra backend đã chạy chưa.
       </div>
     )
+
+  // Thêm 1 fragment vào slot đang chọn — thuần local state, không gọi API/ghi DB.
+  function handleAddFragment() {
+    if (!selectedSlotCode) return
+    const value = newFragValue.trim()
+    if (!value) return
+    const scopeValue = newFragScope === 'default' ? null : newFragScopeValue.trim()
+    if (newFragScope !== 'default' && !scopeValue) return
+    const meta = NEW_FRAG_SCOPES.find((s) => s.code === newFragScope)!
+    const frag: FragmentRow = {
+      scopeCode: newFragScope,
+      scopeName: meta.scopeName,
+      priority: meta.priority,
+      scopeValue,
+      value,
+      isWarning: false,
+      validationMsg: null,
+    }
+    const slotCode = selectedSlotCode
+    setData((prev) => {
+      if (!prev) return prev
+      const slot = prev.slots[slotCode]
+      if (!slot) return prev
+      const newlyFilled = slot.fragmentCount === 0 && slot.required
+      const updatedSlot: SlotDetail = { ...slot, fragments: [...slot.fragments, frag], fragmentCount: slot.fragmentCount + 1 }
+      const sidebar = prev.sidebar.map((g) =>
+        g.blockId !== slot.blockId
+          ? g
+          : {
+              ...g,
+              slots: g.slots.map((s) => (s.code === slotCode ? { ...s, filled: true } : s)),
+              reqFilled: newlyFilled ? g.reqFilled + 1 : g.reqFilled,
+            }
+      )
+      const missingRequired = newlyFilled ? prev.missingRequired.filter((m) => m.slotCode !== slotCode) : prev.missingRequired
+      const completeness = newlyFilled
+        ? {
+            ...prev.completeness,
+            reqFilled: prev.completeness.reqFilled + 1,
+            pct: Math.round(((prev.completeness.reqFilled + 1) / prev.completeness.totalReq) * 100),
+          }
+        : prev.completeness
+      return { ...prev, slots: { ...prev.slots, [slotCode]: updatedSlot }, sidebar, missingRequired, completeness }
+    })
+    setNewFragScopeValue('')
+    setNewFragValue('')
+  }
 
   const { completeness, sidebar, missingRequired, constraintIssues } = data
 
@@ -386,27 +452,66 @@ export default function ProductConfigDetailPage() {
                 </div>
               </div>
 
-              {/* Thêm Config Fragment — read-only, giữ giao diện */}
-              <div title="read-only" style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '16px 18px', marginBottom: 16, opacity: 0.75 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: '#122019', marginBottom: 11 }}>Thêm Config Fragment</div>
+              {/* Thêm Config Fragment — thuần local state (demo builder), chưa ghi vào hệ thống */}
+              <div style={{ background: '#fff', border: '1px solid #E6ECE8', borderRadius: 13, padding: '16px 18px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, marginBottom: 11 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: '#122019' }}>Thêm Config Fragment</div>
+                  <div style={{ fontSize: 10.5, color: '#A7B5AC' }}>Minh hoạ trên UI — chưa ghi vào hệ thống</div>
+                </div>
                 <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5E6F66', marginBottom: 7 }}>Loại Selector Scope</div>
                 <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 13 }}>
-                  {['Mặc định', 'People', 'Place', 'Time'].map((label, i) => (
-                    <span key={label} style={{ padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: i === 1 ? 700 : 500, color: i === 1 ? '#fff' : '#41524A', background: i === 1 ? '#0E8C5A' : '#F1F5F2' }}>
-                      {label}
-                    </span>
-                  ))}
+                  {NEW_FRAG_SCOPES.map((s) => {
+                    const active = newFragScope === s.code
+                    return (
+                      <button
+                        key={s.code}
+                        onClick={() => setNewFragScope(s.code)}
+                        style={{ padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: active ? 700 : 500, color: active ? '#fff' : '#41524A', background: active ? '#0E8C5A' : '#F1F5F2', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        {s.chipLabel}
+                      </button>
+                    )
+                  })}
                 </div>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                   <div style={{ flex: 1.2 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66', display: 'block', marginBottom: 5 }}>Giá trị Scope</label>
-                    <input disabled placeholder="VD: Loyalty / HCM, HN / Khuyến mãi Tết" style={inputStyle} />
+                    <input
+                      value={newFragScopeValue}
+                      onChange={(e) => setNewFragScopeValue(e.target.value)}
+                      disabled={newFragScope === 'default'}
+                      placeholder={newFragScope === 'default' ? '— áp cho mọi ngữ cảnh —' : 'VD: Loyalty / HCM, HN / Khuyến mãi Tết'}
+                      style={{ ...inputStyle, background: newFragScope === 'default' ? '#F4F7F5' : '#fff' }}
+                    />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66', display: 'block', marginBottom: 5 }}>Giá trị gán</label>
-                    <input disabled placeholder="VD: 1,0%/tháng" style={inputStyle} />
+                    <input
+                      value={newFragValue}
+                      onChange={(e) => setNewFragValue(e.target.value)}
+                      placeholder="VD: 1,0%/tháng"
+                      style={inputStyle}
+                    />
                   </div>
-                  <button disabled style={{ flex: 'none', background: '#0E8C5A', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'not-allowed', fontFamily: 'inherit' }}>
+                  <button
+                    onClick={handleAddFragment}
+                    disabled={!newFragValue.trim() || (newFragScope !== 'default' && !newFragScopeValue.trim())}
+                    style={{
+                      flex: 'none',
+                      background: !newFragValue.trim() || (newFragScope !== 'default' && !newFragScopeValue.trim()) ? '#C7D5CC' : '#0E8C5A',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 16px',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      cursor: !newFragValue.trim() || (newFragScope !== 'default' && !newFragScopeValue.trim()) ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
                     <Icon name="plus" size={15} color="#fff" /> Thêm
                   </button>
                 </div>
