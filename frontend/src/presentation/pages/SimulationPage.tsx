@@ -188,7 +188,7 @@ export default function SimulationPage() {
   const handleExportCsv = () => {
     if (!form || !result) return
     const rows: (string | number)[][] = []
-    rows.push(['Lịch trả nợ (Amortization Schedule) — Product Factory'])
+    rows.push(['Lịch trả nợ (Amortization Schedule) — FOMS'])
     rows.push(['Sản phẩm', currentVariant?.name ?? form.variantCode])
     rows.push(['Mã sản phẩm (Variant)', form.variantCode])
     rows.push(['Mã cấu hình (Config)', form.configCode])
@@ -271,7 +271,7 @@ export default function SimulationPage() {
     doc.setFont('BeVietnamPro', 'normal')
     doc.setFontSize(9.5)
     doc.setTextColor('#5E6F66')
-    doc.text(`Product Factory · ${currentVariant?.name ?? form.variantCode} (${form.variantCode}) · xuất ngày ${new Date().toLocaleDateString('vi-VN')}`, 40, 58)
+    doc.text(`FOMS · ${currentVariant?.name ?? form.variantCode} (${form.variantCode}) · xuất ngày ${new Date().toLocaleDateString('vi-VN')}`, 40, 58)
 
     const summaryRows: [string, string][] = [
       ['Mã Variant / Config', `${form.variantCode} / ${form.configCode}`],

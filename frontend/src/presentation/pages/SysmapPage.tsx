@@ -3,26 +3,28 @@ import Icon from '../components/Icon'
 
 // 7 tầng pipeline sản phẩm — nav key thật (một số chưa dựng pixel-perfect, click vẫn điều
 // hướng đúng, GenericView tự hiện placeholder "sẽ được dựng ở bước tiếp theo" — không crash).
+// Màu bg/fg trích đúng nguyên bản prototype (sysMapModel().pipeline) — mỗi tầng 1 tông riêng.
 const PIPELINE = [
-  { key: 'businessintent', label: 'Business Intent' },
-  { key: 'intent', label: 'Product Intent' },
-  { key: 'pattern', label: 'Product Pattern' },
-  { key: 'template', label: 'Product Template' },
-  { key: 'config', label: 'Product Config' },
-  { key: 'variant', label: 'Product Variant' },
-  { key: 'catalog', label: 'Product Catalog' },
+  { key: 'businessintent', label: 'Business Intent', sub: 'Mục tiêu kinh doanh', bg: '#E5EEF9', fg: '#2F73C4' },
+  { key: 'intent', label: 'Product Intent', sub: 'Gắn Archetype · OT lõi', bg: '#DCF3E7', fg: '#0B7349' },
+  { key: 'pattern', label: 'Product Pattern', sub: 'Khuôn + Block', bg: '#DCF3E7', fg: '#0B7349' },
+  { key: 'template', label: 'Product Template', sub: 'Theo đối tượng KH', bg: '#DCF3E7', fg: '#0B7349' },
+  { key: 'config', label: 'Product Config', sub: 'Gán Fragment', bg: '#EFE6F8', fg: '#7A4FB0' },
+  { key: 'variant', label: 'Product Variant', sub: 'Đóng gói bán', bg: '#FBEFC7', fg: '#9A6B00' },
+  { key: 'catalog', label: 'Product Catalog', sub: 'Lên kệ kênh', bg: '#FBEFC7', fg: '#9A6B00' },
 ]
 
 // 7 thư viện nền tảng nuôi vào pipeline — "feeds" mô tả cấu trúc FK/join thật đã dựng
 // (vd Obligation Type dùng trong pattern_obligation_type -> nuôi Product Pattern).
+// Màu trích đúng nguyên bản prototype (sysMapModel().foundations).
 const FOUNDATIONS = [
-  { key: 'archetype', label: 'Financial Obligation Archetype', feeds: 'Product Intent', color: '#0B7349' },
-  { key: 'obligation', label: 'Obligation Library', feeds: 'Product Pattern', color: '#2F73C4' },
-  { key: 'block', label: 'Block & Answer Slot', feeds: 'Product Pattern', color: '#9A6B00' },
-  { key: 'attribute', label: 'Attribute', feeds: 'Block & Answer Slot', color: '#7A3FA0' },
+  { key: 'archetype', label: 'Financial Obligation Archetype', feeds: 'Product Intent', color: '#2F73C4' },
+  { key: 'obligation', label: 'Obligation Library', feeds: 'Product Pattern', color: '#0B7349' },
+  { key: 'block', label: 'Block & Answer Slot', feeds: 'Product Pattern', color: '#0B7349' },
+  { key: 'attribute', label: 'Attribute', feeds: 'Block & Answer Slot', color: '#1F5FAF' },
   { key: 'matrix', label: 'Ma trận ràng buộc', feeds: 'Product Pattern', color: '#B23B3B' },
-  { key: 'lifecycle', label: 'Lifecycle & State', feeds: 'Pattern · Config', color: '#0E8C5A' },
-  { key: 'domain', label: 'Domain', feeds: 'Attribute', color: '#41524A' },
+  { key: 'lifecycle', label: 'Lifecycle & State', feeds: 'Pattern · Config', color: '#9A6B00' },
+  { key: 'domain', label: 'Domain', feeds: 'Attribute', color: '#5E6F66' },
 ]
 
 // Quan hệ thực thể — mô tả cấu trúc FK thật của schema (đã xác minh trong V1__schema.sql),
@@ -70,23 +72,23 @@ export default function SysmapPage() {
               <button
                 onClick={() => navigate(`/${p.key}`)}
                 style={{
-                  border: '1px solid #E6ECE8',
-                  background: '#F8FBF9',
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  color: '#0B7349',
+                  border: `1.5px solid ${p.fg}`,
+                  background: p.bg,
+                  borderRadius: 12,
+                  padding: '14px 17px',
+                  minWidth: 140,
+                  textAlign: 'left',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   whiteSpace: 'nowrap',
                 }}
               >
-                {p.label}
+                <div style={{ fontSize: 14.5, fontWeight: 800, color: p.fg, lineHeight: 1.15 }}>{p.label}</div>
+                <div style={{ fontSize: 11.5, color: '#5E6F66', marginTop: 5 }}>{p.sub}</div>
               </button>
               {i < PIPELINE.length - 1 && (
-                <div style={{ flex: 'none', width: 30, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="arrow" size={15} color="#C2D0C8" />
+                <div style={{ flex: 'none', width: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="arrow" size={17} color="#C2D0C8" />
                 </div>
               )}
             </div>
@@ -97,7 +99,7 @@ export default function SysmapPage() {
       {/* Khối 2: thư viện nền tảng nuôi vào pipeline */}
       <Card style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: '#122019', marginBottom: 14 }}>Thư viện nền tảng nuôi vào pipeline</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 13 }}>
           {FOUNDATIONS.map((f) => (
             <button
               key={f.key}
@@ -105,28 +107,28 @@ export default function SysmapPage() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: 14,
                 border: '1px solid #E6ECE8',
-                borderRadius: 10,
-                padding: '11px 14px',
+                borderRadius: 12,
+                padding: '15px 17px',
                 background: '#fff',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 textAlign: 'left',
               }}
             >
-              <span style={{ width: 9, height: 9, borderRadius: 99, background: f.color, flex: 'none' }} />
+              <span style={{ width: 11, height: 11, borderRadius: 4, background: f.color, flex: 'none' }} />
               <span style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{f.label}</div>
-                <div style={{ fontSize: 10.5, color: '#8A998F', marginTop: 1 }}>nuôi vào {f.feeds}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#243A30' }}>{f.label}</div>
+                <div style={{ fontSize: 12, color: '#8A998F', marginTop: 3 }}>nuôi vào {f.feeds}</div>
               </span>
               <span
                 style={{
-                  fontSize: 9.5,
+                  fontSize: 11,
                   fontWeight: 700,
-                  color: '#5E6F66',
-                  background: '#F1F5F2',
-                  padding: '2px 8px',
+                  color: f.color,
+                  background: '#F4F7F5',
+                  padding: '4px 11px',
                   borderRadius: 99,
                   flex: 'none',
                 }}
@@ -156,7 +158,7 @@ export default function SysmapPage() {
                       color: '#8A998F',
                       padding: '9px 12px',
                       borderBottom: '1px solid #EEF2EF',
-                      textAlign: h === 'CARDINALITY' ? 'right' : 'left',
+                      textAlign: 'left',
                     }}
                   >
                     {h}
@@ -168,16 +170,15 @@ export default function SysmapPage() {
               {RELATIONS.map((r, i) => (
                 <div key={i} style={{ display: 'table-row', borderBottom: '1px solid #F1F5F2' }}>
                   <div style={{ display: 'table-cell', padding: '9px 12px', fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{r.source}</div>
-                  <div style={{ display: 'table-cell', padding: '9px 12px', fontSize: 12, color: '#5E6F66' }}>{r.verb}</div>
-                  <div style={{ display: 'table-cell', padding: '9px 12px', fontSize: 12.5, fontWeight: 600, color: '#243A30' }}>{r.target}</div>
+                  <div style={{ display: 'table-cell', padding: '9px 12px', fontSize: 12, color: '#5E6F66' }}>— {r.verb} →</div>
+                  <div style={{ display: 'table-cell', padding: '9px 12px', fontSize: 12.5, fontWeight: 600, color: '#0B7349' }}>{r.target}</div>
                   <div
                     style={{
                       display: 'table-cell',
                       padding: '9px 12px',
                       fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 11.5,
-                      color: '#8A998F',
-                      textAlign: 'right',
+                      color: '#9A6B00',
                     }}
                   >
                     {r.card}

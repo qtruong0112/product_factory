@@ -74,7 +74,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isDetail = parts.length > 1
   // Tiêu đề riêng cho màn chi tiết/builder (khác màn danh sách).
   const DETAIL_TITLES: Record<string, string> = { pattern: 'Trình dựng Product Pattern' }
-  const [listTitle, crumb] = VIEW_TITLES[active] ?? ['Product Factory', '']
+  const [listTitle, crumb] = VIEW_TITLES[active] ?? ['FINANCIAL OBLIGATION MANUFACTURING SYSTEM', '']
   const title = isDetail ? DETAIL_TITLES[active] ?? listTitle : listTitle
 
   return (
@@ -103,8 +103,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         >
           <div
             style={{
-              width: 38,
-              height: 38,
+              width: 42,
+              height: 42,
               borderRadius: 10,
               background: 'linear-gradient(135deg,#14B870,#0E8C5A)',
               display: 'flex',
@@ -114,11 +114,12 @@ export default function Layout({ children }: { children: ReactNode }) {
               boxShadow: '0 4px 12px rgba(14,140,90,.35)',
             }}
           >
-            <span style={{ fontWeight: 800, color: '#fff', fontSize: 18, letterSpacing: '-.5px' }}>PF</span>
+            <span style={{ fontWeight: 800, color: '#fff', fontSize: 11.5, letterSpacing: '-.3px' }}>FOMS</span>
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: 14.5, lineHeight: 1.1 }}>Product Factory</div>
-            <div style={{ color: '#7FD8AE', fontSize: 11, fontWeight: 500, marginTop: 2 }}>LENDING OS</div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 11, lineHeight: 1.3, letterSpacing: '.2px' }}>
+              FINANCIAL OBLIGATION MANUFACTURING SYSTEM
+            </div>
           </div>
         </div>
 
@@ -332,7 +333,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         >
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#8A998F', fontSize: 11.5, fontWeight: 500 }}>
-              <span>Product Factory</span>
+              <span>FINANCIAL OBLIGATION MANUFACTURING SYSTEM</span>
               <span style={{ color: '#C2D0C8' }}>/</span>
               <span style={{ color: '#0E8C5A', fontWeight: 600 }}>{crumb}</span>
             </div>

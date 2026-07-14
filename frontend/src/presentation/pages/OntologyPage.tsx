@@ -133,12 +133,21 @@ export default function OntologyPage() {
       </div>
     )
 
+  // Màu trích đúng nguyên bản prototype (ontologyModel().concepts) — mỗi khái niệm 1 tông riêng
+  // (blue/gold/green/gray), card 2 tầng: header màu bg + thân trắng có mô tả + pill đếm màu.
   const concepts = [
-    { label: 'Obligation Element Type (OET)', count: elementTypeList.length, color: '#0B7349' },
-    { label: 'Obligation Element', count: elementList.length, color: '#2F73C4' },
-    { label: 'Obligation Type (lõi)', count: typeCoreList.length, color: '#9A6B00' },
-    { label: 'Obligation Type Family (OTF)', count: typeList.length, color: '#7A3FA0' },
+    { label: 'Obligation Element Type (OET)', vi: '6 chiều phân loại', desc: 'Party, Value, Activation, Fulfillment, Recovery, Time — cố định, tập đóng.', count: `${elementTypeList.length} loại`, color: '#2F73C4', bg: '#E5EEF9' },
+    { label: 'Obligation Element', vi: 'Câu trả lời định tính', desc: 'Giá trị cụ thể cho 1 OET — chưa tham số hoá, vd "gốc giảm dần".', count: `${elementList.length} phần tử`, color: '#9A6B00', bg: '#FBEFC7' },
+    { label: 'Obligation Type (lõi)', vi: 'Tổ hợp đủ 6 OET', desc: 'Đúng 1 Element cho mỗi OET → 1 khuôn nghĩa vụ hoàn chỉnh.', count: `${typeCoreList.length} loại`, color: '#0B7349', bg: '#DCF3E7' },
+    { label: 'Obligation Type Family (OTF)', vi: 'Sẵn sàng tái sử dụng', desc: 'Tổ hợp OT lõi + Element cụ thể, gắn 1 Financial Obligation Archetype.', count: `${typeList.length} tổ hợp`, color: '#5E6F66', bg: '#EEF1EF' },
   ]
+
+  const familyColorFor = (archetypeName: string): string => {
+    const n = archetypeName.toLowerCase()
+    if (n.includes('conditional')) return '#157A57'
+    if (n.includes('revolving')) return '#C9740A'
+    return '#0E8C5A'
+  }
 
   return (
     <div style={{ padding: '24px 26px', animation: 'fadeUp .3s ease', maxWidth: 1500 }}>
@@ -150,22 +159,28 @@ export default function OntologyPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, flexWrap: 'wrap' }}>
           {concepts.map((c, i) => (
-            <div key={c.label} style={{ display: 'flex', alignItems: 'stretch', flex: '1 1 160px', minWidth: 0 }}>
+            <div key={c.label} style={{ display: 'flex', alignItems: 'stretch', flex: '1 1 200px', minWidth: 0 }}>
               <div
                 style={{
                   flex: 1,
-                  border: `1.5px solid ${c.color}33`,
-                  borderRadius: 12,
-                  padding: '13px 14px',
+                  border: `1.5px solid ${c.color}`,
+                  borderRadius: 13,
+                  overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 4,
+                  minWidth: 0,
                 }}
               >
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.4px', color: c.color, textTransform: 'uppercase' }}>
-                  {c.label}
-                </span>
-                <span style={{ fontSize: 20, fontWeight: 800, color: '#122019' }}>{c.count}</span>
+                <div style={{ padding: '11px 14px', background: c.bg }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: c.color, lineHeight: 1.15 }}>{c.label}</div>
+                  <div style={{ fontSize: 11, color: c.color, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>{c.vi}</div>
+                </div>
+                <div style={{ padding: '11px 14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 9 }}>
+                  <div style={{ fontSize: 11.5, color: '#5E6F66', lineHeight: 1.45 }}>{c.desc}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: c.color, background: c.bg, alignSelf: 'flex-start', padding: '2px 9px', borderRadius: 99 }}>
+                    {c.count}
+                  </div>
+                </div>
               </div>
               {i < CONCEPT_RELATIONS.length && (
                 <div style={{ flex: 'none', width: 84, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
@@ -189,44 +204,75 @@ export default function OntologyPage() {
             OTF THEO ARCHETYPE (FOA)
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[...typesByArchetype.entries()].map(([archetypeName, ts]) => (
-              <div key={archetypeName}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', marginBottom: 6 }}>{archetypeName}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {ts.map((t) => (
-                    <button
-                      key={t.code}
-                      onClick={() => setSelectedType(t.code)}
-                      style={{
-                        textAlign: 'left',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '7px 10px',
-                        fontSize: 12.5,
-                        fontWeight: t.code === selectedType ? 700 : 500,
-                        color: t.code === selectedType ? '#fff' : '#41524A',
-                        background: t.code === selectedType ? '#0E8C5A' : '#F4F7F5',
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {t.name}
-                    </button>
-                  ))}
+            {[...typesByArchetype.entries()].map(([archetypeName, ts]) => {
+              const famColor = familyColorFor(archetypeName)
+              return (
+                <div key={archetypeName}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                    <span style={{ width: 9, height: 9, borderRadius: 3, background: famColor, flex: 'none' }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#5E6F66', letterSpacing: '.3px' }}>{archetypeName}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {ts.map((t) => {
+                      const on = t.code === selectedType
+                      return (
+                        <button
+                          key={t.code}
+                          onClick={() => setSelectedType(t.code)}
+                          style={{
+                            textAlign: 'left',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 9,
+                            border: `1.5px solid ${on ? famColor : '#EEF2EF'}`,
+                            borderRadius: 9,
+                            padding: '9px 11px',
+                            fontSize: 12.5,
+                            fontWeight: on ? 700 : 500,
+                            color: on ? '#0B3B2E' : '#41524A',
+                            background: on ? '#F4FBF7' : '#fff',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: famColor, flex: 'none' }} />
+                          {t.name}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Card>
 
         <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>
-              Cấu trúc {typeList.find((t) => t.code === selectedType)?.name ?? ''}
-            </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8A998F' }}>{selectedType}</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 3 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#122019' }}>
+                  Cấu trúc {typeList.find((t) => t.code === selectedType)?.name ?? ''}
+                </span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8A998F' }}>{selectedType}</span>
+              </div>
+            </div>
+            {(() => {
+              const curArchetype = typeList.find((t) => t.code === selectedType)?.archetypeName
+              if (!curArchetype) return null
+              const famColor = familyColorFor(curArchetype)
+              return (
+                <div style={{ flex: 'none', textAlign: 'right' }}>
+                  <div style={{ fontSize: 10.5, color: '#A7B5AC', fontWeight: 700, letterSpacing: '.3px' }}>THUỘC HỌ</div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 5, padding: '5px 12px', borderRadius: 99, background: `${famColor}1A` }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: famColor }} />
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: famColor }}>{curArchetype}</span>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
-          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: '#8A998F', marginBottom: 14, marginTop: 8 }}>
             1 OTF = tổ hợp nhiều Obligation Type lõi, mỗi OT lõi đủ 6 OET (Party/Value/Activation/Time/Fulfillment/Recovery).
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
