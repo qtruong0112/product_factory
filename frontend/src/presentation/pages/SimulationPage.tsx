@@ -496,7 +496,7 @@ export default function SimulationPage() {
             </div>
           ))}
 
-          {scenarioBlock('Tình huống ân hạn (chỉ trả lãi)', 'Kỳ đầu chỉ trả lãi, hoãn gốc', form.graceOn, '#E8920C', () => set('graceOn', !form.graceOn), (
+          {scenarioBlock('Tình huống ân hạn (chỉ trả lãi)', 'Kỳ chỉ trả lãi, hoãn gốc', form.graceOn, '#E8920C', () => set('graceOn', !form.graceOn), (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66' }}>Số kỳ ân hạn (chỉ trả lãi)</label>
@@ -506,7 +506,7 @@ export default function SimulationPage() {
             </div>
           ))}
 
-          {scenarioBlock('Tình huống ân hạn lãi (lãi nhập gốc)', 'Kỳ không trả gì, lãi tích vào dư nợ', form.interestGraceOn, '#7A4FC7', () => set('interestGraceOn', !form.interestGraceOn), (
+          {scenarioBlock('Tình huống ân hạn lãi ', 'Kỳ chỉ trả gốc, hoãn lãi', form.interestGraceOn, '#7A4FC7', () => set('interestGraceOn', !form.interestGraceOn), (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66' }}>Số kỳ ân hạn lãi</label>
