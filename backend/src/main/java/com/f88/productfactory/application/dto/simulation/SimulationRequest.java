@@ -21,6 +21,9 @@ public class SimulationRequest {
     private BigDecimal periodicFeePct;
     private boolean graceOn;
     private Integer graceMonths;
+    // Ân hạn lãi: kỳ không trả gì, lãi phát sinh nhập vào dư nợ (capitalized interest).
+    private boolean interestGraceOn;
+    private Integer interestGraceMonths;
 
     // Khoảng hạn mức/kỳ hạn THẬT của config đang chọn (suy từ limit_range/installment_count) —
     // dùng để kiểm tra ràng buộc "trong hạn mức"/"kỳ hạn hợp lệ" đúng theo từng sản phẩm, thay vì
@@ -76,6 +79,10 @@ public class SimulationRequest {
     public void setGraceOn(boolean v) { this.graceOn = v; }
     public Integer getGraceMonths() { return graceMonths; }
     public void setGraceMonths(Integer v) { this.graceMonths = v; }
+    public boolean isInterestGraceOn() { return interestGraceOn; }
+    public void setInterestGraceOn(boolean v) { this.interestGraceOn = v; }
+    public Integer getInterestGraceMonths() { return interestGraceMonths; }
+    public void setInterestGraceMonths(Integer v) { this.interestGraceMonths = v; }
     public BigDecimal getAmountMin() { return amountMin; }
     public void setAmountMin(BigDecimal v) { this.amountMin = v; }
     public BigDecimal getAmountMax() { return amountMax; }
