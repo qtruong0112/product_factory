@@ -35,6 +35,8 @@ interface Scenario {
   prepayAmount: number
   graceOn: boolean
   graceMonths: number
+  interestGraceOn: boolean
+  interestGraceMonths: number
   earlyOn: boolean
   earlyPeriod: number
   earlyPenaltyPct: number
@@ -494,13 +496,23 @@ export default function SimulationPage() {
             </div>
           ))}
 
-          {scenarioBlock('Tình huống ân hạn', 'Kỳ đầu chỉ trả lãi, hoãn gốc', form.graceOn, '#E8920C', () => set('graceOn', !form.graceOn), (
+          {scenarioBlock('Tình huống ân hạn (chỉ trả lãi)', 'Kỳ đầu chỉ trả lãi, hoãn gốc', form.graceOn, '#E8920C', () => set('graceOn', !form.graceOn), (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
                 <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66' }}>Số kỳ ân hạn (chỉ trả lãi)</label>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: '#9A6B00' }}>{form.graceMonths} kỳ</span>
               </div>
               <input type="range" min={1} max={6} step={1} value={form.graceMonths} onChange={(e) => set('graceMonths', Number(e.target.value))} style={{ width: '100%', accentColor: '#E8920C' }} />
+            </div>
+          ))}
+
+          {scenarioBlock('Tình huống ân hạn lãi (lãi nhập gốc)', 'Kỳ không trả gì, lãi tích vào dư nợ', form.interestGraceOn, '#7A4FC7', () => set('interestGraceOn', !form.interestGraceOn), (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: '#5E6F66' }}>Số kỳ ân hạn lãi</label>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: '#7A4FC7' }}>{form.interestGraceMonths} kỳ</span>
+              </div>
+              <input type="range" min={1} max={6} step={1} value={form.interestGraceMonths} onChange={(e) => set('interestGraceMonths', Number(e.target.value))} style={{ width: '100%', accentColor: '#7A4FC7' }} />
             </div>
           ))}
 

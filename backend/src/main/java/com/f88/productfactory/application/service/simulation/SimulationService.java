@@ -231,6 +231,7 @@ public class SimulationService {
         m.put("penaltyOn", false); m.put("penaltyPeriod", 6); m.put("penaltyDays", 10);
         m.put("prepayOn", false); m.put("prepayPeriod", 9); m.put("prepayAmount", new BigDecimal("8000000"));
         m.put("graceOn", false); m.put("graceMonths", 2);
+        m.put("interestGraceOn", false); m.put("interestGraceMonths", 2);
         m.put("earlyOn", false); m.put("earlyPeriod", 12); m.put("earlyPenaltyPct", new BigDecimal("2"));
         return m;
     }
@@ -311,6 +312,7 @@ public class SimulationService {
         m.put("penaltyOn", false); m.put("penaltyPeriod", Math.max(1, months / 3)); m.put("penaltyDays", 10);
         m.put("prepayOn", false); m.put("prepayPeriod", Math.max(1, months / 2)); m.put("prepayAmount", new BigDecimal("5000000"));
         m.put("graceOn", false); m.put("graceMonths", 1);
+        m.put("interestGraceOn", false); m.put("interestGraceMonths", 1);
         m.put("earlyOn", false); m.put("earlyPeriod", Math.max(1, months - 1)); m.put("earlyPenaltyPct", new BigDecimal("2"));
         return m;
     }
@@ -388,6 +390,9 @@ public class SimulationService {
         req.setPeriodicFeePct(toBigDecimal(s.get("periodicFeePct")));
         Object gm = s.get("graceMonths");
         req.setGraceMonths(gm != null ? ((Number) gm).intValue() : 0);
+        req.setInterestGraceOn(Boolean.TRUE.equals(s.get("interestGraceOn")));
+        Object igm = s.get("interestGraceMonths");
+        req.setInterestGraceMonths(igm != null ? ((Number) igm).intValue() : 0);
         req.setAmountMin(toBigDecimal(s.get("amountMin")));
         req.setAmountMax(toBigDecimal(s.get("amountMax")));
         Object tl = s.get("termLimit");

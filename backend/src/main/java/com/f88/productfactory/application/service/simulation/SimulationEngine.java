@@ -31,8 +31,11 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  * Excel tham chiếu tính (thay vì công thức annuity đóng giả định mọi kỳ dài bằng nhau). Kỳ cuối vẫn
  * giữ "plug" (trả hết phần dư nợ còn lại) đề phòng sai số làm tròn dồn nhỏ còn sót lại.
  *
- * Ân hạn (grace): kỳ ân hạn chỉ trả lãi+phí (CPV), gốc dồn qua kỳ sau, PMT tính trên số kỳ còn lại
- * sau ân hạn. Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn lại. Tất toán sớm
+ * Ân hạn (grace): kỳ ân hạn gốc chỉ trả lãi+phí (CPV), gốc dồn qua kỳ sau, PMT tính trên số kỳ còn lại
+ * sau ân hạn. Ân hạn lãi (interestGrace): kỳ hoàn toàn không trả gì — lãi phát sinh được nhập vào
+ * dư nợ (capitalized interest); sau kỳ ân hạn lãi, dư nợ mới = gốc gốc + lãi tích lũy, PMT tính lại
+ * trên dư nợ mới. Hai loại ân hạn có thể dùng độc lập, không xếp chồng.
+ * Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn lại. Tất toán sớm
  * (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
  * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ TÍNH PHẠT/30) × lãi suất × hệ số
  * phạt (mặc định 1.5 = trần 150% theo attribute_constraint 'penalty_rate', có thể ghi đè qua
@@ -55,6 +58,9 @@ public final class SimulationEngine {
         BigDecimal baseRatePct = req.getBaseRatePct();
         BigDecimal periodicFeePct = req.getPeriodicFeePct() != null ? req.getPeriodicFeePct() : BigDecimal.ZERO;
         int grace = req.isGraceOn() ? clamp(req.getGraceMonths() != null ? req.getGraceMonths() : 0, 0, months - 1) : 0;
+        int interestGrace = req.isInterestGraceOn() ? clamp(req.getInterestGraceMonths() != null ? req.getInterestGraceMonths() : 0, 0, months - 1) : 0;
+        // Hai loại ân hạn không xếp chồng: nếu cả hai bật, ân hạn lãi ưu tiên trước, ân hạn gốc nối tiếp sau.
+        // Ở đây đơn giản hóa: dùng độc lập (người dùng chỉ bật 1 loại tại 1 thời điểm).
         LocalDate start = req.getStartDate() != null ? req.getStartDate() : LocalDate.now().plusDays(30);
         double appraisalFee = req.getAppraisalFee() != null ? req.getAppraisalFee().doubleValue() : 0;
 
@@ -81,26 +87,34 @@ public final class SimulationEngine {
         double cumulativePayment = 0;
         int periodsUsed = 0;
 
-        int scheduledPeriods = months - grace;
+        int scheduledPeriods = months - grace - interestGrace;
         for (int period = 1; period <= months; period++) {
             double opening = balance;
             LocalDate periodStartDate = start.plusMonths(period - 1);
             LocalDate periodEndDate = start.plusMonths(period);
             long daysInPeriod = ChronoUnit.DAYS.between(periodStartDate, periodEndDate);
             boolean inGrace = period <= grace;
+            boolean inInterestGrace = !inGrace && period <= grace + interestGrace;
             // Chi phí vay (CPV) gộp lãi+phí kỳ đó, tính theo số ngày thật/365 — xem class-doc.
             double cpv = opening * dailyRateTotal * daysInPeriod;
             double interest = rTotal > 0 ? cpv * (r / rTotal) : 0;
             double fee = rTotal > 0 ? cpv * (feeMonth / rTotal) : 0;
-            double principal = inGrace ? 0 : Math.min(pmt - cpv, opening);
+            // Ân hạn lãi: không trả gì, lãi nhập vào balance. Ân hạn gốc: chỉ trả lãi+phí (CPV).
+            double principal = (inGrace || inInterestGrace) ? 0 : Math.min(pmt - cpv, opening);
+            // Trong kỳ ân hạn lãi: lãi+phí không thu mà cộng vào dư nợ.
+            if (inInterestGrace) {
+                interest = 0;
+                fee = 0;
+            }
             // Plug kỳ cuối lịch gốc: trả hết phần dư nợ còn lại thay vì đúng PMT cố định, bù sai số
             // dồn từ số ngày mỗi tháng khác nhau — khớp hành vi file Excel tham chiếu.
-            boolean isLastScheduled = !inGrace && (period - grace) == scheduledPeriods;
-            if (!inGrace && (isLastScheduled || opening - principal < 1)) {
+            boolean isLastScheduled = !inGrace && !inInterestGrace && (period - grace - interestGrace) == scheduledPeriods;
+            if (!inGrace && !inInterestGrace && (isLastScheduled || opening - principal < 1)) {
                 principal = opening;
             }
 
-            boolean isPenalty = req.isPenaltyOn() && req.getPenaltyPeriod() != null && period == req.getPenaltyPeriod();
+            boolean isPenalty = req.isPenaltyOn() && req.getPenaltyPeriod() != null && period == req.getPenaltyPeriod()
+                    && !inGrace && !inInterestGrace;
             double penalty = 0;
             if (isPenalty) {
                 int days = req.getPenaltyDays() != null ? req.getPenaltyDays() : 0;
@@ -110,7 +124,7 @@ public final class SimulationEngine {
                 totalPenalty += penalty;
             }
 
-            boolean isPrepay = req.isPrepayOn() && !inGrace && req.getPrepayPeriod() != null && period == req.getPrepayPeriod();
+            boolean isPrepay = req.isPrepayOn() && !inGrace && !inInterestGrace && req.getPrepayPeriod() != null && period == req.getPrepayPeriod();
             double prepayExtra = 0;
             if (isPrepay && req.getPrepayAmount() != null) {
                 prepayExtra = Math.min(req.getPrepayAmount().doubleValue(), Math.max(0, opening - principal));
@@ -118,6 +132,7 @@ public final class SimulationEngine {
             }
 
             boolean isEarly = req.isEarlyOn() && req.getEarlyPeriod() != null && period == req.getEarlyPeriod()
+                    && !inGrace && !inInterestGrace
                     && (opening - principal - prepayExtra) > 1;
             double earlyAmount = 0, earlyPenalty = 0;
             if (isEarly) {
@@ -127,12 +142,16 @@ public final class SimulationEngine {
                 totalEarlyPenalty += earlyPenalty;
             }
 
-            double closing = isEarly ? 0 : Math.max(0, opening - principal - prepayExtra);
+            // Ân hạn lãi: lãi+phí nhập vào balance (không thu tiền), không tính vào closing thông thường.
+            double accrued = inInterestGrace ? (opening * dailyRateTotal * daysInPeriod) : 0;
+            double closing = isEarly ? 0 : Math.max(0, opening - principal - prepayExtra + accrued);
             double payment = principal + interest + fee + penalty + prepayExtra + earlyAmount + earlyPenalty;
 
             String tagText = null, tagColor = null, rowBg = "#fff";
             if (isEarly) {
                 tagText = "Tất toán sớm · phạt " + formatVnd(earlyPenalty) + "đ"; tagColor = "#B23B3B"; rowBg = "#FEF6F6";
+            } else if (inInterestGrace) {
+                tagText = "Ân hạn lãi · lãi nhập gốc"; tagColor = "#7A4FC7"; rowBg = "#F7F3FE";
             } else if (inGrace) {
                 tagText = "Ân hạn · chỉ trả lãi"; tagColor = "#9A6B00"; rowBg = "#FFFBF0";
             } else if (isPenalty && isPrepay) {
@@ -183,7 +202,10 @@ public final class SimulationEngine {
 
             if (isEarly) break;
             if (period == grace && grace > 0) {
-                pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace);
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, grace, months - grace - interestGrace);
+            } else if (period == grace + interestGrace && interestGrace > 0) {
+                // Sau kỳ ân hạn lãi: dư nợ mới = gốc + lãi tích lũy → tính lại PMT.
+                pmt = solveEmiByDays(balance, dailyRateTotal, start, grace + interestGrace, months - grace - interestGrace);
             } else if (prepayExtra > 0 && balance > 1) {
                 pmt = solveEmiByDays(balance, dailyRateTotal, start, period, months - period);
             }
