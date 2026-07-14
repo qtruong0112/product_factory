@@ -476,7 +476,7 @@ export default function SimulationPage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.4px', color: '#8A998F', marginBottom: 11 }}>PHÍ</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
               {sliderRow('Phí thẩm định (1 lần · tại giải ngân)', vnd(form.appraisalFee), form.appraisalFee, 0, 2_000_000, 100_000, (v) => set('appraisalFee', v), '#2F73C4')}
-              {sliderRow('Phí quản lý theo kỳ (% dư nợ)', fmt2(form.periodicFeePct) + '%/kỳ', form.periodicFeePct, 0, 0.5, 0.05, (v) => set('periodicFeePct', v), '#2F73C4')}
+              {sliderRow('Phí quản lý theo kỳ (% dư nợ)', fmt2(form.periodicFeePct) + '%/kỳ', form.periodicFeePct, 0, 10, 0.1, (v) => set('periodicFeePct', v), '#2F73C4', ['0%', '10% · trần'])}
             </div>
           </div>
 
