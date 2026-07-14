@@ -227,11 +227,10 @@ public class SimulationService {
         m.put("startDate", s.getStartDate());
         m.put("appraisalFee", s.getAppraisalFee());
         m.put("periodicFeePct", s.getPeriodicFeePct());
-        // Kịch bản demo gốc (bundler state.sim) bật sẵn cả 3 tình huống để minh họa đầy đủ engine —
-        // khớp đúng ảnh chụp prototype (kỳ 6 trễ 10 ngày, kỳ 9 trả thêm 8tr, 2 kỳ ân hạn).
-        m.put("penaltyOn", true); m.put("penaltyPeriod", 6); m.put("penaltyDays", 10);
-        m.put("prepayOn", true); m.put("prepayPeriod", 9); m.put("prepayAmount", new BigDecimal("8000000"));
-        m.put("graceOn", true); m.put("graceMonths", 2);
+        // Tất cả tình huống TẮT theo mặc định — người dùng tự bật khi cần mô phỏng.
+        m.put("penaltyOn", false); m.put("penaltyPeriod", 6); m.put("penaltyDays", 10);
+        m.put("prepayOn", false); m.put("prepayPeriod", 9); m.put("prepayAmount", new BigDecimal("8000000"));
+        m.put("graceOn", false); m.put("graceMonths", 2);
         m.put("earlyOn", false); m.put("earlyPeriod", 12); m.put("earlyPenaltyPct", new BigDecimal("2"));
         return m;
     }
