@@ -31,10 +31,10 @@ import com.f88.productfactory.application.dto.simulation.SimulationRequest;
  * Excel tham chiếu tính (thay vì công thức annuity đóng giả định mọi kỳ dài bằng nhau). Kỳ cuối vẫn
  * giữ "plug" (trả hết phần dư nợ còn lại) đề phòng sai số làm tròn dồn nhỏ còn sót lại.
  *
- * Ân hạn (grace): kỳ ân hạn gốc chỉ trả lãi+phí (CPV), gốc dồn qua kỳ sau, PMT tính trên số kỳ còn lại
- * sau ân hạn. Ân hạn lãi (interestGrace): kỳ hoàn toàn không trả gì — lãi phát sinh được nhập vào
- * dư nợ (capitalized interest); sau kỳ ân hạn lãi, dư nợ mới = gốc gốc + lãi tích lũy, PMT tính lại
- * trên dư nợ mới. Hai loại ân hạn có thể dùng độc lập, không xếp chồng.
+ * Ân hạn gốc (grace): kỳ chỉ trả lãi+phí (CPV), gốc = 0, dư nợ giữ nguyên, PMT tính trên số kỳ còn lại
+ * sau ân hạn. Ân hạn lãi (interestGrace): kỳ chỉ trả GỐC, lãi và phí được miễn (= 0), dư nợ giảm bình
+ * thường theo đúng PMT; sau kỳ ân hạn lãi, PMT tính lại trên dư nợ còn lại đã được trả bớt.
+ * Hai loại ân hạn dùng độc lập (không xếp chồng).
  * Trả bớt gốc (prepay) tại 1 kỳ chỉ định → tái tính PMT phần dư nợ còn lại. Tất toán sớm
  * (early) tại 1 kỳ chỉ định → trả hết dư nợ + phí phạt %, kết thúc lịch sớm.
  * Phạt trễ hạn (penalty) tại 1 kỳ chỉ định = PMT × (số ngày trễ TÍNH PHẠT/30) × lãi suất × hệ số
@@ -99,15 +99,19 @@ public final class SimulationEngine {
             double cpv = opening * dailyRateTotal * daysInPeriod;
             double interest = rTotal > 0 ? cpv * (r / rTotal) : 0;
             double fee = rTotal > 0 ? cpv * (feeMonth / rTotal) : 0;
-            // Ân hạn lãi: không trả gì, lãi nhập vào balance. Ân hạn gốc: chỉ trả lãi+phí (CPV).
-            double principal = (inGrace || inInterestGrace) ? 0 : Math.min(pmt - cpv, opening);
-            // Trong kỳ ân hạn lãi: lãi+phí không thu mà cộng vào dư nợ.
-            if (inInterestGrace) {
+            double principal;
+            if (inGrace) {
+                // Ân hạn gốc: chỉ trả lãi+phí, gốc = 0, dư nợ giữ nguyên.
+                principal = 0;
+            } else if (inInterestGrace) {
+                // Ân hạn lãi: chỉ trả gốc, lãi và phí được miễn (= 0), toàn bộ PMT đi vào gốc.
                 interest = 0;
                 fee = 0;
+                principal = Math.min(pmt, opening);
+            } else {
+                principal = Math.min(pmt - cpv, opening);
             }
-            // Plug kỳ cuối lịch gốc: trả hết phần dư nợ còn lại thay vì đúng PMT cố định, bù sai số
-            // dồn từ số ngày mỗi tháng khác nhau — khớp hành vi file Excel tham chiếu.
+            // Plug kỳ cuối: trả hết dư nợ còn lại để bù sai số làm tròn dồn từ số ngày mỗi tháng khác nhau.
             boolean isLastScheduled = !inGrace && !inInterestGrace && (period - grace - interestGrace) == scheduledPeriods;
             if (!inGrace && !inInterestGrace && (isLastScheduled || opening - principal < 1)) {
                 principal = opening;
@@ -142,16 +146,15 @@ public final class SimulationEngine {
                 totalEarlyPenalty += earlyPenalty;
             }
 
-            // Ân hạn lãi: lãi+phí nhập vào balance (không thu tiền), không tính vào closing thông thường.
-            double accrued = inInterestGrace ? (opening * dailyRateTotal * daysInPeriod) : 0;
-            double closing = isEarly ? 0 : Math.max(0, opening - principal - prepayExtra + accrued);
+            // Ân hạn lãi: dư nợ giảm bình thường (chỉ miễn lãi, không tích lũy).
+            double closing = isEarly ? 0 : Math.max(0, opening - principal - prepayExtra);
             double payment = principal + interest + fee + penalty + prepayExtra + earlyAmount + earlyPenalty;
 
             String tagText = null, tagColor = null, rowBg = "#fff";
             if (isEarly) {
                 tagText = "Tất toán sớm · phạt " + formatVnd(earlyPenalty) + "đ"; tagColor = "#B23B3B"; rowBg = "#FEF6F6";
             } else if (inInterestGrace) {
-                tagText = "Ân hạn lãi · lãi nhập gốc"; tagColor = "#7A4FC7"; rowBg = "#F7F3FE";
+                tagText = "Ân hạn lãi · chỉ trả gốc"; tagColor = "#7A4FC7"; rowBg = "#F7F3FE";
             } else if (inGrace) {
                 tagText = "Ân hạn · chỉ trả lãi"; tagColor = "#9A6B00"; rowBg = "#FFFBF0";
             } else if (isPenalty && isPrepay) {
