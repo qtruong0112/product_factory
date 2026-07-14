@@ -200,7 +200,7 @@ public class SimulationService {
         }
 
         return answerSlotRepo.findByBlockId(blockId).stream()
-                .filter(s -> slotCode.equals(s.getCode()))
+                .filter(s -> slotCode.equals(s.getCode()) && s.getDefaultValue() != null)
                 .map(AnswerSlot::getDefaultValue)
                 .findFirst().orElse(null);
     }
