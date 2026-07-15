@@ -134,6 +134,7 @@ export default function SimulationPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hoveredPeriod, setHoveredPeriod] = useState<number | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -142,7 +143,7 @@ export default function SimulationPage() {
     ])
       .then(([vs, d]: [VariantOption[], { scenario: Scenario; result: RunResult }]) => {
         setVariants(vs)
-        setForm(d.scenario)
+        setForm({ ...d.scenario, appraisalFee: 0, periodicFeePct: 1.6 })
         setResult(d.result)
       })
       .catch((e) => setError(e.message))
@@ -164,7 +165,7 @@ export default function SimulationPage() {
     fetch(`/api/simulation/default?variantCode=${code}`)
       .then((r) => r.json())
       .then((d: { scenario: Scenario; result: RunResult }) => {
-        setForm(d.scenario)
+        setForm({ ...d.scenario, appraisalFee: 0, periodicFeePct: 1.6 })
         setResult(d.result)
       })
       .catch((e) => setError(e.message))
@@ -642,8 +643,8 @@ export default function SimulationPage() {
               {kpiCardSmall('config', 'PHÍ QUẢN LÝ THEO KỲ', fmt2(form.periodicFeePct) + '%/kỳ', '#2F73C4', 'Trên dư nợ đầu kỳ · ' + vnd(r.periodicFeeOnly))}
               {kpiCardSmall('bell', 'TỔNG PHẠT TRỄ HẠN', vnd(r.totalPenalty), r.totalPenalty > 0 ? '#B23B3B' : '#A7B5AC', form.penaltyOn
                 ? (r.graceDaysApplied > 0
-                    ? `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày · miễn ${r.graceDaysApplied} ngày đầu (chính sách sản phẩm)`
-                    : `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày`)
+                  ? `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày · miễn ${r.graceDaysApplied} ngày đầu (chính sách sản phẩm)`
+                  : `Kỳ ${form.penaltyPeriod} · trễ ${form.penaltyDays} ngày`)
                 : 'Không có')}
               {kpiCardSmall('variant', 'ĐÃ TRẢ BỚT GỐC', vnd(r.totalPrepay), r.totalPrepay > 0 ? '#0B7349' : '#A7B5AC', form.prepayOn ? `Kỳ ${form.prepayPeriod} · còn ${r.periodsUsed} kỳ` : 'Không có')}
             </div>
@@ -731,15 +732,76 @@ export default function SimulationPage() {
                   </div>
                 )}
                 <div style={{ position: 'absolute', left: 0, right: 0, bottom: 18, top: 0, display: 'flex', alignItems: 'flex-end', gap: 3 }}>
-                  {r.chart.map((b) => (
-                    <div key={b.period} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', minWidth: 0 }}>
-                      <div style={{ width: '100%', maxWidth: 26, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-                        <div style={{ width: '100%', height: b.feeH, background: '#2F73C4', borderRadius: '3px 3px 0 0' }} />
-                        <div style={{ width: '100%', height: b.intH, background: '#E8920C' }} />
-                        <div style={{ width: '100%', height: b.priH, background: '#0E8C5A' }} />
+                  {r.chart.map((b) => {
+                    const schedRow = r.schedule.find((s) => s.periodNo === b.period)
+                    const isHovered = hoveredPeriod === b.period
+                    const dimmed = hoveredPeriod !== null && !isHovered
+                    return (
+                      <div
+                        key={b.period}
+                        style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', minWidth: 0, position: 'relative', cursor: 'pointer' }}
+                        onMouseEnter={() => setHoveredPeriod(b.period)}
+                        onMouseLeave={() => setHoveredPeriod(null)}
+                      >
+                        {isHovered && schedRow && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: 'calc(100% + 10px)',
+                            transform: 'translateY(-50%)',
+                            background: '#fff',
+                            border: '1.5px solid #E6ECE8',
+                            borderRadius: 11,
+                            padding: '11px 14px',
+                            zIndex: 20,
+                            boxShadow: '0 6px 24px rgba(0,0,0,.13)',
+                            minWidth: 195,
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#122019', marginBottom: 8, borderBottom: '1px solid #EEF2EF', paddingBottom: 7 }}>
+                              Kỳ {b.period}
+                              <span style={{ fontWeight: 500, color: '#8A998F', marginLeft: 6, fontSize: 11 }}>
+                                {schedRow.periodStart} → {schedRow.periodEnd}
+                              </span>
+                            </div>
+                            {([
+                              ['Gốc', schedRow.principal, '#0B7349', schedRow.principal > 0],
+                              ['Lãi', schedRow.interest, '#9A6B00', true],
+                              ['Phí', schedRow.fee, '#2F73C4', true],
+                              ['Phạt', schedRow.penalty, '#B23B3B', schedRow.penalty > 0],
+                            ] as [string, number, string, boolean][]).filter(([, , , show]) => show).map(([label, value, color]) => (
+                              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, fontSize: 12, marginBottom: 4 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#8A998F' }}>
+                                  <span style={{ width: 8, height: 8, borderRadius: 2, background: color, display: 'inline-block', flex: 'none' }} />
+                                  {label}
+                                </span>
+                                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color }}>{vnd(value)}</span>
+                              </div>
+                            ))}
+                            <div style={{ borderTop: '1px solid #EEF2EF', marginTop: 6, paddingTop: 7, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#122019' }}>Kỳ trả</span>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 800, color: '#122019' }}>{vnd(schedRow.payment)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, marginTop: 4 }}>
+                              <span style={{ fontSize: 11.5, color: '#8A998F' }}>Dư cuối kỳ</span>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: '#5E6F66' }}>{vnd(schedRow.closingBalance)}</span>
+                            </div>
+                            {schedRow.hasTag && (
+                              <div style={{ marginTop: 7, paddingTop: 6, borderTop: '1px solid #EEF2EF', fontSize: 11, fontWeight: 700, color: schedRow.tagColor ?? '#8A998F' }}>
+                                ● {schedRow.tagText}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div style={{ width: '100%', maxWidth: 26, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%', opacity: dimmed ? 0.35 : 1, transition: 'opacity .12s' }}>
+                          <div style={{ width: '100%', height: b.feeH, background: '#2F73C4', borderRadius: '3px 3px 0 0' }} />
+                          <div style={{ width: '100%', height: b.intH, background: '#E8920C' }} />
+                          <div style={{ width: '100%', height: b.priH, background: '#0E8C5A' }} />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 16, display: 'flex', gap: 3 }}>
                   {r.chart.map((b) => (
