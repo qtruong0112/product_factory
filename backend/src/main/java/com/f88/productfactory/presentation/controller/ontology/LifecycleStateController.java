@@ -2,7 +2,7 @@ package com.f88.productfactory.presentation.controller.ontology;
 
 import com.f88.productfactory.domain.model.ontology.LifecycleState;
 import com.f88.productfactory.domain.model.ontology.LifecycleStateId;
-import com.f88.productfactory.domain.repository.ontology.LifecycleStateRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.LifecycleStateRepository;
 import com.f88.productfactory.presentation.common.ReadOnlyController;
 import com.f88.productfactory.application.common.ReadOnlyService;
 import org.springframework.web.bind.annotation.RequestMapping;

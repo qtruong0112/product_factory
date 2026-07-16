@@ -4,11 +4,11 @@ import com.f88.productfactory.domain.model.ontology.FoaElement;
 import com.f88.productfactory.domain.model.ontology.ObligationElement;
 import com.f88.productfactory.domain.model.ontology.ObligationTypeComposition;
 import com.f88.productfactory.domain.model.structure.Block;
-import com.f88.productfactory.domain.repository.ontology.FinancialObligationArchetypeRepository;
-import com.f88.productfactory.domain.repository.ontology.FoaElementRepository;
-import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
-import com.f88.productfactory.domain.repository.ontology.ObligationTypeCompositionRepository;
-import com.f88.productfactory.domain.repository.structure.BlockRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.FinancialObligationArchetypeRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.FoaElementRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.ObligationElementRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.ObligationTypeCompositionRepository;
+import com.f88.productfactory.infrastructure.persistence.structure.BlockRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

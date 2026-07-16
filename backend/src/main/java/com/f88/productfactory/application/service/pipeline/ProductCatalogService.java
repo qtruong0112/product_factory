@@ -2,9 +2,9 @@ package com.f88.productfactory.application.service.pipeline;
 
 import com.f88.productfactory.domain.model.pipeline.CatalogListing;
 import com.f88.productfactory.domain.model.pipeline.ProductVariant;
-import com.f88.productfactory.domain.repository.pipeline.CatalogListingRepository;
-import com.f88.productfactory.domain.repository.pipeline.ProductCatalogRepository;
-import com.f88.productfactory.domain.repository.pipeline.ProductVariantRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.CatalogListingRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.ProductCatalogRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.ProductVariantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

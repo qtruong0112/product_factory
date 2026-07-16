@@ -1382,6 +1382,22 @@ Cả 2 nơi **không gọi API ghi, không đổi DB** — state chỉ sống tr
 
 **Verify:** rebuild backend; test cả 8 Variant (VAR-101→108) đều `200 OK`; VAR-102 fallback đúng "500.000đ" (logic đã có sẵn từ trước, giờ mới chạy tới được) — 0 regression cho 7 sản phẩm còn lại. Thuần backend, không đổi frontend/schema.
 
+### Giai đoạn 82 — Refactor kiến trúc: dời Spring Data repository từ `domain.repository` sang `infrastructure.persistence`
+
+**Bối cảnh:** user hỏi thẳng "sao trong infrastructure không có file gì mà ở folder domain lại có repository, liệu đã đáp ứng điều kiện Clean Architecture chưa" — chỉ ra đúng vấn đề: `infrastructure/` trước đó chỉ có 1 file (`WebConfig.java`), trong khi cả 45 repository interface (`extends JpaRepository` trực tiếp) nằm trong `domain/repository/<feature>/` — vi phạm Dependency Rule (domain không được phụ thuộc chi tiết framework). Sau khi giải thích đây là quyết định có chủ đích từ Giai đoạn 27 ("Clean Architecture Lite"), user chốt "domain chỉ nên để entity thôi còn giao tiếp DB thì để ở infra" và qua AskUserQuestion chọn **refactor toàn bộ ngay** (thay vì chỉ áp dụng cho code mới).
+
+**Sửa:** thuần cơ học, không đổi hành vi/entity/DTO/logic Service. `git mv` 45 file từ `domain/repository/<feature>/` sang `infrastructure/persistence/<feature>/` (10 feature: activity/attribute/governance/ontology/pipeline/release/simulation/structure/user/version) — giữ lịch sử file qua git mv thay vì xoá+tạo mới; sed hàng loạt đổi package declaration trong 45 file vừa dời; cập nhật import ở 77 file khác (Service/Controller) đang tham chiếu `com.f88.productfactory.domain.repository.*` → `com.f88.productfactory.infrastructure.persistence.*`; sửa 1 dòng Javadoc còn sót trong `ReadOnlyService.java` (`application.common`) nhắc tên package cũ. `domain/` giờ chỉ còn `domain.model` (entity + `@IdClass` composite key) — đúng tinh thần "domain chỉ để entity". Cập nhật quy ước package trong `CLAUDE.md` (mục "VỊ TRÍ THƯ MỤC").
+
+**Verify:** cần khởi động lại Docker Desktop (đã tắt sẵn từ trước) rồi `docker compose up -d --build backend` — `mvn -q clean package` 0 lỗi compile (31.5s); smoke test curl `product-variants`/`attributes`/`product-patterns/PT-001/detail`/`simulation/default?variantCode=VAR-102` (case NPE vừa fix Giai đoạn 81) đều `200 OK` — xác nhận 0 regression hành vi từ việc đổi package hàng loạt.
+
+### Giai đoạn 83 — sửa nốt 1 chỗ sót "Obligation Type" bare ở Quy trình phát hành
+
+**Bối cảnh:** user gửi ảnh chụp màn `/release` (Bước 3/8 "Dựng Product Pattern"), chỉ ra checklist "Gán Obligation Type cho khuôn" chưa theo đúng nhãn "Obligation Type Family (OTF)" đã chuẩn hoá từ Giai đoạn 56.
+
+**Sửa:** grep xác nhận đúng 2 chỗ sót cùng 1 câu — `process_step_checklist` (`V2__seed.sql`, process_id=1/step_no=3/sort_order=1, hiện ở card "Việc cần làm") và hằng số tĩnh `ReleaseProcessService.DESC[2]` (câu mô tả đầu card cùng bước) — cả 2 sót lại từ đợt rà soát Giai đoạn 56/57. Sửa cả 2 thành "...Obligation Type Family (OTF) cho khuôn".
+
+**Verify:** seed đổi nên `docker compose down -v && up --build` 0 lỗi; curl `release-processes/VAR-101/detail` xác nhận `steps[2].desc` và `steps[2].checklist[0].item` đều đúng text mới.
+
 ---
 ---
 

@@ -1,7 +1,7 @@
 package com.f88.productfactory.presentation.controller.user;
 
 import com.f88.productfactory.domain.model.user.AppUser;
-import com.f88.productfactory.domain.repository.user.AppUserRepository;
+import com.f88.productfactory.infrastructure.persistence.user.AppUserRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

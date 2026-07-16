@@ -2,9 +2,9 @@ package com.f88.productfactory.application.service.attribute;
 
 import com.f88.productfactory.domain.model.attribute.AttributeGroup;
 import com.f88.productfactory.domain.model.attribute.Domain;
-import com.f88.productfactory.domain.repository.attribute.AttributeGroupRepository;
-import com.f88.productfactory.domain.repository.attribute.AttributeRepository;
-import com.f88.productfactory.domain.repository.attribute.DomainRepository;
+import com.f88.productfactory.infrastructure.persistence.attribute.AttributeGroupRepository;
+import com.f88.productfactory.infrastructure.persistence.attribute.AttributeRepository;
+import com.f88.productfactory.infrastructure.persistence.attribute.DomainRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

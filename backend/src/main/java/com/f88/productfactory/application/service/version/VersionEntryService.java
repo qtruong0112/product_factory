@@ -1,7 +1,7 @@
 package com.f88.productfactory.application.service.version;
 
 import com.f88.productfactory.domain.model.version.VersionEntry;
-import com.f88.productfactory.domain.repository.version.VersionEntryRepository;
+import com.f88.productfactory.infrastructure.persistence.version.VersionEntryRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
