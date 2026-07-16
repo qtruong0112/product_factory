@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 /**
- * Use-case chung cho các bảng tra cứu read-only — lớp application bọc quanh JpaRepository (domain
- * port), để presentation không phụ thuộc thẳng vào domain.repository.
+ * Use-case chung cho các bảng tra cứu read-only — lớp application bọc quanh JpaRepository (repository
+ * port ở infrastructure.persistence), để presentation không phụ thuộc thẳng vào infrastructure.
  *
  * @param <T>  kiểu entity
  * @param <ID> kiểu khóa chính

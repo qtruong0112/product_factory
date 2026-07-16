@@ -1676,7 +1676,7 @@ INSERT INTO "process_step_checklist" ("process_id", "step_no", "sort_order", "it
   (1, 2, 1, 'Điền OE cho 3 OT lõi Cốt lõi (Giải ngân / Hoàn trả gốc / Trả lãi)', true),
   (1, 2, 2, 'Bật/tắt OT lõi Phụ trợ theo bảng kích hoạt', true),
   (1, 2, 3, 'Điền OE cho OT lõi Phụ trợ đã bật để hoàn thành OTF', true),
-  (1, 3, 1, 'Gán Obligation Type cho khuôn', true),
+  (1, 3, 1, 'Gán Obligation Type Family (OTF) cho khuôn', true),
   (1, 3, 2, 'Kéo-thả Block bắt buộc/tùy chọn', true),
   (1, 3, 3, 'Khai báo Answer Slot cho từng Block', true),
   (1, 4, 1, 'Chọn đối tượng khách hàng', true),

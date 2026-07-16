@@ -1,7 +1,7 @@
 package com.f88.productfactory.application.service.activity;
 
 import com.f88.productfactory.domain.model.activity.ActivityLog;
-import com.f88.productfactory.domain.repository.activity.ActivityLogRepository;
+import com.f88.productfactory.infrastructure.persistence.activity.ActivityLogRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

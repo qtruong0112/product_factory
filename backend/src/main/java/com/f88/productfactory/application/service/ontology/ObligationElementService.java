@@ -2,8 +2,8 @@ package com.f88.productfactory.application.service.ontology;
 
 import com.f88.productfactory.domain.model.ontology.ObligationElement;
 import com.f88.productfactory.domain.model.ontology.ObligationElementType;
-import com.f88.productfactory.domain.repository.ontology.ObligationElementRepository;
-import com.f88.productfactory.domain.repository.ontology.ObligationElementTypeRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.ObligationElementRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.ObligationElementTypeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

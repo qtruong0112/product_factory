@@ -2,8 +2,8 @@ package com.f88.productfactory.application.service.ontology;
 
 import com.f88.productfactory.domain.model.ontology.Lifecycle;
 import com.f88.productfactory.domain.model.ontology.LifecycleState;
-import com.f88.productfactory.domain.repository.ontology.LifecycleRepository;
-import com.f88.productfactory.domain.repository.ontology.LifecycleStateRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.LifecycleRepository;
+import com.f88.productfactory.infrastructure.persistence.ontology.LifecycleStateRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

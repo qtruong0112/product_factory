@@ -2,7 +2,7 @@ package com.f88.productfactory.presentation.controller.attribute;
 
 import com.f88.productfactory.application.service.attribute.DomainService;
 import com.f88.productfactory.domain.model.attribute.Domain;
-import com.f88.productfactory.domain.repository.attribute.DomainRepository;
+import com.f88.productfactory.infrastructure.persistence.attribute.DomainRepository;
 import com.f88.productfactory.presentation.common.ReadOnlyController;
 import com.f88.productfactory.application.common.ReadOnlyService;
 import org.springframework.http.ResponseEntity;

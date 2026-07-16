@@ -2,8 +2,8 @@ package com.f88.productfactory.presentation.controller.pipeline;
 
 import com.f88.productfactory.domain.model.pipeline.BusinessIntent;
 import com.f88.productfactory.domain.model.pipeline.BusinessIntentKpi;
-import com.f88.productfactory.domain.repository.pipeline.BusinessIntentKpiRepository;
-import com.f88.productfactory.domain.repository.pipeline.BusinessIntentRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.BusinessIntentKpiRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.BusinessIntentRepository;
 import com.f88.productfactory.presentation.common.ReadOnlyController;
 import com.f88.productfactory.application.common.ReadOnlyService;
 import org.springframework.http.ResponseEntity;

@@ -4,10 +4,10 @@ import com.f88.productfactory.domain.model.pipeline.ProductVariant;
 import com.f88.productfactory.domain.model.release.MakerCheckerProcess;
 import com.f88.productfactory.domain.model.release.ProcessStep;
 import com.f88.productfactory.domain.model.release.ProcessStepChecklist;
-import com.f88.productfactory.domain.repository.pipeline.ProductVariantRepository;
-import com.f88.productfactory.domain.repository.release.MakerCheckerProcessRepository;
-import com.f88.productfactory.domain.repository.release.ProcessStepChecklistRepository;
-import com.f88.productfactory.domain.repository.release.ProcessStepRepository;
+import com.f88.productfactory.infrastructure.persistence.pipeline.ProductVariantRepository;
+import com.f88.productfactory.infrastructure.persistence.release.MakerCheckerProcessRepository;
+import com.f88.productfactory.infrastructure.persistence.release.ProcessStepChecklistRepository;
+import com.f88.productfactory.infrastructure.persistence.release.ProcessStepRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ReleaseProcessService {
     private static final String[] DESC = {
             "Khởi nguồn từ định hướng kinh doanh: xác định mục tiêu, tệp khách hàng và Financial Obligation Archetype phù hợp.",
             "Cụ thể hóa ý định sản phẩm: chọn Financial Obligation Archetype và điền Obligation Element (OE) cho các OT lõi để hình thành Obligation Type Family (OTF).",
-            "Vẽ khuôn sản phẩm: kéo-thả Block vào cấu trúc và gán Obligation Type cho khuôn.",
+            "Vẽ khuôn sản phẩm: kéo-thả Block vào cấu trúc và gán Obligation Type Family (OTF) cho khuôn.",
             "Cụ thể hóa Pattern cho một đối tượng khách hàng (cá nhân/doanh nghiệp) và bối cảnh bán.",
             "Điền giá trị cho Answer Slot, tạo Config Fragment có thể giới hạn theo Selector Scope.",
             "Chạy Simulation Engine: dựng lịch trả nợ, dòng tiền và kiểm tra toàn bộ ràng buộc trước khi trình duyệt.",
